@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Store, Building2, Truck, Lock, Phone, KeyRound, AlertCircle, MapPin, Building, ShieldCheck, User, CheckCircle2 } from 'lucide-react';
+import { Store, Building2, Truck, Lock, Phone, KeyRound, AlertCircle, MapPin, Building, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 
@@ -24,7 +24,7 @@ function normalizePhone(value: string) {
   return value.replace(/[^0-9]/g, '');
 }
 
-export default function ModernAuthPage() {
+export default function CleanAuthPage() {
   const router = useRouter();
   const { signIn, signUp } = useAuth();
 
@@ -36,14 +36,14 @@ export default function ModernAuthPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   
-  // حقول إنشاء الحساب (بدون بريد إلكتروني، برقم الهاتف حصراً)
+  // حقول إنشاء الحساب (برقم الهاتف حصراً بدون بريد إلكتروني)
   const [storeName, setStoreName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [province, setProvince] = useState('بغداد');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // حقول دخول المدير الآمن
+  // حقول دخول مدير النظام (Admin)
   const [adminAccessKey, setAdminAccessKey] = useState('');
 
   const [error, setError] = useState('');
@@ -57,10 +57,11 @@ export default function ModernAuthPage() {
     try {
       if (isAdminMode) {
         if (!adminAccessKey.trim()) {
-          throw new Error('مفتاح مدير النظام مطلوب.');
+          throw new Error('مفتاح الوصول الخاص بمدير النظام مطلوب.');
         }
-        if (adminAccessKey.trim() !== 'IQ-Admin-2026-Secure') {
-          throw new Error('مفتاح الوصول غير صحيح.');
+        // التحقق من مفتاح المدير (يمكن ربطه بمتغيرات البيئة أو مفتاح معتمد)
+        if (adminAccessKey.trim() !== process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY && adminAccessKey.trim() !== 'IQ-Admin-2026-Secure') {
+          throw new Error('مفتاح مدير النظام غير صحيح.');
         }
         router.push('/admin');
         return;
@@ -68,11 +69,11 @@ export default function ModernAuthPage() {
 
       const cleanPhone = normalizePhone(phone);
       if (!cleanPhone || cleanPhone.length < 10 || !cleanPhone.startsWith('07')) {
-        throw new Error('يرجى إدخال رقم هاتف عراقي صحيح (يبدأ بـ 07).');
+        throw new Error('يرجى إدخال رقم هاتف محمول عراقي صحيح (يبدأ بـ 07).');
       }
 
       if (!password || password.length < 6) {
-        throw new Error('كلمة المرور يجب أن تكون 6 أرقام أو أحرف على الأقل.');
+        throw new Error('كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل.');
       }
 
       if (mode === 'signup') {
@@ -83,7 +84,7 @@ export default function ModernAuthPage() {
       }
 
       if (isSupabaseConfigured) {
-        // الاعتماد على رقم الهاتف كمعرّف فريد بالنظام الداخلي بدون بريد إلكتروني حقيقي
+        // توليد معرف بريد إلكتروني داخلي آمن يعتمد كلياً على رقم الهاتف العراقي
         const pseudoEmail = `${cleanPhone}@jumlaati.iq`;
         if (mode === 'signup') {
           await signUp(pseudoEmail, password, { storeName, ownerName, province, role, phone: cleanPhone });
@@ -91,10 +92,10 @@ export default function ModernAuthPage() {
           await signIn(pseudoEmail, password);
         }
       } else {
-        throw new Error('يرجى ربط قاعدة البيانات للاستمرار.');
+        throw new Error('قاعدة البيانات غير متصلة. يرجى ربط النظام بقاعدة بيانات حقيقية.');
       }
 
-      // التوجيه حسب الدور
+      // التوجيه المباشر حسب دور المستخدم التجاري
       if (role === 'supplier') router.push('/supplier-dashboard');
       else if (role === 'delivery') router.push('/delivery-dashboard');
       else router.push('/retailer-home');
@@ -110,33 +111,35 @@ export default function ModernAuthPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-slate-200 p-8 relative">
         
-        {/* زر سري/جانبي لدخول المدير بعيداً عن الواجهة العامة */}
+        {/* زر سري/تبديل للتحويل إلى وضع مدير النظام */}
         <button
           type="button"
           onClick={() => { setIsAdminMode(!isAdminMode); setError(''); }}
-          className="absolute top-6 left-6 flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 transition"
+          className="absolute top-6 left-6 flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 transition font-arabic"
         >
-          <ShieldCheck size={16} />
-          {isAdminMode ? 'العودة للواجهة الرئيسية' : 'إدارة النظام'}
+          <KeyRound size={16} />
+          {isAdminMode ? 'العودة للواجهة الرئيسية' : 'تسجيل دخول المدير'}
         </button>
 
         <div className="text-center mb-8">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 mb-3">
             <Store size={24} />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 font-arabic">أهلاً بعودتك 👋</h1>
+          <h1 className="text-2xl font-black text-slate-900 font-arabic">
+            {isAdminMode ? 'لوحة تحكم مدير النظام' : 'أهلاً بعودتك 👋'}
+          </h1>
           <p className="text-xs text-slate-500 mt-1 font-arabic">
-            {isAdminMode ? 'بوابة دخول المشرف العام الآمنة' : 'سجل دخولك أو أنشئ حسابك الجديد لإدارة توريد البضائع في العراق'}
+            {isAdminMode ? 'أدخل مفتاح الصلاحيات الإدارية المطلقة للمنصة' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
           </p>
         </div>
 
         {!isAdminMode && (
           <>
-            {/* اختيار الأدوار الثلاثة (تجار الجملة، محل/فرع، مندوب التوصيل) */}
+            {/* اختيار الأدوار الفعلية للمنصة */}
             <div className="mb-6">
               <p className="text-xs font-bold text-slate-700 mb-3 font-arabic flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                اختر نوع حسابك
+                اختر نوع حسابك التجاري
               </p>
               <div className="grid grid-cols-3 gap-3">
                 {(Object.keys(roles) as UserRole[]).map((key) => {
@@ -167,7 +170,7 @@ export default function ModernAuthPage() {
               </div>
             </div>
 
-            {/* تبديل بين تسجيل الدخول وإنشاء حساب */}
+            {/* أزرار التبديل بين تسجيل الدخول وإنشاء حساب */}
             <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-2xl mb-6">
               <button
                 type="button"
@@ -206,7 +209,7 @@ export default function ModernAuthPage() {
                   type="password"
                   value={adminAccessKey}
                   onChange={(e) => setAdminAccessKey(e.target.value)}
-                  placeholder="أدخل مفتاح المشرف العام..."
+                  placeholder="أدخل مفتاح الإدارة..."
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition"
                   dir="ltr"
                 />
@@ -214,7 +217,7 @@ export default function ModernAuthPage() {
             </div>
           ) : mode === 'signup' ? (
             <>
-              {/* تفاصيل المنشأة عند التسجيل */}
+              {/* تفاصيل المنشأة عند إنشاء الحساب */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-arabic">اسم الشركة / المتجر *</label>
                 <div className="relative">
@@ -225,7 +228,7 @@ export default function ModernAuthPage() {
                     type="text"
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
-                    placeholder="مثال: مستودع الجبوري للمواد الغذائية"
+                    placeholder="مثال: مستودع النور للمواد الغذائية"
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-emerald-500 focus:bg-white font-arabic transition"
                   />
                 </div>
@@ -242,14 +245,14 @@ export default function ModernAuthPage() {
                       type="text"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
-                      placeholder="الثلاثي أو اللقب"
+                      placeholder="الاسم الثلاثي أو اللقب"
                       className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-emerald-500 focus:bg-white font-arabic transition"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 font-arabic">المدينة / المحافظة *</label>
+                  <label className="text-xs font-semibold text-slate-700 font-arabic">المحافظة العراقية *</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 right-3 grid place-items-center text-slate-400">
                       <MapPin size={16} />
@@ -335,7 +338,7 @@ export default function ModernAuthPage() {
             </>
           ) : (
             <>
-              {/* حقول تسجيل الدخول برقم الهاتف وكلمة المرور بدون بريد */}
+              {/* تسجيل الدخول العادي */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-arabic">رقم الهاتف العراقي</label>
                 <div className="relative">
@@ -377,7 +380,7 @@ export default function ModernAuthPage() {
             disabled={loading}
             className="w-full rounded-2xl bg-emerald-600 py-3.5 text-xs font-bold text-white transition hover:bg-emerald-500 disabled:opacity-60 font-arabic shadow-md mt-4"
           >
-            {loading ? 'جاري المعالجة...' : isAdminMode ? 'دخول لوحة تحكم المدير' : mode === 'signup' ? 'إرسال طلب التسجيل والتوثيق' : 'تسجيل الدخول'}
+            {loading ? 'جاري المعالجة...' : isAdminMode ? 'دخول لوحة تحكم المدير' : mode === 'signup' ? 'إنشاء الحساب التجاري' : 'تسجيل الدخول'}
           </button>
         </form>
 
@@ -390,4 +393,4 @@ export default function ModernAuthPage() {
       </div>
     </div>
   );
-}
+                }
