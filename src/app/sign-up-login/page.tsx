@@ -32,19 +32,19 @@ export default function CleanAuthPage() {
   const [role, setRole] = useState<UserRole>('supplier');
   const [isAdminMode, setIsAdminMode] = useState(false);
 
-  // حقول الدخول
+  // حقول الدخول العادية للمستخدمين
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   
-  // حقول إنشاء الحساب (برقم الهاتف حصراً بدون بريد إلكتروني)
+  // حقول إنشاء الحساب
   const [storeName, setStoreName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [province, setProvince] = useState('بغداد');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // حقول دخول مدير النظام (Admin)
-  const [adminAccessKey, setAdminAccessKey] = useState('');
+  // حقل دخول مدير النظام الشامل (يقبل الايميل، الهاتف، أو المفتاح)
+  const [adminInput, setAdminInput] = useState('');
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,13 +56,26 @@ export default function CleanAuthPage() {
 
     try {
       if (isAdminMode) {
-        if (!adminAccessKey.trim()) {
-          throw new Error('مفتاح الوصول الخاص بمدير النظام مطلوب.');
+        const cleanInput = adminInput.trim();
+        if (!cleanInput) {
+          throw new Error('يرجى إدخال البريد الإلكتروني، رقم الهاتف، أو مفتاح الوصول الخاص بالمدير.');
         }
-        // التحقق من مفتاح المدير (يمكن ربطه بمتغيرات البيئة أو مفتاح معتمد)
-        if (adminAccessKey.trim() !== process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY && adminAccessKey.trim() !== 'IQ-Admin-2026-Secure') {
-          throw new Error('مفتاح مدير النظام غير صحيح.');
+
+        // القيم المعتمدة للمدير (يمكنك جلبها من البيئة أو الثوابت)
+        const validAdminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@jumlaati.iq';
+        const validAdminPhone = process.env.NEXT_PUBLIC_ADMIN_PHONE || '07700000000';
+        const validAdminKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || 'IQ-Admin-2026-Secure';
+
+        // التحقق إذا تطابق المدخل مع أي من الطرق الثلاث
+        const isMatch = 
+          cleanInput.toLowerCase() === validAdminEmail.toLowerCase() ||
+          normalizePhone(cleanInput) === normalizePhone(validAdminPhone) ||
+          cleanInput === validAdminKey;
+
+        if (!isMatch) {
+          throw new Error('بيانات الدخول الإدارية غير صحيحة.');
         }
+
         router.push('/admin');
         return;
       }
@@ -84,7 +97,6 @@ export default function CleanAuthPage() {
       }
 
       if (isSupabaseConfigured) {
-        // توليد معرف بريد إلكتروني داخلي آمن يعتمد كلياً على رقم الهاتف العراقي
         const pseudoEmail = `${cleanPhone}@jumlaati.iq`;
         if (mode === 'signup') {
           await signUp(pseudoEmail, password, { storeName, ownerName, province, role, phone: cleanPhone });
@@ -92,10 +104,9 @@ export default function CleanAuthPage() {
           await signIn(pseudoEmail, password);
         }
       } else {
-        throw new Error('قاعدة البيانات غير متصلة. يرجى ربط النظام بقاعدة بيانات حقيقية.');
+        throw new Error('قاعدة البيانات غير متصلة.');
       }
 
-      // التوجيه المباشر حسب دور المستخدم التجاري
       if (role === 'supplier') router.push('/supplier-dashboard');
       else if (role === 'delivery') router.push('/delivery-dashboard');
       else router.push('/retailer-home');
@@ -111,7 +122,7 @@ export default function CleanAuthPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-slate-200 p-8 relative">
         
-        {/* زر سري/تبديل للتحويل إلى وضع مدير النظام */}
+        {/* زر التبديل إلى لوحة المدير */}
         <button
           type="button"
           onClick={() => { setIsAdminMode(!isAdminMode); setError(''); }}
@@ -129,13 +140,12 @@ export default function CleanAuthPage() {
             {isAdminMode ? 'لوحة تحكم مدير النظام' : 'أهلاً بعودتك 👋'}
           </h1>
           <p className="text-xs text-slate-500 mt-1 font-arabic">
-            {isAdminMode ? 'أدخل مفتاح الصلاحيات الإدارية المطلقة للمنصة' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
+            {isAdminMode ? 'قم بالدخول باستخدام بريد المدير، رقم هاتفه، أو مفتاح الوصول' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
           </p>
         </div>
 
         {!isAdminMode && (
           <>
-            {/* اختيار الأدوار الفعلية للمنصة */}
             <div className="mb-6">
               <p className="text-xs font-bold text-slate-700 mb-3 font-arabic flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -170,7 +180,6 @@ export default function CleanAuthPage() {
               </div>
             </div>
 
-            {/* أزرار التبديل بين تسجيل الدخول وإنشاء حساب */}
             <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-2xl mb-6">
               <button
                 type="button"
@@ -200,16 +209,16 @@ export default function CleanAuthPage() {
 
           {isAdminMode ? (
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-700 font-arabic">مفتاح الوصول الآمن للمدير</label>
+              <label className="text-xs font-semibold text-slate-700 font-arabic">معرف المدير (البريد الإلكتروني، رقم الهاتف، أو المفتاح)</label>
               <div className="relative">
                 <span className="absolute inset-y-0 right-3 grid place-items-center text-slate-400">
                   <KeyRound size={16} />
                 </span>
                 <input
-                  type="password"
-                  value={adminAccessKey}
-                  onChange={(e) => setAdminAccessKey(e.target.value)}
-                  placeholder="أدخل مفتاح الإدارة..."
+                  type="text"
+                  value={adminInput}
+                  onChange={(e) => setAdminInput(e.target.value)}
+                  placeholder="admin@jumlaati.iq أو 0770... أو المفتاح السري"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition"
                   dir="ltr"
                 />
@@ -217,7 +226,6 @@ export default function CleanAuthPage() {
             </div>
           ) : mode === 'signup' ? (
             <>
-              {/* تفاصيل المنشأة عند إنشاء الحساب */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-arabic">اسم الشركة / المتجر *</label>
                 <div className="relative">
@@ -338,7 +346,6 @@ export default function CleanAuthPage() {
             </>
           ) : (
             <>
-              {/* تسجيل الدخول العادي */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-arabic">رقم الهاتف العراقي</label>
                 <div className="relative">
