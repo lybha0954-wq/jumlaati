@@ -335,42 +335,4 @@ export default function AdminHubContent() {
           {recentActivity.map((item) => (
             <div key={item.id} className="px-4 py-3 flex items-center gap-3 hover:bg-muted/10 transition-colors">
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${item.color}`}>
-                {item.type === 'order' && <ShoppingBag size={14} />}
-                {item.type === 'user' && <Users size={14} />}
-                {item.type === 'alert' && <AlertTriangle size={14} />}
-                {item.type === 'payment' && <CheckCircle size={14} />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-arabic text-sm text-foreground leading-tight">{item.text}</p>
-              </div>
-              <span className="text-xs text-muted-foreground font-arabic flex-shrink-0">{item.time}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick Links */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: 'إدارة المستخدمين', href: '/admin-users', icon: Users, color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
-          { label: 'المعاملات المالية', href: '/admin-transactions', icon: BarChart2, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
-        ].map((link) => {
-          const LinkIcon = link.icon;
-          return (
-            <Link key={link.href} href={link.href} className={`flex items-center gap-3 p-4 rounded-2xl border ${link.bg} hover:opacity-90 active:scale-[0.97] transition-all`}>
-              <div className={`w-9 h-9 bg-white rounded-xl flex items-center justify-center flex-shrink-0`}>
-                <LinkIcon size={17} className={link.color} />
-              </div>
-              <span className={`font-arabic font-semibold text-sm ${link.color}`}>{link.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* ── Modals ── */}
-      {selectedPromo && <PromoDetailModal promo={selectedPromo} onClose={() => setSelectedPromo(null)} />}
-      {selectedKpi && <KpiDetailModal kpi={selectedKpi} onClose={() => setSelectedKpi(null)} />}
-      {showSignOut && <SignOutModal onClose={() => setShowSignOut(false)} onConfirm={handleSignOut} />}
-    </div>
-  );
-}
+                <Activity size={14
