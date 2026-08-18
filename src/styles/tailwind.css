@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --primary: #1E3A5F;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EFF6FF;
+  --secondary-foreground: #1E3A5F;
+  --accent: #10B981;
+  --accent-foreground: #FFFFFF;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #1E3A5F;
+  --radius: 12px;
+  --font-sans: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --danger: #EF4444;
+  --danger-foreground: #FFFFFF;
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+  /* Unified shadow tokens */
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg: 0 8px 24px rgba(15,23,42,0.10), 0 4px 8px rgba(15,23,42,0.06);
+  --shadow-xl: 0 16px 40px rgba(15,23,42,0.12), 0 8px 16px rgba(15,23,42,0.06);
+}
+
+/* ── Dark Mode ─────────────────────────────────────────────────────────────── */
+.dark {
+  --background: #0F172A;
+  --foreground: #F1F5F9;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1E293B;
+  --secondary-foreground: #93C5FD;
+  --accent: #10B981;
+  --accent-foreground: #FFFFFF;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --card: #1E293B;
+  --card-foreground: #F1F5F9;
+  --border: #334155;
+  --input: #334155;
+  --ring: #3B82F6;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --danger: #F87171;
+  --danger-foreground: #FFFFFF;
+  --success: #34D399;
+  --success-foreground: #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.25);
+  --shadow-xl: 0 16px 40px rgba(0,0,0,0.45), 0 8px 16px rgba(0,0,0,0.3);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    direction: rtl;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  h1, h2, h3, h4, h5, h6, p {
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .font-arabic {
+    font-family: 'Tajawal', sans-serif;
+  }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  .sidebar-transition {
+    transition: width 300ms ease, transform 300ms ease;
+  }
+  .fade-in {
+    animation: fadeIn 200ms ease forwards;
+  }
+  .slide-up {
+    animation: slideUp 200ms ease forwards;
+  }
+  .pulse-highlight {
+    animation: pulseHighlight 600ms ease forwards;
+  }
+  .text-hero-xl {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+  }
+  .blob-primary {
+    background: radial-gradient(circle at 30% 50%, rgba(30, 58, 95, 0.15), transparent 60%);
+    filter: blur(40px);
+  }
+  .card-hover {
+    transition: box-shadow 200ms ease, transform 150ms ease;
+  }
+  .card-hover:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+  .shadow-unified-sm { box-shadow: var(--shadow-sm); }
+  .shadow-unified-md { box-shadow: var(--shadow-md); }
+  .shadow-unified-lg { box-shadow: var(--shadow-lg); }
+  .shadow-unified-xl { box-shadow: var(--shadow-xl); }
+  .card-unified {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem;
+  }
+  .row-delete-exit {
+    animation: rowDeleteExit 300ms ease forwards;
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, var(--muted) 25%, #e8edf2 50%, var(--muted) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  @media print {
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    body { background: white !important; color: black !important; }
+    .print-invoice {
+      padding: 20px;
+      font-family: 'Tajawal', sans-serif;
+    }
+  }
+  .print-only { display: none; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseHighlight {
+  0% { background-color: transparent; }
+  40% { background-color: rgba(16, 185, 129, 0.12); }
+  100% { background-color: transparent; }
+}
+@keyframes rowDeleteExit {
+  0% { opacity: 1; max-height: 60px; }
+  100% { opacity: 0; max-height: 0; padding: 0; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
