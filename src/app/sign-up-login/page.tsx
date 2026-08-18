@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Store, Building2, Truck, Lock, Phone, KeyRound, AlertCircle, MapPin, Building, User } from 'lucide-react';
+import { Store, Building2, Truck, Lock, Phone, KeyRound, AlertCircle, MapPin, Building, User, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 
@@ -24,7 +24,7 @@ function normalizePhone(value: string) {
   return value.replace(/[^0-9]/g, '');
 }
 
-export default function CleanAuthPage() {
+export default function SecureAuthPage() {
   const router = useRouter();
   const { signIn, signUp } = useAuth();
 
@@ -32,7 +32,7 @@ export default function CleanAuthPage() {
   const [role, setRole] = useState<UserRole>('supplier');
   const [isAdminMode, setIsAdminMode] = useState(false);
 
-  // حقول الدخول العادية للمستخدمين
+  // حقول دخول المستخدمين العاديين
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   
@@ -43,8 +43,9 @@ export default function CleanAuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // حقل دخول مدير النظام الشامل (يقبل الايميل، الهاتف، أو المفتاح)
-  const [adminInput, setAdminInput] = useState('');
+  // حقول دخول مدير النظام الأمني (الخطوة الأولى + الخطوة الثانية)
+  const [adminIdentifier, setAdminIdentifier] = useState(''); // الإيميل أو الهاتف
+  const [adminPassword, setAdminPassword] = useState('');     // رمز الأمان الثاني
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,30 +57,46 @@ export default function CleanAuthPage() {
 
     try {
       if (isAdminMode) {
-        const cleanInput = adminInput.trim();
-        if (!cleanInput) {
-          throw new Error('يرجى إدخال البريد الإلكتروني، رقم الهاتف، أو مفتاح الوصول الخاص بالمدير.');
+        const cleanIdentifier = adminIdentifier.trim();
+        const cleanAdminPass = adminPassword.trim();
+
+        if (!cleanIdentifier) {
+          throw new Error('يرجى إدخال بريد المدير، رقم الهاتف، أو المفتاح السري الشامل.');
         }
 
-        // القيم المعتمدة للمدير (يمكنك جلبها من البيئة أو الثوابت)
+        // جلب البيانات المعتمدة من البيئة أو القيم الافتراضية
         const validAdminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@jumlaati.iq';
         const validAdminPhone = process.env.NEXT_PUBLIC_ADMIN_PHONE || '07700000000';
-        const validAdminKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || 'IQ-Admin-2026-Secure';
+        const validAdminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'AdminPass@2026#';
+        const validAdminMasterKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || 'IQ-Admin-2026-Secure';
 
-        // التحقق إذا تطابق المدخل مع أي من الطرق الثلاث
-        const isMatch = 
-          cleanInput.toLowerCase() === validAdminEmail.toLowerCase() ||
-          normalizePhone(cleanInput) === normalizePhone(validAdminPhone) ||
-          cleanInput === validAdminKey;
+        // 1. خيار الدخول بالمفتاح السري الشامل (Master Key Direct Access)
+        if (cleanIdentifier === validAdminMasterKey) {
+          router.push('/admin');
+          return;
+        }
 
-        if (!isMatch) {
-          throw new Error('بيانات الدخول الإدارية غير صحيحة.');
+        // 2. التحقق من الخطوة الثانية: كلمة المرور / رمز أمان المدير
+        if (!cleanAdminPass) {
+          throw new Error('رمز الأمان / كلمة مرور المدير مطلوبة للاستمرار.');
+        }
+
+        // التحقق من هوية المدير (الإيميل أو الهاتف) + مطابقة رمز الأمان الثاني
+        const isEmailOrPhoneValid = 
+          cleanIdentifier.toLowerCase() === validAdminEmail.toLowerCase() ||
+          normalizePhone(cleanIdentifier) === normalizePhone(validAdminPhone);
+
+        const isPasswordValid = cleanAdminPass === validAdminPassword;
+
+        if (!isEmailOrPhoneValid || !isPasswordValid) {
+          throw new Error('بيانات الدخول الإدارية أو رمز الأمان غير صحيح.');
         }
 
         router.push('/admin');
         return;
       }
 
+      // الدخول العادي للمستخدمين بالهاتف العراقي
       const cleanPhone = normalizePhone(phone);
       if (!cleanPhone || cleanPhone.length < 10 || !cleanPhone.startsWith('07')) {
         throw new Error('يرجى إدخال رقم هاتف محمول عراقي صحيح (يبدأ بـ 07).');
@@ -122,25 +139,25 @@ export default function CleanAuthPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-slate-200 p-8 relative">
         
-        {/* زر التبديل إلى لوحة المدير */}
+        {/* زر سري للتحويل إلى وضع أدمين النظام */}
         <button
           type="button"
           onClick={() => { setIsAdminMode(!isAdminMode); setError(''); }}
           className="absolute top-6 left-6 flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 transition font-arabic"
         >
           <KeyRound size={16} />
-          {isAdminMode ? 'العودة للواجهة الرئيسية' : 'تسجيل دخول المدير'}
+          {isAdminMode ? 'العودة للواجهة الرئيسية' : 'بوابة أمن المدير'}
         </button>
 
         <div className="text-center mb-8">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 mb-3">
-            <Store size={24} />
+          <div className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${isAdminMode ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'} mb-3`}>
+            {isAdminMode ? <ShieldAlert size={24} /> : <Store size={24} />}
           </div>
           <h1 className="text-2xl font-black text-slate-900 font-arabic">
-            {isAdminMode ? 'لوحة تحكم مدير النظام' : 'أهلاً بعودتك 👋'}
+            {isAdminMode ? 'بوابة دخول المشرف العام' : 'أهلاً بعودتك 👋'}
           </h1>
           <p className="text-xs text-slate-500 mt-1 font-arabic">
-            {isAdminMode ? 'قم بالدخول باستخدام بريد المدير، رقم هاتفه، أو مفتاح الوصول' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
+            {isAdminMode ? 'منطقة آمنة: يتطلب معرف المدير ورقم الأمان الخاص' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
           </p>
         </div>
 
@@ -208,20 +225,40 @@ export default function CleanAuthPage() {
           )}
 
           {isAdminMode ? (
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-700 font-arabic">معرف المدير (البريد الإلكتروني، رقم الهاتف، أو المفتاح)</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 right-3 grid place-items-center text-slate-400">
-                  <KeyRound size={16} />
-                </span>
-                <input
-                  type="text"
-                  value={adminInput}
-                  onChange={(e) => setAdminInput(e.target.value)}
-                  placeholder="admin@jumlaati.iq أو 0770... أو المفتاح السري"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition"
-                  dir="ltr"
-                />
+            /* وضع أمن المدير بأعلى درجة حماية (الخطوة الأولى + الثانية) */
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 font-arabic">1. معرف المدير (الإيميل أو الهاتف أو Master Key)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 right-3 grid place-items-center text-slate-400">
+                    <User size={16} />
+                  </span>
+                  <input
+                    type="text"
+                    value={adminIdentifier}
+                    onChange={(e) => setAdminIdentifier(e.target.value)}
+                    placeholder="admin@jumlaati.iq أو 0770..."
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 font-arabic">2. رمز الأمان / كلمة مرور المشرف (Admin PIN)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 right-3 grid place-items-center text-slate-400">
+                    <Lock size={16} />
+                  </span>
+                  <input
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition"
+                    dir="ltr"
+                  />
+                </div>
               </div>
             </div>
           ) : mode === 'signup' ? (
@@ -385,19 +422,4 @@ export default function CleanAuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-emerald-600 py-3.5 text-xs font-bold text-white transition hover:bg-emerald-500 disabled:opacity-60 font-arabic shadow-md mt-4"
-          >
-            {loading ? 'جاري المعالجة...' : isAdminMode ? 'دخول لوحة تحكم المدير' : mode === 'signup' ? 'إنشاء الحساب التجاري' : 'تسجيل الدخول'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-[11px] text-slate-400 font-arabic">
-            منصة جُمْلَتِي لتجارة الجملة وسلاسل الإمداد في العراق • جميع المعاملات بالدينار العراقي (IQD).
-          </p>
-        </div>
-
-      </div>
-    </div>
-  );
-                }
+            className={`w-full rounded-2xl py-3.5 text-xs font-bold text-white transition disabled:opacity-60 font-arabic shado
