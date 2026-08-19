@@ -24,6 +24,19 @@ function normalizePhone(value: string) {
   return value.replace(/[^0-9]/g, '');
 }
 
+// دالة مساعدة لإرسال التنبيه الأمني إلى الـ API الداخلي ومنه إلى تليجرام
+async function sendTelegramAlert(title: string, message: string) {
+  try {
+    await fetch('/api/telegram-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, message }),
+    });
+  } catch (e) {
+    console.error('فشل إرسال تنبيه تليجرام:', e);
+  }
+}
+
 export default function SecureAuthPage() {
   const router = useRouter();
   const { signIn, signUp } = useAuth();
@@ -44,8 +57,8 @@ export default function SecureAuthPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   // حقول دخول مدير النظام الأمني (الخطوة الأولى + الخطوة الثانية)
-  const [adminIdentifier, setAdminIdentifier] = useState(''); // الإيميل أو الهاتف
-  const [adminPassword, setAdminPassword] = useState('');     // رمز الأمان الثاني
+  const [adminIdentifier, setAdminIdentifier] = useState(''); 
+  const [adminPassword, setAdminPassword] = useState('');     
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -70,18 +83,19 @@ export default function SecureAuthPage() {
         const validAdminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'AdminPass@2026#';
         const validAdminMasterKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || 'IQ-Admin-2026-Secure';
 
-        // 1. خيار الدخول بالمفتاح السري الشامل (Master Key Direct Access)
+        // 1. خيار الدخول بالمفتاح السري الشامل
         if (cleanIdentifier === validAdminMasterKey) {
+          await sendTelegramAlert('دخول ناجح (Master Key) 🟢', 'تم الدخول إلى لوحة المشرف العام عبر المفتاح السري الشامل.');
           router.push('/admin');
           return;
         }
 
         // 2. التحقق من الخطوة الثانية: كلمة المرور / رمز أمان المدير
         if (!cleanAdminPass) {
+          await sendTelegramAlert('محاولة دخول إدارية ناقصة ⚠️', `تم إدخال المعرف (${cleanIdentifier}) دون كتابة رمز الأمان.`);
           throw new Error('رمز الأمان / كلمة مرور المدير مطلوبة للاستمرار.');
         }
 
-        // التحقق من هوية المدير (الإيميل أو الهاتف) + مطابقة رمز الأمان الثاني
         const isEmailOrPhoneValid = 
           cleanIdentifier.toLowerCase() === validAdminEmail.toLowerCase() ||
           normalizePhone(cleanIdentifier) === normalizePhone(validAdminPhone);
@@ -89,9 +103,13 @@ export default function SecureAuthPage() {
         const isPasswordValid = cleanAdminPass === validAdminPassword;
 
         if (!isEmailOrPhoneValid || !isPasswordValid) {
+          // إرسال تنبيه فوري عند محاولة دخول فاشلة للمشرف
+          await sendTelegramAlert('محاولة اختراق أو دخول فاشلة للأدمين ❌', `تم استخدام معرف: (${cleanIdentifier}) وكلمة مرور خاطئة.`);
           throw new Error('بيانات الدخول الإدارية أو رمز الأمان غير صحيح.');
         }
 
+        // إرسال تنبيه نجاح الدخول الإداري
+        await sendTelegramAlert('دخول ناجح للوحة المشرف العام 🟢', `تم تسجيل دخول المشرف بنجاح عبر المعرف: ${cleanIdentifier}`);
         router.push('/admin');
         return;
       }
@@ -157,7 +175,7 @@ export default function SecureAuthPage() {
             {isAdminMode ? 'بوابة دخول المشرف العام' : 'أهلاً بعودتك 👋'}
           </h1>
           <p className="text-xs text-slate-500 mt-1 font-arabic">
-            {isAdminMode ? 'منطقة آمنة: يتطلب معرف المدير ورقم الأمان الخاص' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
+            {isAdminMode ? 'منطقة آمنة: يتطلب معرف المدير ورقم الأمان الخاص والتنبيه الآلي' : 'سجل دخولك أو أنشئ حسابك التجاري لإدارة التوريد في العراق'}
           </p>
         </div>
 
@@ -225,7 +243,6 @@ export default function SecureAuthPage() {
           )}
 
           {isAdminMode ? (
-            /* وضع أمن المدير بأعلى درجة حماية (الخطوة الأولى + الثانية) */
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-arabic">1. معرف المدير (الإيميل أو الهاتف أو Master Key)</label>
@@ -403,35 +420,4 @@ export default function SecureAuthPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-arabic">كلمة المرور</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 right-3 grid place-items-center text-slate-400">
-                    <Lock size={16} />
-                  </span>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-xs text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition"
-                    dir="ltr"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full rounded-2xl py-3.5 text-xs font-bold text-white transition disabled:opacity-60 font-arabic shado
-// دالة إرسال التنبيه لتليجرام بسرية تامة عبر الخادم
-async function sendTelegramAlert(title: string, message: string) {
-  try {
-    await fetch('/api/telegram-alert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, message, ip: 'Local/Client' }),
-    });
-  } catch (e) {
-    console.error('Telegram alert error:', e);
-  }
-}
+                  <span className="absolute inset-y-0 right-3 grid place-items-center
