@@ -423,3 +423,15 @@ export default function SecureAuthPage() {
             type="submit"
             disabled={loading}
             className={`w-full rounded-2xl py-3.5 text-xs font-bold text-white transition disabled:opacity-60 font-arabic shado
+// دالة إرسال التنبيه لتليجرام بسرية تامة عبر الخادم
+async function sendTelegramAlert(title: string, message: string) {
+  try {
+    await fetch('/api/telegram-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, message, ip: 'Local/Client' }),
+    });
+  } catch (e) {
+    console.error('Telegram alert error:', e);
+  }
+}
