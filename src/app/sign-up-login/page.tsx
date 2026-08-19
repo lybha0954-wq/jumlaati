@@ -52,7 +52,7 @@ export default function SecureAuthPage() {
   // حقول إنشاء الحساب
   const [storeName, setStoreName] = useState('');
   const [ownerName, setOwnerName] = useState('');
-  const [province, setProvince] = useState('بغداد');
+  const [province, setProvince] = useState('كربلاء');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
