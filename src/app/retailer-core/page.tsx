@@ -1,4 +1,4 @@
-// app/retailer-core/page.tsx
+
 'use client';
 import { useState } from 'react';
 import { ShoppingCart, Package, Clock, CreditCard, LogOut, Search } from 'lucide-react';
