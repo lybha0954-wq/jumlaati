@@ -1,4 +1,3 @@
-
 'use client';
 import { Truck, MapPin, CheckCircle, Clock, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
