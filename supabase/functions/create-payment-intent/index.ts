@@ -3,92 +3,159 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 declare const Deno: {
   serve: (handler: (req: Request) => Promise<Response>) => void;
-  env: {
-    get: (key: string) => string | undefined;
-  };
-};
+    env: {
+        get: (key: string) => string | undefined;
+          };
+          };
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+          const corsHeaders = {
+            'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+              };
 
-interface CreatePaymentIntentRequest {
-  amount: number;
-  currency?: string;
-  orderNumber: string;
-  buyerName: string;
-  buyerStoreName: string;
-  buyerPhone: string;
-  deliveryAddress: string;
-  deliveryCity: string;
-  deliveryNotes?: string;
-  subtotal: number;
-  deliveryFee: number;
-  total: number;
-  commission: number;
-  paymentMethod: string;
-  storeId?: string;
-  items: Array<{ productId: string; name: string; qty: number; unitPrice: number; unit?: string }>;
-}
+              interface CreatePaymentIntentRequest {
+                amount: number;
+                  currency?: string;
+                    orderNumber: string;
+                      buyerName: string;
+                        buyerStoreName: string;
+                          buyerPhone: string;
+                            deliveryAddress: string;
+                              deliveryCity: string;
+                                deliveryNotes?: string;
+                                  subtotal: number;
+                                    deliveryFee: number;
+                                      total: number;
+                                        commission: number;
+                                          paymentMethod: string;
+                                            storeId?: string;
+                                              items: Array<{ productId: string; name: string; qty: number; unitPrice: number; unit?: string }>;
+                                              }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+                                              Deno.serve(async (req: Request) => {
+                                                if (req.method === 'OPTIONS') {
+                                                    return new Response('ok', { headers: corsHeaders });
+                                                      }
 
-  try {
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+                                                        try {
+                                                            const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+                                                                const supabaseUrl = Deno.env.get('SUPABASE_URL');
+                                                                    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    if (!stripeKey) throw new Error('STRIPE_SECRET_KEY is not configured');
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase environment variables are missing');
-    }
+                                                                        if (!stripeKey) throw new Error('STRIPE_SECRET_KEY is not configured');
+                                                                            if (!supabaseUrl || !supabaseServiceKey) throw new Error('Supabase configuration is missing');
 
-    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+                                                                                const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
+                                                                                    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body: CreatePaymentIntentRequest = await req.json();
-    
-    // التحقق من المبلغ وإجماليات الطلب
-    if (!body.total || body.total <= 0) {
-      throw new Error('Invalid total amount');
-    }
+                                                                                        const body: CreatePaymentIntentRequest = await req.json();
 
-    // إنشاء Payment Intent في Stripe بالعملة المطلوبة (افتراضياً USD أو IQD حسب إعداداتك)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(body.total * 100), // Stripe يتعامل بالهللات/السنتافات
-      currency: body.currency || 'usd',
-      metadata: {
-        orderNumber: body.orderNumber,
-        buyerName: body.buyerName,
-        buyerStoreName: body.buyerStoreName,
-        buyerPhone: body.buyerPhone,
-        storeId: body.storeId || '',
-        commission: body.commission.toString(),
-      },
-    });
+                                                                                            // التحقق من صحة المبالغ المالية
+                                                                                                const calculatedTotal = (body.subtotal || 0) + (body.deliveryFee || 0);
+                                                                                                    const finalTotal = body.total || calculatedTotal;
 
-    return new Response(
-      JSON.stringify({
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+                                                                                                        if (finalTotal <= 0) {
+                                                                                                              return new Response(
+                                                                                                                      JSON.stringify({ error: 'مبلغ الطلب غير صالح' }),
+                                                                                                                              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                                                                                                                                    );
+                                                                                                                                        }
 
-  } async (error: any) => { // تم ضبطها لمعالجة الأخطاء بدقة
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
-    );
-  }
-});
+                                                                                                                                            const currency = (body.currency || 'iqd').toLowerCase();
+
+                                                                                                                                                // بالنسبة لـ Stripe: معظم العملات تضرب بـ 100، ولكن IQD من عملات Zero-Decimal
+                                                                                                                                                    const stripeAmount = currency === 'iqd' ? Math.round(finalTotal) : Math.round(finalTotal * 100);
+
+                                                                                                                                                        // إنشاء عميل في Stripe
+                                                                                                                                                            const stripeCustomer = await stripe.customers.create({
+                                                                                                                                                                  name: body.buyerStoreName || body.buyerName,
+                                                                                                                                                                        phone: body.buyerPhone || undefined,
+                                                                                                                                                                              metadata: {
+                                                                                                                                                                                      store_name: body.buyerStoreName || '',
+                                                                                                                                                                                              order_number: body.orderNumber,
+                                                                                                                                                                                                    },
+                                                                                                                                                                                                        });
+
+                                                                                                                                                                                                            // إنشاء نية الدفع Payment Intent
+                                                                                                                                                                                                                const paymentIntent = await stripe.paymentIntents.create({
+                                                                                                                                                                                                                      amount: stripeAmount,
+                                                                                                                                                                                                                            currency: currency,
+                                                                                                                                                                                                                                  customer: stripeCustomer.id,
+                                                                                                                                                                                                                                        description: `طلب جملتي #${body.orderNumber} — ${body.buyerStoreName || body.buyerName}`,
+                                                                                                                                                                                                                                              metadata: {
+                                                                                                                                                                                                                                                      order_number: body.orderNumber,
+                                                                                                                                                                                                                                                              buyer_name: body.buyerName,
+                                                                                                                                                                                                                                                                      delivery_city: body.deliveryCity || '',
+                                                                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                                                                                  automatic_payment_methods: { enabled: true },
+                                                                                                                                                                                                                                                                                      });
+
+                                                                                                                                                                                                                                                                                          // حفظ الطلب في جدول orders المتوافق مع مخطط القاعدة
+                                                                                                                                                                                                                                                                                              const { data: orderData, error: orderError } = await supabase
+                                                                                                                                                                                                                                                                                                    .from('orders')
+                                                                                                                                                                                                                                                                                                          .insert({
+                                                                                                                                                                                                                                                                                                                  order_number: body.orderNumber,
+                                                                                                                                                                                                                                                                                                                          store_id: body.storeId || null,
+                                                                                                                                                                                                                                                                                                                                  buyer_name: body.buyerName,
+                                                                                                                                                                                                                                                                                                                                          buyer_store_name: body.buyerStoreName || '',
+                                                                                                                                                                                                                                                                                                                                                  buyer_phone: body.buyerPhone || '',
+                                                                                                                                                                                                                                                                                                                                                          delivery_address: body.deliveryAddress || '',
+                                                                                                                                                                                                                                                                                                                                                                  delivery_city: body.deliveryCity || '',
+                                                                                                                                                                                                                                                                                                                                                                          delivery_notes: body.deliveryNotes || '',
+                                                                                                                                                                                                                                                                                                                                                                                  subtotal: body.subtotal,
+                                                                                                                                                                                                                                                                                                                                                                                          delivery_fee: body.deliveryFee,
+                                                                                                                                                                                                                                                                                                                                                                                                  total: finalTotal,
+                                                                                                                                                                                                                                                                                                                                                                                                          commission: body.commission || 0,
+                                                                                                                                                                                                                                                                                                                                                                                                                  payment_method: body.paymentMethod || 'stripe',
+                                                                                                                                                                                                                                                                                                                                                                                                                          status: 'reviewing',
+                                                                                                                                                                                                                                                                                                                                                                                                                                  payment_status: 'pending',
+                                                                                                                                                                                                                                                                                                                                                                                                                                          payment_intent_id: paymentIntent.id,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                })
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      .select('id')
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            .single();
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                if (orderError) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                      console.error('Order insert error:', orderError);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            throw new Error('فشل في حفظ بيانات الطلب: ' + orderError.message);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    const orderId = orderData.id;
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        // إدراج عناصر الطلب في جدول order_items المعتمد
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            if (body.items && body.items.length > 0) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  const orderItemsToInsert = body.items.map((item) => ({
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          order_id: orderId,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  product_id: item.productId || null,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          name: item.name || 'منتج غير مسمى',
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  qty: item.qty || 1,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          unit: item.unit || 'قطعة',
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  unit_price: item.unitPrice || 0,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }));
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              const { error: itemsError } = await supabase
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      .from('order_items')
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              .insert(orderItemsToInsert);
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    if (itemsError) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            console.error('Order items insert error:', itemsError);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          return new Response(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                JSON.stringify({
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        clientSecret: paymentIntent.client_secret,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                orderId,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        paymentIntentId: paymentIntent.id,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        );
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          } catch (e: unknown) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              const message = e instanceof Error ? e.message : 'فشلت عملية تهيئة الدفع';
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  console.error('create-payment-intent error:', message);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      return new Response(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            JSON.stringify({ error: message }),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      );
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
