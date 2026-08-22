@@ -1,4 +1,4 @@
-import './globals.css';undat
+import './globals.css';
 export const metadata = {
   title: 'منصة جملتي التجارية',
     description: 'منصة التجارة الإلكترونية للسوق العراقي',
