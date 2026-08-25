@@ -1,165 +1,235 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Users, Search, Shield, Store, Truck, User, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { 
+  Users, 
+  Shield, 
+  Store, 
+  Truck, 
+  UserCheck, 
+  Phone, 
+  MapPin, 
+  Search,
+  CheckCircle,
+  XCircle
+} from 'lucide-react'
+
+interface UserProfile {
+  id: string
+  full_name: string
+  store_name: string | null
+  phone: string | null
+  role: 'admin' | 'supplier' | 'retailer' | 'courier'
+  city: string | null
+  created_at: string
+}
 
 export default function AdminUsersPage() {
-  const { user } = useAuth();
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [users, setUsers] = useState<UserProfile[]>([])
+  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedRole, setSelectedRole] = useState<string>('all')
+  const supabase = createClient()
 
-  // جلب جميع المستخدمين
   useEffect(() => {
     async function fetchUsers() {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, full_name, store_name, phone, role, city, created_at')
+          .order('created_at', { ascending: false })
 
-      if (!error && data) setUsers(data);
-      setLoading(false);
-    }
-    fetchUsers();
-  }, []);
+        if (error) throw error
 
-  // تحديث دور المستخدم
-  const updateRole = async (userId: string, newRole: string) => {
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ role: newRole })
-      .eq('id', userId);
-
-    if (!error) {
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-    }
-  };
-
-  // حذف مستخدم
-  const deleteUser = async (userId: string) => {
-    if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (!error) {
-        setUsers(users.filter(u => u.id !== userId));
+        if (data) {
+          setUsers(data as UserProfile[])
+          setFilteredUsers(data as UserProfile[])
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error)
+      } finally {
+        setLoading(false)
       }
     }
-  };
 
-  // الفلترة والبحث
-  const filteredUsers = users.filter((u) => {
-    const matchesFilter = filter === 'all' || u.role === filter;
-    const matchesSearch = u.full_name.includes(search) || u.email.includes(search);
-    return matchesFilter && matchesSearch;
-  });
+    fetchUsers()
+  }, [supabase])
 
-  // أيقونات وألوان حسب الدور
-  const roleConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-    admin: { label: 'مدير', icon: <Shield size={18} />, color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-    supplier: { label: 'مورد', icon: <Store size={18} />, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    retailer: { label: 'تاجر', icon: <User size={18} />, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    courier: { label: 'موصل', icon: <Truck size={18} />, color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  };
+  useEffect(() => {
+    let result = users
+
+    if (selectedRole !== 'all') {
+      result = result.filter(user => user.role === selectedRole)
+    }
+
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(user => 
+        (user.full_name && user.full_name.toLowerCase().includes(term)) ||
+        (user.store_name && user.store_name.toLowerCase().includes(term)) ||
+        (user.phone && user.phone.includes(term)) ||
+        (user.city && user.city.toLowerCase().includes(term))
+      )
+    }
+
+    setFilteredUsers(result)
+  }, [searchTerm, selectedRole, users])
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20'><Shield className='w-3 h-3' /> إبدارة</span>
+      case 'supplier':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'><Store className='w-3 h-3' /> مورد جملة</span>
+      case 'retailer':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20'><UserCheck className='w-3 h-3' /> تاجر تجزئة</span>
+      case 'courier':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20'><Truck className='w-3 h-3' /> موصل توصيل</span>
+      default:
+        return <span className='px-3 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20'>{role}</span>
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[60vh]' dir='rtl'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500'></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-
-        {/* الترويسة والبحث */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">إدارة المستخدمين</h1>
-            <p className="text-sm text-slate-400">تحكم في حسابات الموردين والتجار والموصليين</p>
-          </div>
-          <div className="relative w-full md:w-96">
-            <Search className="absolute right-4 top-3.5 text-slate-500" size={20} />
-            <input
-              type="text"
-              placeholder="ابحث بالاسم أو البريد..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/60 border border-slate-700 rounded-2xl py-3 pr-12 pl-4 text-white placeholder-slate-500 focus:border-purple-500 transition"
-            />
+    <div className='space-y-6' dir='rtl'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl'>
+        <div>
+          <h1 className='text-2xl font-bold bg-gradient-to-r from-indigo-400 to-violet-300 bg-clip-text text-transparent'>
+            إدارة المستخدمين
+          </h1>
+          <p className='text-slate-400 text-sm mt-1'>
+            استعراض ومتابعة حسابات التجار والموردين والموصلين المسجلين في المنصة.
+          </p>
+        </div>
+        <div className='flex items-center gap-3'>
+          <div className='px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium flex items-center gap-2'>
+            <Users className='w-4 h-4' />
+            العدد الكلي: {users.length}
           </div>
         </div>
+      </div>
 
-        {/* الفلترة حسب الدور */}
-        <div className="flex flex-wrap gap-2">
-          {['all', 'supplier', 'retailer', 'courier', 'admin'].map((role) => (
-            <button
-              key={role}
-              onClick={() => setFilter(role)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                filter === role
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20'
-                  : 'bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10'
-              }`}
-            >
-              {role === 'all' ? 'الكل' : role === 'supplier' ? 'الموردين' : role === 'retailer' ? 'التجار' : role === 'courier' ? 'الموصليين' : 'المدراء'}
-            </button>
-          ))}
+      {/* Filters & Search Toolbar */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-4'>
+        {/* Search Input */}
+        <div className='relative w-full md:w-96'>
+          <Search className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+          <input
+            type='text'
+            placeholder='بحث بالاسم، اسم المتجر، الهاتف، أو المدينة...'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors'
+          />
         </div>
 
-        {/* قائمة المستخدمين */}
-        <div className="space-y-4">
-          {loading && <div className="text-center py-10 text-slate-500">جاري تحميل المستخدمين...</div>}
-          {!loading && filteredUsers.length === 0 && (
-            <div className="text-center py-16 text-slate-500">لا يوجد مستخدمين مطابقين.</div>
-          )}
-
-          {filteredUsers.map((u) => {
-            const config = roleConfig[u.role] || roleConfig.retailer;
-            return (
-              <div key={u.id} className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-purple-500/30 rounded-3xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/5">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  {/* بيانات المستخدم */}
-                  <div className="flex items-center gap-4">
-                    <div className={`h-12 w-12 rounded-2xl border flex items-center justify-center ${config.color}`}>
-                      {config.icon}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{u.full_name || 'بدون اسم'}</h3>
-                      <p className="text-xs text-slate-400" dir="ltr">{u.email}</p>
-                      <p className="text-xs text-slate-500 mt-1">هاتف: {u.phone || 'غير مسجل'}</p>
-                    </div>
-                  </div>
-
-                  {/* التحديثات والحذف */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
-                      {Object.keys(roleConfig).map((role) => (
-                        <button
-                          key={role}
-                          onClick={() => updateRole(u.id, role)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                            u.role === role
-                              ? 'bg-purple-600 text-white'
-                              : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          {roleConfig[role].label}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => deleteUser(u.id)}
-                      className="flex items-center gap-2 text-red-400 hover:text-red-300 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl transition"
-                    >
-                      <Trash2 size={16} /> حذف
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Role Filters */}
+        <div className='flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0'>
+          <button
+            onClick={() => setSelectedRole('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedRole === 'all'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            الكل
+          </button>
+          <button
+            onClick={() => setSelectedRole('supplier')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedRole === 'supplier'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            الموردين
+          </button>
+          <button
+            onClick={() => setSelectedRole('retailer')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedRole === 'retailer'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            التجار
+          </button>
+          <button
+            onClick={() => setSelectedRole('courier')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedRole === 'courier'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            الموصلين
+          </button>
         </div>
+      </div>
 
+      {/* Users Table */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden'>
+        <div className='overflow-x-auto'>
+          <table className='w-full text-right border-collapse'>
+            <thead>
+              <tr className='border-b border-slate-800 text-slate-400 text-xs font-medium bg-slate-950/40'>
+                <th className='p-4'>الاسم الكامل</th>
+                <th className='p-4'>اسم المتجر</th>
+                <th className='p-4'>الدور / الصلاحية</th>
+                <th className='p-4'>رقم الهاتف</th>
+                <th className='p-4'>المدينة</th>
+                <th className='p-4'>تاريخ الانضمام</th>
+              </tr>
+            </thead>
+            <tbody className='divide-y divide-slate-800/60 text-sm text-slate-300'>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className='hover:bg-slate-800/25 transition-colors'>
+                    <td className='p-4 font-medium text-white'>
+                      {user.full_name || 'بدون اسم'}
+                    </td>
+                    <td className='p-4 text-slate-300'>
+                      {user.store_name || '-'}
+                    </td>
+                    <td className='p-4'>{getRoleBadge(user.role)}</td>
+                    <td className='p-4 font-mono text-slate-400 flex items-center gap-1.5 pt-5'>
+                      <Phone className='w-3.5 h-3.5 text-indigo-400' />
+                      {user.phone || 'غير مسجل'}
+                    </td>
+                    <td className='p-4 text-slate-400'>
+                      <div className='flex items-center gap-1'>
+                        <MapPin className='w-3.5 h-3.5 text-indigo-400' />
+                        {user.city || 'العراق'}
+                      </div>
+                    </td>
+                    <td className='p-4 text-slate-400 text-xs'>
+                      {new Date(user.created_at).toLocaleDateString('ar-IQ')}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className='p-8 text-center text-slate-500'>
+                    لا توجد نتائج مطابقة للبحث.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  );
+  )
 }
