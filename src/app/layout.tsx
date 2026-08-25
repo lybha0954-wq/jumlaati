@@ -1,10 +1,7 @@
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 
-export const metadata = {
-  title: 'منصة جملتي التجارية',
-  description: 'منصة الجملة والتجزئة في العراق',
-};
+export const metadata = { title: 'منصة جملتي التجارية', description: 'منصة الجملة والتجزئة في العراق' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
