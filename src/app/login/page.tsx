@@ -98,7 +98,7 @@ export default function LoginPage() {
         loginEmail === DEMO_CREDENTIALS[role].email && loginPassword === DEMO_CREDENTIALS[role].password;
       const phoneMatch = usePhone && normalizePhone(input) === normalizePhone(DEMO_CREDENTIALS[role].phone) && loginPassword === DEMO_CREDENTIALS[role].password;
 
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured()) {
         await signIn(loginEmail, loginPassword);
       } else if (!demoMatch && !phoneMatch) {
         throw new Error('بيانات الدخول غير صحيحة. استخدم بيانات العرض التجريبي أو سجل بحساب صالح.');

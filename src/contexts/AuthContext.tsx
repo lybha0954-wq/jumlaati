@@ -6,12 +6,14 @@ import type { User } from '@supabase/supabase-js';
 const AuthContext = createContext<{
   user: User | null;
   profile: any;
+  role: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }>({
   user: null,
   profile: null,
+  role: null,
   loading: true,
   signIn: async () => ({}),
   signOut: async () => {},
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, role: profile?.role ?? null, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,13 +13,14 @@ interface UserProfile {
   created_at: string
 }
 
+const supabase = createClient();
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState<string>('all')
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchUsers() {
@@ -43,7 +44,7 @@ export default function AdminUsersPage() {
     }
 
     fetchUsers()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     let result = users
