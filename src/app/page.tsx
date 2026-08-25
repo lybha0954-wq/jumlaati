@@ -9,9 +9,8 @@ export default function Home() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) {
-      router.push('/login');
-    } else {
+    if (!user) { router.push('/login'); }
+    else {
       if (profile?.role === 'admin') router.push('/admin/panel');
       else if (profile?.role === 'supplier') router.push('/supplier/dashboard');
       else if (profile?.role === 'retailer') router.push('/retailer/browse');
@@ -20,9 +19,5 @@ export default function Home() {
     }
   }, [user, profile, loading, router]);
 
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <p className="text-slate-500 text-lg">جاري التحميل...</p>
-    </div>
-  );
+  return <div className="min-h-screen flex items-center justify-center text-slate-500">جاري التحميل...</div>;
 }
