@@ -39,8 +39,8 @@ export default function InventoryContent() {
   const filtered = products.filter((p) => {
     const matchSearch =
       p.name.includes(search) ||
-      p.barcode.includes(search) ||
-      p.category.includes(search);
+      (p.barcode ?? '').includes(search) ||
+      (p.category ?? '').includes(search);
     const matchCat = categoryFilter === 'الكل' || p.category === categoryFilter;
     const matchStatus = statusFilter === 'الكل' || p.status === statusFilter;
     return matchSearch && matchCat && matchStatus;
