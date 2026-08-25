@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-const UnifiedNotificationCenter = () => {
+const UnifiedNotificationCenter = ({ role, embedded }: { role?: string; embedded?: boolean }) => {
   React.useEffect(() => {
     // eslint-disable-next-line no-console
     console.warn('Placeholder: UnifiedNotificationCenter is not implemented yet.');

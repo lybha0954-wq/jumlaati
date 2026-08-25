@@ -16,21 +16,26 @@ export default function AdminFinancePage() {
   const [totalCredits, setTotalCredits] = useState(0)
   const [totalDebits, setTotalDebits] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
     async function fetchFinanceData() {
       try {
         const { data, error } = await supabase
-          .from('ledger_entries')
+          .from('transactions')
           .select('id, created_at, amount, type, description')
           .order('created_at', { ascending: false })
 
-        if (error) throw error
+        if (error) {
+          console.error('Error fetching admin finance data:', error)
+          setFetchError(error.message || 'تعذّر تحميل البيانات المالية')
+          return
+        }
 
         if (data) {
           setLedger(data as LedgerEntry[])
-          
+
           let credits = 0
           let debits = 0
           data.forEach(entry => {
@@ -45,8 +50,9 @@ export default function AdminFinancePage() {
           setTotalCredits(credits)
           setTotalDebits(debits)
         }
-      } catch (error) {
-        console.error('Error fetching admin finance data:', error)
+      } catch (err) {
+        console.error('Error fetching admin finance data:', err)
+        setFetchError('تعذّر الاتصال بقاعدة البيانات')
       } finally {
         setLoading(false)
       }
@@ -74,7 +80,7 @@ export default function AdminFinancePage() {
             المالية والتقارير المحاسبية
           </h1>
           <p className='text-slate-400 text-sm mt-1'>
-            متابعة حركة السيولة، الإيرادات العامة، والقيود المحاسبية في النظام (Ledger).
+            متابعة حركة السيولة، الإيرادات العامة، والقيود المحاسبية في النظام.
           </p>
         </div>
         <div className='flex items-center gap-3'>
@@ -84,6 +90,13 @@ export default function AdminFinancePage() {
           </div>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {fetchError && (
+        <div className='bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm'>
+          ⚠️ {fetchError}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
@@ -143,7 +156,7 @@ export default function AdminFinancePage() {
       <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden'>
         <div className='p-6 border-b border-slate-800/80 flex items-center justify-between'>
           <div>
-            <h2 className='text-lg font-bold text-white'>سجل القيود المحاسبية (Ledger Entries)</h2>
+            <h2 className='text-lg font-bold text-white'>سجل الحركات المالية</h2>
             <p className='text-slate-400 text-xs mt-0.5'>تفاصيل الحركات المالية والقيود المسجلة تلقائياً</p>
           </div>
         </div>
@@ -187,7 +200,7 @@ export default function AdminFinancePage() {
               ) : (
                 <tr>
                   <td colSpan={5} className='p-8 text-center text-slate-500'>
-                    لا توجد قيود محاسبية مسجلة حتى الآن.
+                    لا توجد حركات مالية مسجلة حتى الآن.
                   </td>
                 </tr>
               )}

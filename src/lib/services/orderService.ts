@@ -126,6 +126,10 @@ export const orderService = {
     }
   },
 
+  async updateIncomingOrderStatus(id: string, status: IncomingOrder['status']): Promise<boolean> {
+    return orderService.updateOrderStatus(id, status);
+  },
+
   async createOrder(order: Partial<IncomingOrder>): Promise<IncomingOrder | null> {
     try {
       const { data, error } = await supabase

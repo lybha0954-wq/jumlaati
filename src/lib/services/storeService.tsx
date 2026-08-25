@@ -1,5 +1,2 @@
-export function storeService(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: storeService is not implemented yet.', args);
-  return null;
-}
+// Re-export everything from the real implementation
+export * from './storeService';
