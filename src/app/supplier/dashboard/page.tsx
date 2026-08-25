@@ -1,15 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { 
-  Building2, 
-  Package, 
-  ShoppingBag, 
-  DollarSign, 
-  ArrowUpRight,
-  TrendingUp
-} from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { Building2, Package, ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
 
 interface SupplierStats {
   totalProducts: number

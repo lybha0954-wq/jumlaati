@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-  } async (error: any) => { // تم ضبطها لمعالجة الأخطاء بدقة
+  } catch (error: any) { // تم ضبطها لمعالجة الأخطاء بدقة
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -1,8 +1,7 @@
-'use client'
-
-import React, { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { ShoppingCart, Trash2, CheckCircle2, ArrowRight, Store } from 'lucide-react'
+'use client';
+import React, { useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { ShoppingCart, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function RetailerCartPage() {
   const [loading, setLoading] = useState(false)
@@ -12,7 +11,7 @@ export default function RetailerCartPage() {
   const handleCheckout = async () => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase?.auth?.getUser()
       if (!user) {
         alert('يجب تسجيل الدخول أولاً')
         return

@@ -1,20 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { 
-  ShoppingCart, 
-  Clock, 
-  CheckCircle2, 
-  Truck, 
-  XCircle, 
-  Search, 
-  DollarSign,
-  Package,
-  MapPin,
-  Phone,
-  Store
-} from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { ShoppingCart, Clock, CheckCircle2, Truck, XCircle, Search, Package } from 'lucide-react';
 
 interface AdminOrder {
   id: string
@@ -155,9 +142,7 @@ export default function AdminOrdersPage() {
           <button
             onClick={() => setSelectedStatus('all')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'all'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedStatus === 'all' ?'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             الكل
@@ -165,9 +150,7 @@ export default function AdminOrdersPage() {
           <button
             onClick={() => setSelectedStatus('pending')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'pending'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedStatus === 'pending' ?'bg-amber-600 text-white shadow-lg shadow-amber-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             قيد الانتظار
@@ -175,9 +158,7 @@ export default function AdminOrdersPage() {
           <button
             onClick={() => setSelectedStatus('processing')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'processing'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedStatus === 'processing' ?'bg-blue-600 text-white shadow-lg shadow-blue-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             قيد التجهيز
@@ -185,9 +166,7 @@ export default function AdminOrdersPage() {
           <button
             onClick={() => setSelectedStatus('delivered')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'delivered'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedStatus === 'delivered' ?'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             تم التوصيل

@@ -1,0 +1,149 @@
+import { supabase } from '@/lib/supabase/client';
+
+export interface LineItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  unit?: string;
+}
+
+export interface IncomingOrder {
+  id: string;
+  orderNumber: string;
+  retailerId: string;
+  retailerName?: string;
+  retailerPhone?: string;
+  supplierId?: string;
+  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: LineItem[];
+  totalAmount: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deliveryAddress?: string;
+}
+
+export interface SupplierOrder {
+  id: string;
+  orderNumber: string;
+  supplierId: string;
+  supplierName?: string;
+  retailerId?: string;
+  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: LineItem[];
+  totalAmount: number;
+  notes?: string;
+  createdAt?: string;
+}
+
+function mapOrder(o: Record<string, unknown>): IncomingOrder {
+  const items = Array.isArray(o.order_items)
+    ? (o.order_items as Record<string, unknown>[]).map((i) => ({
+        id: String(i.id ?? ''),
+        productId: String(i.product_id ?? ''),
+        productName: String(i.product_name ?? i.name ?? ''),
+        quantity: Number(i.quantity ?? 0),
+        unitPrice: Number(i.unit_price ?? i.price ?? 0),
+        total: Number(i.total ?? Number(i.quantity ?? 0) * Number(i.unit_price ?? 0)),
+        unit: i.unit ? String(i.unit) : undefined,
+      }))
+    : [];
+
+  return {
+    id: String(o.id ?? ''),
+    orderNumber: String(o.order_number ?? o.id ?? ''),
+    retailerId: String(o.retailer_id ?? o.buyer_id ?? ''),
+    retailerName: o.retailer_name ? String(o.retailer_name) : undefined,
+    retailerPhone: o.retailer_phone ? String(o.retailer_phone) : undefined,
+    supplierId: o.supplier_id ? String(o.supplier_id) : undefined,
+    status: (o.status as IncomingOrder['status']) ?? 'pending',
+    items,
+    totalAmount: Number(o.total_amount ?? o.total ?? 0),
+    notes: o.notes ? String(o.notes) : undefined,
+    createdAt: o.created_at ? String(o.created_at) : undefined,
+    updatedAt: o.updated_at ? String(o.updated_at) : undefined,
+    deliveryAddress: o.delivery_address ? String(o.delivery_address) : undefined,
+  };
+}
+
+export const orderService = {
+  async getIncomingOrders(): Promise<IncomingOrder[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(mapOrder);
+    } catch {
+      return [];
+    }
+  },
+
+  async getSupplierOrders(): Promise<SupplierOrder[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map((o) => ({
+        ...mapOrder(o),
+        supplierId: String(o.supplier_id ?? ''),
+        supplierName: o.supplier_name ? String(o.supplier_name) : undefined,
+      })) as SupplierOrder[];
+    } catch {
+      return [];
+    }
+  },
+
+  async getOrderById(id: string): Promise<IncomingOrder | null> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data ? mapOrder(data) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  async updateOrderStatus(id: string, status: IncomingOrder['status']): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
+  async createOrder(order: Partial<IncomingOrder>): Promise<IncomingOrder | null> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          retailer_id: order.retailerId,
+          supplier_id: order.supplierId,
+          status: order.status ?? 'pending',
+          total_amount: order.totalAmount ?? 0,
+          notes: order.notes,
+          delivery_address: order.deliveryAddress,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data ? mapOrder(data) : null;
+    } catch {
+      return null;
+    }
+  },
+};

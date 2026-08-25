@@ -1,8 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { Package, Plus, Trash2, Edit, CheckCircle2 } from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { Package, Plus, Trash2, CheckCircle2 } from 'lucide-react';
 
 interface Product {
   id: string

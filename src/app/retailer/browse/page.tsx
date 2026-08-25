@@ -45,7 +45,7 @@ export default function RetailerBrowsePage() {
 
   // تعديل الكمية في السلة
   const updateQty = (id: string, delta: number) => {
-    const newCart = cart.map((item) =>
+    let newCart = cart.map((item) =>
       item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
     );
     setCart(newCart);

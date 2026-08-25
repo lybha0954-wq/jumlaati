@@ -39,8 +39,8 @@
     "warning": "🚨 CRITICAL: DO NOT REMOVE OR MODIFY ABOVE DEPENDENCIES - Required for Next.js 15 TypeScript app functionality"
   },
   "scripts": {
-    "dev": "next dev -p 4028",
-    "build": "next build",
+    "dev": "node scripts/prune-duplicate-pages.js && next dev -p 4028",
+    "build": "node scripts/prune-duplicate-pages.js && next build",
     "start": "next start -p 4028",
     "serve": "next start -p 4028",
     "lint": "next lint",

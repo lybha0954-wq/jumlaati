@@ -1,8 +1,7 @@
-'use client'
-
-import React, { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { Building2, Save, CheckCircle2 } from 'lucide-react'
+'use client';
+import React, { useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { Building2, Save, CheckCircle2 } from 'lucide-react';
 
 export default function SupplierSettingsPage() {
   const [storeName, setStoreName] = useState('مؤسسة الجملة المركزية')

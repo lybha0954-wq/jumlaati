@@ -1,17 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { 
-  DollarSign, 
-  TrendingUp, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  FileText, 
-  CreditCard,
-  Building2,
-  Calendar
-} from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { DollarSign, ArrowUpRight, ArrowDownRight, Building2 } from 'lucide-react';
 
 interface LedgerEntry {
   id: string
