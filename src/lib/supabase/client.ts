@@ -1,4 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr';
+import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,21 +11,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
-export function createClient(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: createClient is not implemented yet.', args);
-  return null;
+export function createClient() {
+  return supabase;
 }
 
-function isSupabaseConfigured(...args: any[]): any {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: isSupabaseConfigured is not implemented yet.', args);
-  return null;
+function isSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 }
 
 export { isSupabaseConfigured };
-export function getStripe(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: getStripe is not implemented yet.', args);
-  return null;
+
+let stripePromise: Promise<Stripe | null> | null = null;
+
+export function getStripe(): Promise<Stripe | null> {
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  if (!stripePromise && publishableKey) {
+    stripePromise = loadStripe(publishableKey);
+  }
+  return stripePromise ?? Promise.resolve(null);
 }

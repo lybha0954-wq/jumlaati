@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+'use client';
+import React from 'react';
 
-const AppLayout = () => {
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.warn('Placeholder: AppLayout is not implemented yet.');
-  }, []);
+interface AppLayoutProps {
+  children: React.ReactNode;
+  activeRoute?: string;
+}
+
+const AppLayout = ({ children }: AppLayoutProps) => {
   return (
-    <>
-  { /*AppLayout */} 
- </>
+    <div className="min-h-screen bg-slate-950 text-white">
+      {children}
+    </div>
   );
 };
 

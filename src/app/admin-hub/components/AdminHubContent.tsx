@@ -203,7 +203,7 @@ export default function AdminHubContent() {
 
   const handleSignOut = () => {
     setShowSignOut(false);
-    showToast('info', 'جاري تسجيل الخروج...', undefined, 2000);
+    showToast('جاري تسجيل الخروج...', 'info');
     setTimeout(() => {
       if (typeof window !== 'undefined') window.location.href = '/sign-up-login';
     }, 1500);
