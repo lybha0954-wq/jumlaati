@@ -1,170 +1,159 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Package, Truck, Wallet, ArrowUpRight, TrendingUp, Users } from 'lucide-react';
+'use client'
 
-export default function SupplierDashboardPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [stats, setStats] = useState({ products: 0, orders: 0, couriers: 0, revenue: 0 });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { 
+  Building2, 
+  Package, 
+  ShoppingBag, 
+  DollarSign, 
+  ArrowUpRight,
+  TrendingUp
+} from 'lucide-react'
+
+interface SupplierStats {
+  totalProducts: number
+  totalOrders: number
+  totalRevenue: number
+}
+
+export default function SupplierDashboard() {
+  const [stats, setStats] = useState<SupplierStats>({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0
+  })
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
-    async function fetchDashboardData() {
-      if (!user) return;
+    async function fetchSupplierStats() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
 
-      // جلب عدد المنتجات
-      const { count: productCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('supplier_id', user.id);
+        // Fetch products count
+        const { count: productsCount, error: prodError } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('supplier_id', user.id)
 
-      // جلب عدد الطلبات والإيرادات
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('total, status, order_number, created_at, buyer_store_name')
-        .eq('supplier_id', user.id)
-        .order('created_at', { ascending: false });
+        if (prodError) throw prodError
 
-      const totalRevenue = (orders || []).reduce((acc, o) => acc + (o.total || 0), 0);
+        // Fetch orders count & total revenue
+        const { data: ordersData, error: ordError } = await supabase
+          .from('orders')
+          .select('total_amount, status')
+          .eq('supplier_id', user.id)
 
-      // جلب عدد الموصليين العاملين لديه
-      const { count: courierCount } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('employer_supplier_id', user.id)
-        .eq('role', 'courier');
+        if (ordError) throw ordError
 
-      setStats({
-        products: productCount || 0,
-        orders: orders?.length || 0,
-        couriers: courierCount || 0,
-        revenue: totalRevenue,
-      });
+        let revenue = 0
+        if (ordersData) {
+          ordersData.forEach(ord => {
+            if (ord.status === 'delivered') {
+              revenue += Number(ord.total_amount || 0)
+            }
+          })
+        }
 
-      setRecentOrders(orders?.slice(0, 5) || []);
+        setStats({
+          totalProducts: productsCount || 0,
+          totalOrders: ordersData?.length || 0,
+          totalRevenue: revenue
+        })
+      } catch (error) {
+        console.error('Error fetching supplier dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-    fetchDashboardData();
-  }, [user]);
+
+    fetchSupplierStats()
+  }, [supabase])
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[60vh]' dir='rtl'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500'></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* الترحيب والرأس */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              أهلاً بك، {user?.email?.split('@')[0]} 👋
-            </h1>
-            <p className="text-sm text-slate-400">نظرة عامة على أداء متجرك اليوم</p>
-          </div>
-          <button
-            onClick={() => router.push('/supplier/products')}
-            className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all duration-300 transform hover:scale-105"
-          >
-            <Package size={20} />
-            إدارة المنتجات
-          </button>
+    <div className='space-y-6' dir='rtl'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl'>
+        <div>
+          <h1 className='text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent'>
+            لوحة تحكم المورد
+          </h1>
+          <p className='text-slate-400 text-sm mt-1'>
+            مرحباً بك. تتبع منتجاتك المعروضة، مبيعاتك الكلية، وإدارة الطلبات الواردة من تجار التجزئة.
+          </p>
         </div>
-
-        {/* بطاقات الإحصائيات الاحترافية */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <Wallet size={24} />
-              </div>
-              <span className="text-xs text-slate-500 flex items-center gap-1"><TrendingUp size={12} /> إجمالي</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">الإيرادات</p>
-            <h2 className="text-2xl font-black text-white mt-1">{stats.revenue.toLocaleString()} د.ع</h2>
+        <div className='flex items-center gap-3'>
+          <div className='px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium flex items-center gap-2'>
+            <Building2 className='w-4 h-4' />
+            المورد المعتمد
           </div>
+        </div>
+      </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <Package size={24} />
-              </div>
-              <span className="text-xs text-slate-500">المخزون</span>
+      {/* Stats Grid */}
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+        {/* Total Products */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>إجمالي المنتجات</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.totalProducts}</h3>
             </div>
-            <p className="text-slate-400 text-sm mt-4">المنتجات</p>
-            <h2 className="text-2xl font-black text-white mt-1">{stats.products}</h2>
+            <div className='w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400'>
+              <Package className='w-6 h-6' />
+            </div>
           </div>
-
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-amber-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <Truck size={24} />
-              </div>
-              <span className="text-xs text-slate-500">الشحن</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">الطلبات</p>
-            <h2 className="text-2xl font-black text-white mt-1">{stats.orders}</h2>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-purple-500/20 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                <Users size={24} />
-              </div>
-              <span className="text-xs text-slate-500">الفريق</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">الموصليين</p>
-            <h2 className="text-2xl font-black text-white mt-1">{stats.couriers}</h2>
+          <div className='mt-4 flex items-center gap-1 text-xs text-emerald-400'>
+            <span>المواد المعروضة للجملة</span>
           </div>
         </div>
 
-        {/* آخر الطلبات */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="h-8 w-1 bg-gradient-to-b from-emerald-500 to-cyan-500 rounded-full"></span>
-              آخر الطلبات الواردة
-            </h2>
-            <button 
-              onClick={() => router.push('/supplier/orders')}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition"
-            >
-              عرض الكل <ArrowUpRight size={14} />
-            </button>
+        {/* Total Orders */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-teal-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>الطلبات الواردة</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.totalOrders}</h3>
+            </div>
+            <div className='w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400'>
+              <ShoppingBag className='w-6 h-6' />
+            </div>
           </div>
-
-          <div className="space-y-4">
-            {recentOrders.length === 0 && (
-              <div className="text-center py-10 text-slate-500 text-sm">
-                لا توجد طلبات بعد. سيتم عرض الطلبات هنا فور وصولها.
-              </div>
-            )}
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-emerald-500/30 transition">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <Truck size={18} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{order.buyer_store_name || 'متجر غير محدد'}</p>
-                    <p className="text-xs text-slate-500">طلب رقم: {order.order_number}</p>
-                  </div>
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-black text-emerald-400">{order.total.toLocaleString()} د.ع</p>
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${
-                    order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                    order.status === 'assigned' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                    'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                  }`}>
-                    {order.status === 'completed' ? 'مكتمل' : order.status === 'assigned' ? 'تم التكليف' : 'قيد المراجعة'}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className='mt-4 flex items-center gap-1 text-xs text-teal-400'>
+            <span>طلبيات تجار التجزئة</span>
           </div>
         </div>
 
+        {/* Total Revenue */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>إجمالي المبيعات المكتملة</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.totalRevenue.toLocaleString()} <span className='text-xs font-normal text-slate-400'>د.ع</span></h3>
+            </div>
+            <div className='w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400'>
+              <DollarSign className='w-6 h-6' />
+            </div>
+          </div>
+          <div className='mt-4 flex items-center gap-1 text-xs text-cyan-400'>
+            <TrendingUp className='w-3.5 h-3.5' />
+            <span>الأرباح من الطلبات المسلمة</span>
+          </div>
+        </div>
       </div>
     </div>
-  );
+  )
 }
