@@ -18,6 +18,7 @@ export interface Product {
   status?: string;
   finalPrice?: number;
   originalPrice?: number;
+  costPrice?: number;
   createdAt?: string;
 }
 
@@ -33,16 +34,21 @@ export const productService = {
         id: p.id,
         name: p.name,
         description: p.description,
-        price: p.price ?? 0,
-        stock: p.stock_quantity ?? p.stock ?? 0,
+        price: p.final_price ?? p.price ?? 0,
+        stock: p.stock ?? p.stock_quantity ?? 0,
         category: p.category,
         barcode: p.barcode,
         image: p.image_url ?? p.image,
         supplierId: p.supplier_id,
         supplierName: p.supplier_name,
         unit: p.unit,
-        minOrder: p.min_order_quantity ?? p.min_order,
+        minOrder: p.min_order_qty ?? p.min_order_quantity ?? p.min_order,
+        minOrderQty: p.min_order_qty ?? p.min_order_quantity ?? p.min_order ?? 1,
         isActive: p.is_active ?? true,
+        status: p.status,
+        costPrice: p.cost_price ?? 0,
+        finalPrice: p.final_price ?? 0,
+        originalPrice: p.cost_price ?? 0,
         createdAt: p.created_at,
       }));
     } catch {
@@ -63,16 +69,21 @@ export const productService = {
         id: data.id,
         name: data.name,
         description: data.description,
-        price: data.price ?? 0,
-        stock: data.stock_quantity ?? data.stock ?? 0,
+        price: data.final_price ?? data.price ?? 0,
+        stock: data.stock ?? data.stock_quantity ?? 0,
         category: data.category,
         barcode: data.barcode,
         image: data.image_url ?? data.image,
         supplierId: data.supplier_id,
         supplierName: data.supplier_name,
         unit: data.unit,
-        minOrder: data.min_order_quantity ?? data.min_order,
+        minOrder: data.min_order_qty ?? data.min_order_quantity ?? data.min_order,
+        minOrderQty: data.min_order_qty ?? data.min_order_quantity ?? data.min_order ?? 1,
         isActive: data.is_active ?? true,
+        status: data.status,
+        costPrice: data.cost_price ?? 0,
+        finalPrice: data.final_price ?? 0,
+        originalPrice: data.cost_price ?? 0,
         createdAt: data.created_at,
       };
     } catch {
