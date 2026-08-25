@@ -1,149 +1,192 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { MapPin, Phone, Package, ArrowRight, Truck, CheckCircle2, Clock, ExternalLink } from 'lucide-react';
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { 
+  Package, 
+  Truck, 
+  CheckCircle2, 
+  Clock, 
+  Phone, 
+  MapPin,
+  CheckCircle,
+  Navigation
+} from 'lucide-react'
+
+interface DeliveryTask {
+  id: string
+  created_at: string
+  status: string
+  total_amount: number
+  retailer: {
+    full_name: string
+    store_name: string
+    phone: string
+    city: string
+  }
+}
 
 export default function CourierTasksPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState<DeliveryTask[]>([])
+  const [loading, setLoading] = useState(true)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const supabase = createClient()
 
-  // جلب المهام الخاصة بالموصل
-  useEffect(() => {
-    async function fetchTasks() {
-      if (!user) return;
+  async function fetchTasks() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          id,
+          created_at,
+          status,
+          total_amount,
+          retailer:user_profiles!orders_retailer_id_fkey(full_name, store_name, phone, city)
+        `)
         .eq('courier_id', user.id)
-        .in('status', ['assigned', 'delivering'])
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
 
-      if (!error && data) setTasks(data);
-      setLoading(false);
+      if (error) throw error
+
+      if (data) {
+        setTasks(data as unknown as DeliveryTask[])
+      }
+    } catch (error) {
+      console.error('Error fetching courier tasks:', error)
+    } finally {
+      setLoading(false)
     }
-    fetchTasks();
-  }, [user]);
+  }
 
-  // تحديث حالة الطلب
-  const updateStatus = async (orderId: string, status: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
+  useEffect(() => {
+    fetchTasks()
+  }, [supabase])
 
-    if (!error) {
-      setTasks(tasks.filter((task) => task.id !== orderId));
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    setUpdatingId(taskId)
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', taskId)
+
+      if (error) throw error
+
+      // Refresh tasks list
+      await fetchTasks()
+    } catch (error) {
+      console.error('Error updating task status:', error)
+    } finally {
+      setUpdatingId(null)
     }
-  };
+  }
 
-  // فتح الخريطة (إحداثيات المتجر أو عناوين جوجل)
-  const openMap = (task: any) => {
-    const query = task.delivery_city + ' ' + task.delivery_address;
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    window.open(url, '_blank');
-  };
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'out_for_delivery':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20'><Truck className='w-3 h-3' /> مع الموصل (قيد التوصيل)</span>
+      case 'delivered':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'><CheckCircle2 className='w-3 h-3' /> تم التوصيل بنجاح</span>
+      default:
+        return <span className='px-3 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20'>{status}</span>
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[60vh]' dir='rtl'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500'></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-
-        {/* الترويسة */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">مهام التوصيل</h1>
-          <p className="text-sm text-slate-400">هذه هي الطلبات التي كلفك بها المورد، قم بتحديث حالتها فور وصولك للتاجر.</p>
+    <div className='space-y-6' dir='rtl'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl'>
+        <div>
+          <h1 className='text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent'>
+            مهام التوصيل المخصصة
+          </h1>
+          <p className='text-slate-400 text-sm mt-1'>
+            قائمة الطلبات المسندة إليك لتوصيلها إلى محال التجزئة. يمكنك تحديث حالة التوصيل مباشرة.
+          </p>
         </div>
-
-        {/* قائمة المهام */}
-        <div className="space-y-6">
-          {loading && <div className="text-center py-10 text-slate-500">جاري تحميل المهام...</div>}
-          {!loading && tasks.length === 0 && (
-            <div className="text-center py-20 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
-              <div className="bg-slate-800 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck size={40} className="text-slate-500" />
-              </div>
-              <p className="text-slate-400">لا توجد مهام حالياً. استرخِ! 🎉</p>
-            </div>
-          )}
-
-          {tasks.map((task) => (
-            <div key={task.id} className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-cyan-500/30 rounded-3xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/5">
-              
-              {/* رأس المهمة */}
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center text-cyan-400">
-                    <Package size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{task.buyer_store_name || 'متجر غير محدد'}</h3>
-                    <p className="text-xs text-slate-500 font-mono">طلب رقم: {task.order_number}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold border ${
-                    task.status === 'delivering' 
-                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  }`}>
-                    {task.status === 'delivering' ? 'قيد التوصيل' : 'تم التكليف'}
-                  </span>
-                  <span className="text-2xl font-black text-emerald-400">{task.total.toLocaleString()} د.ع</span>
-                </div>
-              </div>
-
-              {/* التفاصيل والعنوان */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm">
-                <div className="flex items-center gap-3 text-slate-300">
-                  <MapPin size={18} className="text-cyan-500 shrink-0" />
-                  <div>
-                    <p className="text-xs text-slate-500">عنوان التاجر</p>
-                    <p className="font-medium">{task.delivery_city} - {task.delivery_address}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-slate-300">
-                  <Phone size={18} className="text-cyan-500 shrink-0" />
-                  <div>
-                    <p className="text-xs text-slate-500">هاتف التاجر</p>
-                    <p className="font-medium" dir="ltr">{task.buyer_phone || 'غير مسجل'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* أزرار التحكم والخريطة */}
-              <div className="flex flex-col sm:flex-row gap-3 border-t border-white/10 pt-4">
-                <button
-                  onClick={() => openMap(task)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition"
-                >
-                  <ExternalLink size={18} /> فتح خريطة الوصول
-                </button>
-                
-                {task.status === 'assigned' ? (
-                  <button
-                    onClick={() => updateStatus(task.id, 'delivering')}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/20 transition-all duration-300"
-                  >
-                    <Truck size={18} /> بدأت التوصيل
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => updateStatus(task.id, 'completed')}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-300"
-                  >
-                    <CheckCircle2 size={18} /> تم التسليم
-                  </button>
-                )}
-              </div>
-
-            </div>
-          ))}
+        <div className='flex items-center gap-3'>
+          <div className='px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium flex items-center gap-2'>
+            <Package className='w-4 h-4' />
+            المهام الكلية: {tasks.length}
+          </div>
         </div>
+      </div>
 
+      {/* Tasks List */}
+      <div className='space-y-4'>
+        {tasks.length > 0 ? (
+          tasks.map((task) => {
+            const retailerObj = Array.isArray(task.retailer) ? task.retailer[0] : task.retailer
+            const isUpdating = updatingId === task.id
+
+            return (
+              <div 
+                key={task.id} 
+                className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 hover:border-purple-500/30 transition-all'
+              >
+                <div className='space-y-3'>
+                  <div className='flex items-center gap-3'>
+                    <span className='font-mono text-purple-400 font-bold'>#{task.id.slice(0, 8)}</span>
+                    {getStatusBadge(task.status)}
+                  </div>
+
+                  <div>
+                    <h2 className='text-lg font-bold text-white'>
+                      {retailerObj?.store_name || retailerObj?.full_name || 'متجر التجزئة'}
+                    </h2>
+                    <div className='flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-1.5'>
+                      <span className='flex items-center gap-1 text-slate-300'>
+                        <Phone className='w-3.5 h-3.5 text-purple-400' />
+                        {retailerObj?.phone || 'لا يوجد هاتف'}
+                      </span>
+                      <span className='flex items-center gap-1 text-slate-300'>
+                        <MapPin className='w-3.5 h-3.5 text-purple-400' />
+                        {retailerObj?.city || 'العراق'}
+                      </span>
+                      <span className='font-bold text-emerald-400'>
+                        المبلغ المطلوب تحصيله: {Number(task.total_amount).toLocaleString()} د.ع
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='flex items-center gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-800/80'>
+                  {task.status !== 'delivered' ? (
+                    <button
+                      onClick={() => updateTaskStatus(task.id, 'delivered')}
+                      disabled={isUpdating}
+                      className='px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50'
+                    >
+                      <CheckCircle className='w-4 h-4' />
+                      {isUpdating ? 'جاري التحديث...' : 'تأكيد التوصيل والتحصيل'}
+                    </button>
+                  ) : (
+                    <div className='px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-1.5'>
+                      <CheckCircle2 className='w-4 h-4' />
+                      تم تسليم الطلب بنجاح
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        ) : (
+          <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-12 text-center text-slate-500'>
+            لا توجد مهام توصيل مسندة إليك حالياً.
+          </div>
+        )}
       </div>
     </div>
-  );
+  )
 }
