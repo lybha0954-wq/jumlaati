@@ -51,7 +51,7 @@ export default function InventoryContent() {
       if (editingProduct) {
         const updated = await productService.update(product.id, product);
         if (updated) {
-          setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)));
+          setProducts((prev) => prev.map((p) => (p.id === product.id ? product : p)));
           toast.success('تم تحديث المنتج بنجاح');
         }
       } else {

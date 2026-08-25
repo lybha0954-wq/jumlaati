@@ -13,7 +13,11 @@ export interface Product {
   supplierName?: string;
   unit?: string;
   minOrder?: number;
+  minOrderQty?: number;
   isActive?: boolean;
+  status?: string;
+  finalPrice?: number;
+  originalPrice?: number;
   createdAt?: string;
 }
 

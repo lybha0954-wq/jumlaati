@@ -11,13 +11,14 @@ interface LedgerEntry {
   description: string
 }
 
+const supabase = createClient();
+
 export default function AdminFinancePage() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([])
   const [totalCredits, setTotalCredits] = useState(0)
   const [totalDebits, setTotalDebits] = useState(0)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchFinanceData() {
@@ -59,7 +60,7 @@ export default function AdminFinancePage() {
     }
 
     fetchFinanceData()
-  }, [supabase])
+  }, [])
 
   if (loading) {
     return (
