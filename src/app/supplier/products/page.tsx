@@ -1,202 +1,251 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Search, Trash2, Package, Layers, BarCode } from 'lucide-react';
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { Package, Plus, Trash2, Edit, CheckCircle2 } from 'lucide-react'
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  stock_quantity: number
+  unit: string
+}
 
 export default function SupplierProductsPage() {
-  const { user } = useAuth();
-  const [products, setProducts] = useState<any[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [barcode, setBarcode] = useState('');
-  const [name, setName] = useState('');
-  const [costPrice, setCostPrice] = useState(0);
-  const [finalPrice, setFinalPrice] = useState(0);
-  const [stock, setStock] = useState(0);
-  const [unit, setUnit] = useState('قطعة');
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [name, setName] = useState('')
+  const [price, setPrice] = useState('')
+  const [stock, setStock] = useState('')
+  const [unit, setUnit] = useState('قطعة')
+  const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const supabase = createClient()
 
-  // جلب المنتجات
-  useEffect(() => {
-    async function fetchProducts() {
+  async function fetchProducts() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('supplier_id', user?.id);
-      if (!error && data) setProducts(data);
-      setLoading(false);
+        .eq('supplier_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      if (data) {
+        setProducts(data as Product[])
+      }
+    } catch (error) {
+      console.error('Error fetching supplier products:', error)
+    } finally {
+      setLoading(false)
     }
-    fetchProducts();
-  }, [user?.id]);
+  }
 
-  // إضافة منتج
-  const addProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from('products').insert({
-      barcode,
-      name,
-      cost_price: Number(costPrice),
-      final_price: Number(finalPrice),
-      stock: Number(stock),
-      unit,
-      supplier_id: user?.id,
-    });
-    if (!error) {
-      setShowForm(false);
-      setBarcode(''); setName(''); setCostPrice(0); setFinalPrice(0); setStock(0); setUnit('قطعة');
-      const { data } = await supabase.from('products').select('*').eq('supplier_id', user?.id);
-      setProducts(data || []);
+  useEffect(() => {
+    fetchProducts()
+  }, [supabase])
+
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name || !price || !stock) return
+
+    setSubmitting(true)
+    setSuccess(false)
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          supplier_id: user.id,
+          name,
+          price: parseFloat(price),
+          stock_quantity: parseInt(stock),
+          unit
+        })
+
+      if (error) throw error
+
+      setName('')
+      setPrice('')
+      setStock('')
+      setUnit('قطعة')
+      setSuccess(true)
+      await fetchProducts()
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (error) {
+      console.error('Error adding product:', error)
+    } finally {
+      setSubmitting(false)
     }
-  };
+  }
 
-  // حذف منتج
-  const deleteProduct = async (id: string) => {
-    await supabase.from('products').delete().eq('id', id);
-    setProducts(products.filter((p) => p.id !== id));
-  };
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return
 
-  // فلترة البحث
-  const filteredProducts = products.filter((p) => p.name.includes(search));
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      await fetchProducts()
+    } catch (error) {
+      console.error('Error deleting product:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[60vh]' dir='rtl'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500'></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* الترويسة */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">إدارة المنتجات</h1>
-            <p className="text-sm text-slate-400">أضف، عدّل، وتتبع مخزونك باحترافية</p>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all duration-300 transform hover:scale-105"
-          >
-            <Plus size={20} />
-            {showForm ? 'إغلاق النموذج' : 'إضافة منتج جديد'}
-          </button>
+    <div className='space-y-6' dir='rtl'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl'>
+        <div>
+          <h1 className='text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent'>
+            إدارة منتجات الجملة
+          </h1>
+          <p className='text-slate-400 text-sm mt-1'>
+            إضافة منتجات جديدة، تحديد أسعار الجملة، والكميات المتوفرة في المخزن.
+          </p>
         </div>
-
-        {/* نموذج الإضافة (تصميم زجاجي فاخر) */}
-        {showForm && (
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl animate-fade-in">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <span className="h-8 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></span>
-              تفاصيل المنتج الجديد
-            </h2>
-            <form onSubmit={addProduct} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    <BarCode size={16} className="text-indigo-400" /> الباركود
-                  </label>
-                  <input
-                    type="text" value={barcode} onChange={(e) => setBarcode(e.target.value)}
-                    className="w-full bg-slate-900/60 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/20 transition"
-                    placeholder="امسح أو اكتب الباركود"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    <Package size={16} className="text-indigo-400" /> اسم المنتج
-                  </label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
-                    className="w-full bg-slate-900/60 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/20 transition"
-                    placeholder="مثال: حليب نيدو 2.5 كجم" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">سعر التكلفة</label>
-                  <input type="number" value={costPrice} onChange={(e) => setCostPrice(Number(e.target.value))} required
-                    className="w-full bg-slate-900/60 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/20 transition" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">سعر البيع</label>
-                  <input type="number" value={finalPrice} onChange={(e) => setFinalPrice(Number(e.target.value))} required
-                    className="w-full bg-slate-900/60 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/20 transition" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">الوحدة</label>
-                  <select value={unit} onChange={(e) => setUnit(e.target.value)}
-                    className="w-full bg-slate-900/60 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/20 transition">
-                    <option value="قطعة">قطعة</option>
-                    <option value="كرتون">كرتون</option>
-                    <option value="كيس">كيس</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-300 transform hover:scale-105">
-                  حفظ المنتج
-                </button>
-              </div>
-            </form>
+        <div className='flex items-center gap-3'>
+          <div className='px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium flex items-center gap-2'>
+            <Package className='w-4 h-4' />
+            المنتجات المعروضة: {products.length}
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* قسم البحث وعدّاد المنتجات */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute right-4 top-3.5 text-slate-500" size={20} />
+      {success && (
+        <div className='bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl flex items-center gap-2 text-sm shadow-lg'>
+          <CheckCircle2 className='w-5 h-5 shrink-0' />
+          <span>تمت إضافة المنتج بنجاح إلى قائمة الجملة!</span>
+        </div>
+      )}
+
+      {/* Add Product Form */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-6 shadow-xl'>
+        <h2 className='text-lg font-bold text-white mb-4'>إضافة منتج جديد</h2>
+        <form onSubmit={handleAddProduct} className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4'>
+          <div>
+            <label className='block text-xs font-medium text-slate-300 mb-1'>اسم المنتج</label>
             <input
-              type="text"
-              placeholder="ابحث عن منتج..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/60 border border-slate-700 rounded-2xl py-3 pr-12 pl-4 text-white placeholder-slate-500 focus:border-indigo-500 transition"
+              type='text'
+              placeholder='مثال: صندوق مياه'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500'
             />
           </div>
-          <div className="flex items-center gap-2 text-slate-400 text-sm">
-            <Layers size={18} className="text-indigo-400" />
-            <span>إجمالي المنتجات: <span className="font-bold text-white">{products.length}</span></span>
-          </div>
-        </div>
 
-        {/* شبكة عرض المنتجات (بطاقات فاخرة) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading && (
-            <div className="col-span-full text-center py-10 text-slate-500">جاري تحميل المنتجات...</div>
-          )}
-          {!loading && products.length === 0 && (
-            <div className="col-span-full text-center py-16">
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-4">
-                <Package size={32} className="text-slate-500" />
-              </div>
-              <p className="text-slate-400">لا توجد منتجات بعد. ابدأ بإضافة أول منتج!</p>
-            </div>
-          )}
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="group bg-white/5 backdrop-blur-xl border border-white/10 hover:border-indigo-500/50 rounded-3xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1">
-              <div className="flex justify-between items-start mb-4">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-indigo-400">
-                  <Package size={24} />
-                </div>
-                <button onClick={() => deleteProduct(product.id)} className="text-slate-500 hover:text-red-400 transition">
-                  <Trash2 size={18} />
-                </button>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-1">{product.name}</h3>
-              <p className="text-xs text-slate-500 mb-3 font-mono">الباركود: {product.barcode || 'غير محدد'}</p>
-              <div className="flex justify-between items-end pt-4 border-t border-white/10">
-                <div>
-                  <p className="text-xs text-slate-400">سعر البيع</p>
-                  <p className="text-xl font-black text-emerald-400">{product.final_price.toLocaleString()} د.ع</p>
-                </div>
-                <div className="text-left">
-                  <p className="text-xs text-slate-400">المخزون</p>
-                  <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${product.stock > 10 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                    {product.stock} {product.unit}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+          <div>
+            <label className='block text-xs font-medium text-slate-300 mb-1'>سعر الجملة (د.ع)</label>
+            <input
+              type='number'
+              placeholder='0'
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              required
+              className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500'
+            />
+          </div>
+
+          <div>
+            <label className='block text-xs font-medium text-slate-300 mb-1'>الكمية المتوفرة</label>
+            <input
+              type='number'
+              placeholder='0'
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              required
+              className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500'
+            />
+          </div>
+
+          <div>
+            <label className='block text-xs font-medium text-slate-300 mb-1'>وحدة القياس</label>
+            <input
+              type='text'
+              placeholder='قطعة / كرتون / كغ'
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              required
+              className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500'
+            />
+          </div>
+
+          <div className='flex items-end'>
+            <button
+              type='submit'
+              disabled={submitting}
+              className='w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50'
+            >
+              <Plus className='w-4 h-4' />
+              <span>{submitting ? 'جاري الإضافة...' : 'إضافة المنتج'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Products Table */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden'>
+        <div className='overflow-x-auto'>
+          <table className='w-full text-right border-collapse'>
+            <thead>
+              <tr className='border-b border-slate-800 text-slate-400 text-xs font-medium bg-slate-950/40'>
+                <th className='p-4'>اسم المنتج</th>
+                <th className='p-4'>سعر الجملة</th>
+                <th className='p-4'>الكمية المخزنية</th>
+                <th className='p-4'>الوحدة</th>
+                <th className='p-4 text-left'>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className='divide-y divide-slate-800/60 text-sm text-slate-300'>
+              {products.length > 0 ? (
+                products.map((product) => (
+                  <tr key={product.id} className='hover:bg-slate-800/25 transition-colors'>
+                    <td className='p-4 font-medium text-white'>{product.name}</td>
+                    <td className='p-4 font-bold text-emerald-400'>{Number(product.price).toLocaleString()} د.ع</td>
+                    <td className='p-4'>{product.stock_quantity}</td>
+                    <td className='p-4'>{product.unit}</td>
+                    <td className='p-4 text-left'>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className='p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/25 transition-colors'
+                        title='حذف المنتج'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className='p-8 text-center text-slate-500'>
+                    لا توجد منتجات مسجلة لديك حالياً.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  );
-}
+  )
+            }
