@@ -1,206 +1,249 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { Package, Truck, Store, User, MapPin, Phone, Search, Filter } from 'lucide-react';
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { 
+  ShoppingCart, 
+  Clock, 
+  CheckCircle2, 
+  Truck, 
+  XCircle, 
+  Search, 
+  DollarSign,
+  Package,
+  MapPin,
+  Phone,
+  Store
+} from 'lucide-react'
+
+interface AdminOrder {
+  id: string
+  created_at: string
+  status: string
+  total_amount: number
+  supplier: {
+    full_name: string
+    store_name: string
+  }
+  retailer: {
+    full_name: string
+    store_name: string
+    phone: string
+  }
+}
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [usersMap, setUsersMap] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const [search, setSearch] = useState('');
+  const [orders, setOrders] = useState<AdminOrder[]>([])
+  const [filteredOrders, setFilteredOrders] = useState<AdminOrder[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const supabase = createClient()
 
-  // جلب جميع الطلبات وبيانات المستخدمين
   useEffect(() => {
-    async function fetchAllData() {
-      // جلب الطلبات
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+    async function fetchOrders() {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            created_at,
+            status,
+            total_amount,
+            supplier:user_profiles!orders_supplier_id_fkey(full_name, store_name),
+            retailer:user_profiles!orders_retailer_id_fkey(full_name, store_name, phone)
+          `)
+          .order('created_at', { ascending: false })
 
-      // جلب بيانات المستخدمين (لربط الأسماء)
-      const { data: usersData } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, role');
+        if (error) throw error
 
-      // إنشاء خريطة للمستخدمين (id -> user object)
-      const userMap: Record<string, any> = {};
-      if (usersData) {
-        usersData.forEach((u) => { userMap[u.id] = u; });
+        if (data) {
+          setOrders(data as unknown as AdminOrder[])
+          setFilteredOrders(data as unknown as AdminOrder[])
+        }
+      } catch (error) {
+        console.error('Error fetching admin orders:', error)
+      } finally {
+        setLoading(false)
       }
-
-      if (!ordersError && ordersData) setOrders(ordersData);
-      setUsersMap(userMap);
-      setLoading(false);
     }
-    fetchAllData();
-  }, []);
 
-  // تغيير حالة الطلب يدوياً من قبل الأدمن
-  const updateOrderStatus = async (orderId: string, status: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
+    fetchOrders()
+  }, [supabase])
 
-    if (!error) {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status } : o));
+  useEffect(() => {
+    let result = orders
+
+    if (selectedStatus !== 'all') {
+      result = result.filter(order => order.status === selectedStatus)
     }
-  };
 
-  const statusColors = (status: string) => {
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(order => 
+        order.id.toLowerCase().includes(term) ||
+        (order.retailer?.store_name && order.retailer.store_name.toLowerCase().includes(term)) ||
+        (order.supplier?.store_name && order.supplier.store_name.toLowerCase().includes(term)) ||
+        (order.retailer?.phone && order.retailer.phone.includes(term))
+      )
+    }
+
+    setFilteredOrders(result)
+  }, [searchTerm, selectedStatus, orders])
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'reviewing': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'assigned': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'delivering': return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-      case 'completed': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'cancelled': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      case 'pending':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20'><Clock className='w-3 h-3' /> قيد الانتظار</span>
+      case 'processing':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20'><Package className='w-3 h-3' /> قيد التجهيز</span>
+      case 'out_for_delivery':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20'><Truck className='w-3 h-3' /> مع الموصل</span>
+      case 'delivered':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'><CheckCircle2 className='w-3 h-3' /> تم التوصيل</span>
+      case 'cancelled':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20'><XCircle className='w-3 h-3' /> ملغي</span>
+      default:
+        return <span className='px-3 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20'>{status}</span>
     }
-  };
+  }
 
-  const statusLabels: Record<string, string> = {
-    reviewing: 'قيد المراجعة',
-    assigned: 'تم التكليف',
-    delivering: 'قيد التوصيل',
-    completed: 'مكتمل',
-    cancelled: 'ملغي'
-  };
-
-  // الفلترة والبحث
-  const filteredOrders = orders.filter((o) => {
-    const supplier = usersMap[o.supplier_id]?.full_name || '';
-    const retailer = usersMap[o.retailer_id]?.full_name || '';
-    const courier = usersMap[o.courier_id]?.full_name || '';
-    const matchesFilter = filter === 'all' || o.status === filter;
-    const matchesSearch = o.order_number.includes(search) || supplier.includes(search) || retailer.includes(search) || courier.includes(search);
-    return matchesFilter && matchesSearch;
-  });
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[60vh]' dir='rtl'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500'></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-
-        {/* الترويسة والفلترة */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">إدارة الطلبات</h1>
-            <p className="text-sm text-slate-400">راقب جميع الطلبات في المنصة وتتبع الموردين والموصليين</p>
-          </div>
-          <div className="relative w-full md:w-96">
-            <Search className="absolute right-4 top-3.5 text-slate-500" size={20} />
-            <input
-              type="text"
-              placeholder="ابحث برقم الطلب أو الاسم..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-900/60 border border-slate-700 rounded-2xl py-3 pr-12 pl-4 text-white placeholder-slate-500 focus:border-purple-500 transition"
-            />
+    <div className='space-y-6' dir='rtl'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl'>
+        <div>
+          <h1 className='text-2xl font-bold bg-gradient-to-r from-indigo-400 to-violet-300 bg-clip-text text-transparent'>
+            متابعة وإدارة الطلبات
+          </h1>
+          <p className='text-slate-400 text-sm mt-1'>
+            استعراض كافة الطلبات الجارية والمكتملة بين الموردين والتجار في المنصة.
+          </p>
+        </div>
+        <div className='flex items-center gap-3'>
+          <div className='px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium flex items-center gap-2'>
+            <ShoppingCart className='w-4 h-4' />
+            إجمالي الطلبات: {orders.length}
           </div>
         </div>
+      </div>
 
-        {/* أزرار الفلترة */}
-        <div className="flex flex-wrap gap-2">
-          {['all', 'reviewing', 'assigned', 'delivering', 'completed', 'cancelled'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                filter === status
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20'
-                  : 'bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10'
-              }`}
-            >
-              {status === 'all' ? 'الكل' : statusLabels[status]}
-            </button>
-          ))}
+      {/* Filters & Search Toolbar */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-4'>
+        {/* Search Input */}
+        <div className='relative w-full md:w-96'>
+          <Search className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+          <input
+            type='text'
+            placeholder='بحث برقم الطلب، اسم المتجر، المورد أو الهاتف...'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors'
+          />
         </div>
 
-        {/* قائمة الطلبات */}
-        <div className="space-y-4">
-          {loading && <div className="text-center py-10 text-slate-500">جاري تحميل الطلبات...</div>}
-          {!loading && filteredOrders.length === 0 && (
-            <div className="text-center py-16 text-slate-500">لا توجد طلبات مطابقة.</div>
-          )}
-
-          {filteredOrders.map((order) => {
-            const supplier = usersMap[order.supplier_id] || { full_name: 'غير محدد' };
-            const retailer = usersMap[order.retailer_id] || { full_name: 'غير محدد' };
-            const courier = usersMap[order.courier_id] || { full_name: 'غير معين' };
-            
-            return (
-              <div key={order.id} className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-purple-500/30 rounded-3xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/5">
-                
-                {/* رأس الطلب */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 flex items-center justify-center text-purple-400">
-                      <Package size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">طلب رقم: {order.order_number}</h3>
-                      <p className="text-xs text-slate-500">بتاريخ: {new Date(order.created_at).toLocaleDateString('ar-IQ')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold border ${statusColors(order.status)}`}>
-                      {statusLabels[order.status]}
-                    </span>
-                    <span className="text-2xl font-black text-emerald-400">{order.total.toLocaleString()} د.ع</span>
-                  </div>
-                </div>
-
-                {/* الأطراف الثلاثة */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 border-t border-white/10 pt-4 text-sm">
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <Store size={18} className="text-emerald-400 shrink-0" />
-                    <div>
-                      <p className="text-xs text-slate-500">المورد</p>
-                      <p className="font-medium">{supplier.full_name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <User size={18} className="text-blue-400 shrink-0" />
-                    <div>
-                      <p className="text-xs text-slate-500">التاجر</p>
-                      <p className="font-medium">{retailer.full_name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <Truck size={18} className="text-amber-400 shrink-0" />
-                    <div>
-                      <p className="text-xs text-slate-500">الموصل</p>
-                      <p className="font-medium">{courier.full_name}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* تفاصيل التوصيل */}
-                <div className="flex items-center gap-3 text-sm text-slate-400 mb-4">
-                  <MapPin size={16} className="text-slate-500" />
-                  <span>{order.delivery_city} - {order.delivery_address}</span>
-                </div>
-
-                {/* التحكم اليدوي من الأدمن */}
-                <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
-                  {order.status !== 'completed' && order.status !== 'cancelled' && (
-                    <>
-                      <button onClick={() => updateOrderStatus(order.id, 'delivering')} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition">قيد التوصيل</button>
-                      <button onClick={() => updateOrderStatus(order.id, 'completed')} className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl transition">مكتمل</button>
-                      <button onClick={() => updateOrderStatus(order.id, 'cancelled')} className="text-xs bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl transition">إلغاء</button>
-                    </>
-                  )}
-                  {order.status === 'completed' && <span className="text-xs text-emerald-400 font-bold">الطلب مكتمل</span>}
-                  {order.status === 'cancelled' && <span className="text-xs text-red-400 font-bold">الطلب ملغي</span>}
-                </div>
-
-              </div>
-            );
-          })}
+        {/* Status Filters */}
+        <div className='flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0'>
+          <button
+            onClick={() => setSelectedStatus('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedStatus === 'all'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            الكل
+          </button>
+          <button
+            onClick={() => setSelectedStatus('pending')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedStatus === 'pending'
+                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            قيد الانتظار
+          </button>
+          <button
+            onClick={() => setSelectedStatus('processing')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedStatus === 'processing'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            قيد التجهيز
+          </button>
+          <button
+            onClick={() => setSelectedStatus('delivered')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedStatus === 'delivered'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+            }`}
+          >
+            تم التوصيل
+          </button>
         </div>
+      </div>
 
+      {/* Orders Table */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden'>
+        <div className='overflow-x-auto'>
+          <table className='w-full text-right border-collapse'>
+            <thead>
+              <tr className='border-b border-slate-800 text-slate-400 text-xs font-medium bg-slate-950/40'>
+                <th className='p-4'>رقم الطلب</th>
+                <th className='p-4'>التاجر (المشتري)</th>
+                <th className='p-4'>المورد (البائع)</th>
+                <th className='p-4'>المبلغ الإجمالي</th>
+                <th className='p-4'>الحالة</th>
+                <th className='p-4'>التاريخ</th>
+              </tr>
+            </thead>
+            <tbody className='divide-y divide-slate-800/60 text-sm text-slate-300'>
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => {
+                  const retailerObj = Array.isArray(order.retailer) ? order.retailer[0] : order.retailer
+                  const supplierObj = Array.isArray(order.supplier) ? order.supplier[0] : order.supplier
+
+                  return (
+                    <tr key={order.id} className='hover:bg-slate-800/25 transition-colors'>
+                      <td className='p-4 font-mono text-indigo-400'>#{order.id.slice(0, 8)}</td>
+                      <td className='p-4'>
+                        <div className='font-medium text-white'>{retailerObj?.store_name || retailerObj?.full_name || 'تاجر'}</div>
+                        <div className='text-xs text-slate-500 mt-0.5'>{retailerObj?.phone || ''}</div>
+                      </td>
+                      <td className='p-4'>
+                        <div className='font-medium text-slate-300'>{supplierObj?.store_name || supplierObj?.full_name || 'مورد جملة'}</div>
+                      </td>
+                      <td className='p-4 font-bold text-emerald-400'>{Number(order.total_amount).toLocaleString()} د.ع</td>
+                      <td className='p-4'>{getStatusBadge(order.status)}</td>
+                      <td className='p-4 text-slate-400 text-xs'>
+                        {new Date(order.created_at).toLocaleDateString('ar-IQ')}
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className='p-8 text-center text-slate-500'>
+                    لا توجد طلبات مطابقة للبحث.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  );
+  )
 }
