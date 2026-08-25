@@ -1,161 +1,239 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Users, Package, Truck, Wallet, TrendingUp, Activity, ShoppingBag, UserPlus } from 'lucide-react';
+'use client'
 
-export default function AdminPanelPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [stats, setStats] = useState({ users: 0, orders: 0, products: 0, revenue: 0 });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { 
+  ShieldAlert, 
+  Users, 
+  ShoppingCart, 
+  DollarSign, 
+  TrendingUp, 
+  Activity,
+  CheckCircle2,
+  Clock,
+  UserCheck
+} from 'lucide-react'
+
+interface AdminStats {
+  totalUsers: number
+  totalOrders: number
+  totalRevenue: number
+  activeSuppliers: number
+}
+
+interface SystemActivity {
+  id: string
+  type: string
+  description: string
+  created_at: string
+}
+
+export default function AdminPanel() {
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    activeSuppliers: 0
+  })
+  const [activities, setActivities] = useState<SystemActivity[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
     async function fetchAdminData() {
-      if (!user) return;
+      try {
+        // Fetch total users count
+        const { count: usersCount } = await supabase
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true })
 
-      // جلب إجمالي المستخدمين
-      const { count: userCount } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
+        // Fetch active suppliers count
+        const { count: suppliersCount } = await supabase
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'supplier')
 
-      // جلب إجمالي الطلبات
-      const { count: orderCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+        // Fetch total orders count
+        const { count: ordersCount } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
 
-      // جلب إجمالي المنتجات
-      const { count: productCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
+        // Calculate total platform revenue from transactions
+        const { data: transactions } = await supabase
+          .from('transactions')
+          .select('amount')
 
-      // جلب إجمالي الإيرادات
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('total, created_at, order_number, buyer_store_name, status')
-        .order('created_at', { ascending: false });
+        const revenue = transactions?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
 
-      const totalRevenue = (orders || []).reduce((acc, o) => acc + (o.total || 0), 0);
+        // Fetch recent system transactions or orders as activity feed
+        const { data: recentOrders } = await supabase
+          .from('orders')
+          .select('id, created_at, status, total_amount')
+          .order('created_at', { ascending: false })
+          .limit(5)
 
-      setStats({
-        users: userCount || 0,
-        orders: orderCount || 0,
-        products: productCount || 0,
-        revenue: totalRevenue,
-      });
+        const formattedActivities: SystemActivity[] = (recentOrders || []).map(order => ({
+          id: order.id,
+          type: 'order',
+          description: `طلب جديد برقم #${order.id.slice(0, 8)} بقيمة ${Number(order.total_amount).toLocaleString()} د.ع`,
+          created_at: order.created_at
+        }))
 
-      setRecentOrders(orders?.slice(0, 6) || []);
+        setStats({
+          totalUsers: usersCount || 0,
+          totalOrders: ordersCount || 0,
+          totalRevenue: revenue,
+          activeSuppliers: suppliersCount || 0
+        })
+        setActivities(formattedActivities)
+
+      } catch (error) {
+        console.error('Error fetching admin panel data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-    fetchAdminData();
-  }, [user]);
+
+    fetchAdminData()
+  }, [supabase])
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[60vh]' dir='rtl'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500'></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* الترويسة */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            لوحة التحكم الرئيسية
+    <div className='space-y-6' dir='rtl'>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl shadow-xl'>
+        <div>
+          <h1 className='text-2xl font-bold bg-gradient-to-r from-indigo-400 to-violet-300 bg-clip-text text-transparent'>
+            لوحة تحكم الإدارة الرئيسية
           </h1>
-          <p className="text-sm text-slate-400">نظرة شاملة على أداء منصة جملتي</p>
+          <p className='text-slate-400 text-sm mt-1'>
+            مراقبة شاملة لمنصة جملتي وإدارة المستخدمين والعمليات المالية.
+          </p>
         </div>
-
-        {/* بطاقات الإحصائيات */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-purple-500/20 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                <Users size={24} />
-              </div>
-              <span className="text-xs text-slate-500 flex items-center gap-1"><Activity size={12} /> نشط</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">إجمالي المستخدمين</p>
-            <h2 className="text-3xl font-black text-white mt-1">{stats.users}</h2>
+        <div className='flex items-center gap-3'>
+          <div className='px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium flex items-center gap-2'>
+            <ShieldAlert className='w-4 h-4' />
+            صلاحيات إدارية كاملة
           </div>
+        </div>
+      </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-pink-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-pink-500/20 border border-pink-500/20 flex items-center justify-center text-pink-400">
-                <ShoppingBag size={24} />
-              </div>
-              <span className="text-xs text-slate-500">الكل</span>
+      {/* Stats Grid */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+        {/* Total Users */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-indigo-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>إجمالي المستخدمين</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.totalUsers}</h3>
             </div>
-            <p className="text-slate-400 text-sm mt-4">إجمالي الطلبات</p>
-            <h2 className="text-3xl font-black text-white mt-1">{stats.orders}</h2>
+            <div className='w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400'>
+              <Users className='w-6 h-6' />
+            </div>
           </div>
-
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-amber-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <Package size={24} />
-              </div>
-              <span className="text-xs text-slate-500">المخزون</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">إجمالي المنتجات</p>
-            <h2 className="text-3xl font-black text-white mt-1">{stats.products}</h2>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1">
-            <div className="flex justify-between items-start">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <Wallet size={24} />
-              </div>
-              <span className="text-xs text-slate-500 flex items-center gap-1"><TrendingUp size={12} /> نمو</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">إجمالي الإيرادات</p>
-            <h2 className="text-3xl font-black text-emerald-400 mt-1">{stats.revenue.toLocaleString()} د.ع</h2>
+          <div className='mt-4 flex items-center gap-1 text-xs text-indigo-400'>
+            <UserCheck className='w-4 h-4' />
+            <span>تجار، مورديين، وموصلين</span>
           </div>
         </div>
 
-        {/* أحدث الطلبات */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="h-8 w-1 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></span>
-              أحدث الطلبات في المنصة
-            </h2>
-            <button 
-              onClick={() => router.push('/admin/orders')}
-              className="text-xs text-slate-400 hover:text-white transition"
-            >
-              عرض جميع الطلبات
-            </button>
+        {/* Active Suppliers */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>الموردون النشطون</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.activeSuppliers}</h3>
+            </div>
+            <div className='w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400'>
+              <CheckCircle2 className='w-6 h-6' />
+            </div>
           </div>
+          <div className='mt-4 flex items-center gap-1 text-xs text-emerald-400'>
+            <TrendingUp className='w-4 h-4' />
+            <span>يسجلون منتجاتهم على المنصة</span>
+          </div>
+        </div>
 
-          <div className="space-y-4">
-            {recentOrders.length === 0 && (
-              <div className="text-center py-10 text-slate-500 text-sm">لا توجد طلبات بعد.</div>
-            )}
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-purple-500/30 transition">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                    <Truck size={18} />
+        {/* Total Orders */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-blue-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>إجمالي الطلبات</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.totalOrders}</h3>
+            </div>
+            <div className='w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400'>
+              <ShoppingCart className='w-6 h-6' />
+            </div>
+          </div>
+          <div className='mt-4 flex items-center gap-1 text-xs text-blue-400'>
+            <Clock className='w-4 h-4' />
+            <span>عبر كافة المحافظات العراقية</span>
+          </div>
+        </div>
+
+        {/* Total Platform Revenue */}
+        <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-teal-500/40 transition-all'>
+          <div className='absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-all'></div>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-slate-400 text-sm font-medium'>إجمالي السيولة (د.ع)</p>
+              <h3 className='text-2xl font-bold text-white mt-1'>{stats.totalRevenue.toLocaleString()}</h3>
+            </div>
+            <div className='w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400'>
+              <DollarSign className='w-6 h-6' />
+            </div>
+          </div>
+          <div className='mt-4 flex items-center gap-1 text-xs text-teal-400'>
+            <Activity className='w-4 h-4' />
+            <span>حجم التداولات الكلي</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent System Activity Feed */}
+      <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden p-6'>
+        <div className='flex items-center justify-between pb-4 border-b border-slate-800/80'>
+          <div>
+            <h2 className='text-lg font-bold text-white'>النشاط العام للنظام</h2>
+            <p className='text-slate-400 text-xs mt-0.5'>آخر العمليات المسجلة في قاعدة البيانات</p>
+          </div>
+        </div>
+
+        <div className='mt-4 space-y-3'>
+          {activities.length > 0 ? (
+            activities.map((act) => (
+              <div key={act.id} className='flex items-center justify-between p-4 rounded-xl bg-slate-950/40 border border-slate-800/60 hover:border-slate-700 transition-all'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400'>
+                    <Activity className='w-5 h-5' />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">{order.buyer_store_name || 'متجر غير محدد'}</p>
-                    <p className="text-xs text-slate-500">طلب رقم: {order.order_number}</p>
+                    <p className='text-sm font-medium text-white'>{act.description}</p>
+                    <span className='text-xs text-slate-500'>{new Date(act.created_at).toLocaleString('ar-IQ')}</span>
                   </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-black text-emerald-400">{order.total.toLocaleString()} د.ع</p>
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${
-                    order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                    order.status === 'delivering' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                    order.status === 'assigned' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  }`}>
-                    {order.status === 'completed' ? 'مكتمل' : order.status === 'delivering' ? 'قيد التوصيل' : order.status === 'assigned' ? 'تم التكليف' : 'قيد المراجعة'}
-                  </span>
-                </div>
+                <span className='px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'>
+                  نشاط مسجل
+                </span>
               </div>
-            ))}
-          </div>
+            ))
+          ) : (
+            <div className='text-center py-8 text-slate-500'>
+              لا توجد نشاطات مسجلة حديثاً.
+            </div>
+          )}
         </div>
-
       </div>
     </div>
-  );
+  )
 }
