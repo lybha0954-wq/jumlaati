@@ -63,11 +63,11 @@ function ProductDetailModal({ group, onClose, onAddToCart, getCartItem, onUpdate
   getCartItem: (id: string) => CartItem | undefined;
   onUpdateQty: (id: string, delta: number, min: number) => void;
 }) {
-  const bestOffer = group.offers.reduce((best, o) => o.finalPrice < best.finalPrice ? o : best, group.offers[0]);
+  const bestOffer = group.offers.reduce((best, o) => (o.finalPrice ?? 0) < (best.finalPrice ?? 0) ? o : best, group.offers[0]);
   const [selectedOffer, setSelectedOffer] = useState(bestOffer);
   const cartItem = getCartItem(selectedOffer.id);
-  const disc = selectedOffer.originalPrice > selectedOffer.finalPrice
-    ? Math.round(((selectedOffer.originalPrice - selectedOffer.finalPrice) / selectedOffer.originalPrice) * 100) : 0;
+  const disc = (selectedOffer.originalPrice ?? 0) > (selectedOffer.finalPrice ?? 0)
+    ? Math.round((((selectedOffer.originalPrice ?? 0) - (selectedOffer.finalPrice ?? 0)) / (selectedOffer.originalPrice ?? 1)) * 100) : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} dir="rtl">
@@ -90,11 +90,11 @@ function ProductDetailModal({ group, onClose, onAddToCart, getCartItem, onUpdate
           {/* Price */}
           <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4">
             <div className="flex items-baseline gap-2">
-              <span className="font-arabic text-3xl font-bold text-primary tabular-nums">{selectedOffer.finalPrice.toLocaleString('ar-IQ')}</span>
+              <span className="font-arabic text-3xl font-bold text-primary tabular-nums">{(selectedOffer.finalPrice ?? 0).toLocaleString('ar-IQ')}</span>
               <span className="font-arabic text-sm text-muted-foreground">د.ع / {group.unit}</span>
             </div>
-            {selectedOffer.originalPrice > selectedOffer.finalPrice && (
-              <span className="font-arabic text-sm text-muted-foreground line-through tabular-nums">{selectedOffer.originalPrice.toLocaleString('ar-IQ')} د.ع</span>
+            {(selectedOffer.originalPrice ?? 0) > (selectedOffer.finalPrice ?? 0) && (
+              <span className="font-arabic text-sm text-muted-foreground line-through tabular-nums">{(selectedOffer.originalPrice ?? 0).toLocaleString('ar-IQ')} د.ع</span>
             )}
           </div>
 
