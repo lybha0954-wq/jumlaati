@@ -1,26 +1,17 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { createClient } from '../../../lib/supabase/client';
+import { supabase } from '../../../lib/supabase/client';
 import { ShoppingCart, Clock, CheckCircle2, Truck, XCircle, Search, Package } from 'lucide-react';
-
-const supabase = createClient();
 
 interface AdminOrder {
   id: string
-  created_at: string
+  placed_at: string
   status: string
-  total_amount: number
-  supplier_id: string | null
-  retailer_id: string | null
-  supplier: {
-    full_name: string
-    store_name: string
-  } | null
-  retailer: {
-    full_name: string
-    store_name: string
-    phone: string
-  } | null
+  total: number
+  store_id: string | null
+  buyer_name: string
+  buyer_store_name: string
+  buyer_phone: string
 }
 
 export default function AdminOrdersPage() {
@@ -33,63 +24,15 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        // Step 1: fetch orders without FK hints to avoid constraint-name mismatch
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
-          .select('id, created_at, status, total_amount, supplier_id, retailer_id')
-          .order('created_at', { ascending: false })
+          .select('id, placed_at, status, total, store_id, buyer_name, buyer_store_name, buyer_phone')
+          .order('placed_at', { ascending: false })
 
         if (ordersError) throw ordersError
 
-        if (!ordersData || ordersData.length === 0) {
-          setOrders([])
-          setFilteredOrders([])
-          return
-        }
-
-        // Step 2: collect unique user IDs and fetch profiles in one query
-        const userIds = Array.from(new Set([
-          ...ordersData.map((o) => o.supplier_id).filter(Boolean),
-          ...ordersData.map((o) => o.retailer_id).filter(Boolean),
-        ])) as string[]
-
-        let profilesMap: Record<string, { full_name: string; store_name: string; phone: string }> = {}
-
-        if (userIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from('user_profiles')
-            .select('id, full_name, store_name, phone')
-            .in('id', userIds)
-
-          if (profiles) {
-            profiles.forEach((p) => {
-              profilesMap[p.id] = {
-                full_name: p.full_name || '',
-                store_name: p.store_name || '',
-                phone: p.phone || '',
-              }
-            })
-          }
-        }
-
-        // Step 3: merge profiles into orders
-        const enriched: AdminOrder[] = ordersData.map((o) => ({
-          id: o.id,
-          created_at: o.created_at,
-          status: o.status,
-          total_amount: o.total_amount,
-          supplier_id: o.supplier_id,
-          retailer_id: o.retailer_id,
-          supplier: o.supplier_id && profilesMap[o.supplier_id]
-            ? { full_name: profilesMap[o.supplier_id].full_name, store_name: profilesMap[o.supplier_id].store_name }
-            : null,
-          retailer: o.retailer_id && profilesMap[o.retailer_id]
-            ? { full_name: profilesMap[o.retailer_id].full_name, store_name: profilesMap[o.retailer_id].store_name, phone: profilesMap[o.retailer_id].phone }
-            : null,
-        }))
-
-        setOrders(enriched)
-        setFilteredOrders(enriched)
+        setOrders(ordersData || [])
+        setFilteredOrders(ordersData || [])
       } catch (error) {
         console.error('Error fetching admin orders:', error)
       } finally {
@@ -111,9 +54,9 @@ export default function AdminOrdersPage() {
       const term = searchTerm.toLowerCase()
       result = result.filter(order =>
         order.id.toLowerCase().includes(term) ||
-        (order.retailer?.store_name && order.retailer.store_name.toLowerCase().includes(term)) ||
-        (order.supplier?.store_name && order.supplier.store_name.toLowerCase().includes(term)) ||
-        (order.retailer?.phone && order.retailer.phone.includes(term))
+        (order.buyer_store_name && order.buyer_store_name.toLowerCase().includes(term)) ||
+        (order.buyer_name && order.buyer_name.toLowerCase().includes(term)) ||
+        (order.buyer_phone && order.buyer_phone.includes(term))
       )
     }
 
@@ -126,11 +69,11 @@ export default function AdminOrdersPage() {
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20'><Clock className='w-3 h-3' /> قيد الانتظار</span>
       case 'reviewing':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20'><Clock className='w-3 h-3' /> قيد المراجعة</span>
-      case 'processing': case'assigned':
+      case 'processing': case 'assigned':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20'><Package className='w-3 h-3' /> قيد التجهيز</span>
-      case 'out_for_delivery': case'delivering':
+      case 'out_for_delivery': case 'delivering':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20'><Truck className='w-3 h-3' /> مع الموصل</span>
-      case 'delivered': case'completed':
+      case 'delivered': case 'completed':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'><CheckCircle2 className='w-3 h-3' /> تم التوصيل</span>
       case 'cancelled':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20'><XCircle className='w-3 h-3' /> ملغي</span>
@@ -225,7 +168,7 @@ export default function AdminOrdersPage() {
               <tr className='border-b border-slate-800 text-slate-400 text-xs font-medium bg-slate-950/40'>
                 <th className='p-4'>رقم الطلب</th>
                 <th className='p-4'>التاجر (المشتري)</th>
-                <th className='p-4'>المورد (البائع)</th>
+                <th className='p-4'>اسم المتجر</th>
                 <th className='p-4'>المبلغ الإجمالي</th>
                 <th className='p-4'>الحالة</th>
                 <th className='p-4'>التاريخ</th>
@@ -237,23 +180,24 @@ export default function AdminOrdersPage() {
                   <tr key={order.id} className='hover:bg-slate-800/25 transition-colors'>
                     <td className='p-4 font-mono text-indigo-400'>#{order.id.slice(0, 8)}</td>
                     <td className='p-4'>
-                      <div className='font-medium text-white'>{order.retailer?.store_name || order.retailer?.full_name || 'تاجر'}</div>
-                      <div className='text-xs text-slate-500 mt-0.5'>{order.retailer?.phone || ''}</div>
+                      <div className='font-medium text-white'>{order.buyer_name || 'تاجر'}</div>
+                      <div className='text-xs text-slate-500 mt-0.5'>{order.buyer_phone || ''}</div>
                     </td>
                     <td className='p-4'>
-                      <div className='font-medium text-slate-300'>{order.supplier?.store_name || order.supplier?.full_name || 'مورد جملة'}</div>
+                      <div className='font-medium text-slate-300'>{order.buyer_store_name || '—'}</div>
                     </td>
-                    <td className='p-4 font-bold text-emerald-400'>{Number(order.total_amount).toLocaleString()} د.ع</td>
+                    <td className='p-4 font-bold text-emerald-400'>{Number(order.total).toLocaleString()} د.ع</td>
                     <td className='p-4'>{getStatusBadge(order.status)}</td>
                     <td className='p-4 text-slate-400 text-xs'>
-                      {new Date(order.created_at).toLocaleDateString('ar-IQ')}
+                      {order.placed_at ? new Date(order.placed_at).toLocaleDateString('ar-IQ') : '—'}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className='p-8 text-center text-slate-500'>
-                    لا توجد طلبات مطابقة للبحث.
+                  <td colSpan={6} className='p-12 text-center text-slate-500'>
+                    <ShoppingCart className='w-10 h-10 mx-auto mb-3 opacity-30' />
+                    <p className='text-sm'>لا توجد طلبات مطابقة للبحث</p>
                   </td>
                 </tr>
               )}

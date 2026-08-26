@@ -415,15 +415,18 @@ function SupplierOrdersTab() {
             </div>
           )}
           {filtered.map((order) => {
-            const cfg = supplierStatusConfig[order.status];
-            const next = supplierNextStatus[order.status];
+            const safeStatus: SupplierStatus = (order.status as SupplierStatus) in supplierStatusConfig
+              ? (order.status as SupplierStatus)
+              : 'pending';
+            const cfg = supplierStatusConfig[safeStatus];
+            const next = supplierNextStatus[safeStatus];
             const actionSlot = (
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-1">
                   {supplierStatusFlow.map((s, idx) => {
                     const stepCfg = supplierStatusConfig[s];
                     const StepIcon = stepCfg.icon;
-                    const currentIdx = supplierStatusFlow.indexOf(order.status);
+                    const currentIdx = supplierStatusFlow.indexOf(safeStatus);
                     const isDone = idx <= currentIdx;
                     return (
                       <React.Fragment key={s}>
@@ -439,10 +442,10 @@ function SupplierOrdersTab() {
                   })}
                 </div>
                 {next ? (
-                  <button onClick={() => advanceStatus(order.id, order.status)}
+                  <button onClick={() => advanceStatus(order.id, safeStatus)}
                     className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-xl text-sm font-arabic font-semibold hover:bg-accent/90 active:scale-95 transition-all shadow-sm">
                     {React.createElement(supplierStatusConfig[next].icon, { size: 15 })}
-                    {supplierNextLabel[order.status]}
+                    {supplierNextLabel[safeStatus]}
                   </button>
                 ) : (
                   <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm font-arabic font-semibold">

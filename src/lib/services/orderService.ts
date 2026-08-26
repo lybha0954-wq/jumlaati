@@ -49,6 +49,8 @@ export interface SupplierOrder {
   totalAmount: number;
   notes?: string;
   createdAt?: string;
+  placedAt: string;
+  paymentStatus: 'paid' | 'pending' | 'overdue';
   customer: {
     name: string;
     storeName: string;
