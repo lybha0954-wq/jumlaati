@@ -71,7 +71,7 @@ function formatPrice(n: number) {
 }
 
 function orderTotal(items: LineItem[]) {
-  return items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  return items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
 }
 
 // ─── Shared Order Row ─────────────────────────────────────────────────────────
@@ -186,17 +186,17 @@ function OrderRow({
                           <div className="w-6 h-6 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
                             <Package size={12} className="text-accent" />
                           </div>
-                          <span className="font-arabic text-foreground text-sm">{item.name}</span>
+                          <span className="font-arabic text-foreground text-sm">{item.productName}</span>
                         </div>
                       </td>
                       <td className="px-3 py-3 text-center">
-                        <span className="font-arabic text-sm text-foreground tabular-nums">{item.qty} {item.unit}</span>
+                        <span className="font-arabic text-sm text-foreground tabular-nums">{item.quantity} {item.unit}</span>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span className="font-arabic text-sm text-muted-foreground tabular-nums">{formatPrice(item.unitPrice)}</span>
                       </td>
                       <td className="px-4 py-3 text-left">
-                        <span className="font-arabic text-sm font-semibold text-foreground tabular-nums">{formatPrice(item.qty * item.unitPrice)}</span>
+                        <span className="font-arabic text-sm font-semibold text-foreground tabular-nums">{formatPrice(item.quantity * item.unitPrice)}</span>
                       </td>
                     </tr>
                   ))}

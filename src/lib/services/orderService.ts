@@ -24,6 +24,18 @@ export interface IncomingOrder {
   createdAt?: string;
   updatedAt?: string;
   deliveryAddress?: string;
+  placedAt: string;
+  paymentStatus: 'paid' | 'pending' | 'overdue';
+  buyer: {
+    name: string;
+    storeName: string;
+    phone: string;
+  };
+  delivery: {
+    city: string;
+    address: string;
+    notes?: string;
+  };
 }
 
 export interface SupplierOrder {
@@ -45,7 +57,7 @@ function mapOrder(o: Record<string, unknown>): IncomingOrder {
         id: String(i.id ?? ''),
         productId: String(i.product_id ?? ''),
         productName: String(i.product_name ?? i.name ?? ''),
-        quantity: Number(i.quantity ?? 0),
+        quantity: Number(i.quantity ?? i.qty ?? 0),
         unitPrice: Number(i.unit_price ?? i.price ?? 0),
         total: Number(i.total ?? Number(i.quantity ?? 0) * Number(i.unit_price ?? 0)),
         unit: i.unit ? String(i.unit) : undefined,
@@ -61,11 +73,23 @@ function mapOrder(o: Record<string, unknown>): IncomingOrder {
     supplierId: o.supplier_id ? String(o.supplier_id) : undefined,
     status: (o.status as IncomingOrder['status']) ?? 'pending',
     items,
-    totalAmount: Number(o.total_amount ?? o.total ?? 0),
+    totalAmount: Number(o.total_amount ?? o.total ?? o.subtotal ?? 0),
     notes: o.notes ? String(o.notes) : undefined,
     createdAt: o.created_at ? String(o.created_at) : undefined,
     updatedAt: o.updated_at ? String(o.updated_at) : undefined,
     deliveryAddress: o.delivery_address ? String(o.delivery_address) : undefined,
+    placedAt: String(o.created_at ?? o.placed_at ?? new Date().toISOString()),
+    paymentStatus: (o.payment_status as IncomingOrder['paymentStatus']) ?? 'pending',
+    buyer: {
+      name: String(o.buyer_name ?? o.retailer_name ?? ''),
+      storeName: String(o.buyer_store_name ?? o.store_name ?? ''),
+      phone: String(o.buyer_phone ?? o.retailer_phone ?? ''),
+    },
+    delivery: {
+      city: String(o.delivery_city ?? ''),
+      address: String(o.delivery_address ?? ''),
+      notes: o.delivery_notes ? String(o.delivery_notes) : undefined,
+    },
   };
 }
 

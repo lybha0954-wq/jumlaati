@@ -24,31 +24,74 @@ export default function AdminFinancePage() {
   useEffect(() => {
     async function fetchFinanceData() {
       try {
-        const { data, error } = await supabase
+        // Try v2 schema first (total_amount column)
+        const { data: v2Data, error: v2Error } = await supabase
           .from('transactions')
-          .select('id, created_at, amount, payment_method, payment_status, transaction_number')
+          .select('id, created_at, total_amount, payment_method, payment_status, transaction_number')
           .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error('Error fetching admin finance data:', error)
-          setFetchError(error.message || 'تعذّر تحميل البيانات المالية')
-          return
-        }
+        if (!v2Error && v2Data) {
+          // v2 schema: total_amount column, statuses: 'paid'/'partial'/'pending'/'overdue'/'cancelled'
+          const mapped: Transaction[] = v2Data.map((row: Record<string, unknown>) => ({
+            id: row.id as string,
+            created_at: row.created_at as string,
+            amount: Number(row.total_amount ?? 0),
+            payment_method: (row.payment_method as string) ?? 'cash',
+            payment_status: (row.payment_status as string) ?? 'pending',
+            transaction_number: (row.transaction_number as string) ?? '',
+          }))
 
-        if (data) {
-          setTransactions(data as Transaction[])
+          setTransactions(mapped)
 
           let completed = 0
           let pending = 0
-          data.forEach(entry => {
-            const amt = Number(entry.amount)
-            if (entry.payment_status === 'completed') {
+          mapped.forEach(entry => {
+            const amt = entry.amount
+            if (entry.payment_status === 'paid' || entry.payment_status === 'completed') {
               completed += amt
             } else {
               pending += amt
             }
           })
+          setTotalCompleted(completed)
+          setTotalPending(pending)
+          return
+        }
 
+        // Fallback: try legacy schema (amount column)
+        const { data: legacyData, error: legacyError } = await supabase
+          .from('transactions')
+          .select('id, created_at, amount, payment_method, payment_status, transaction_number')
+          .order('created_at', { ascending: false })
+
+        if (legacyError) {
+          console.error('Error fetching admin finance data:', legacyError)
+          setFetchError(legacyError.message || 'تعذّر تحميل البيانات المالية')
+          return
+        }
+
+        if (legacyData) {
+          const mapped: Transaction[] = legacyData.map((row: Record<string, unknown>) => ({
+            id: row.id as string,
+            created_at: row.created_at as string,
+            amount: Number(row.amount ?? 0),
+            payment_method: (row.payment_method as string) ?? 'cash',
+            payment_status: (row.payment_status as string) ?? 'pending',
+            transaction_number: (row.transaction_number as string) ?? '',
+          }))
+
+          setTransactions(mapped)
+
+          let completed = 0
+          let pending = 0
+          mapped.forEach(entry => {
+            const amt = entry.amount
+            if (entry.payment_status === 'completed' || entry.payment_status === 'paid') {
+              completed += amt
+            } else {
+              pending += amt
+            }
+          })
           setTotalCompleted(completed)
           setTotalPending(pending)
         }
@@ -176,39 +219,52 @@ export default function AdminFinancePage() {
             </thead>
             <tbody className='divide-y divide-slate-800/60 text-sm text-slate-300'>
               {transactions.length > 0 ? (
-                transactions.map((entry) => (
-                  <tr key={entry.id} className='hover:bg-slate-800/25 transition-colors'>
-                    <td className='p-4 font-mono text-indigo-400'>#{entry.transaction_number || entry.id.slice(0, 8)}</td>
-                    <td className='p-4 font-medium text-white'>
-                      {entry.payment_method === 'cash' ? 'نقداً' :
-                       entry.payment_method === 'bank_transfer' ? 'تحويل بنكي' :
-                       entry.payment_method === 'wallet' ? 'محفظة' :
-                       entry.payment_method === 'credit' ? 'ائتمان' :
-                       entry.payment_method}
-                    </td>
-                    <td className='p-4'>
-                      {entry.payment_status === 'completed' ? (
-                        <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'>
-                          مكتملة
-                        </span>
-                      ) : entry.payment_status === 'failed' ? (
-                        <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/25'>
-                          فاشلة
-                        </span>
-                      ) : (
-                        <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/25'>
-                          معلقة
-                        </span>
-                      )}
-                    </td>
-                    <td className={`p-4 font-bold ${entry.payment_status === 'completed' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                      {Number(entry.amount).toLocaleString()} د.ع
-                    </td>
-                    <td className='p-4 text-slate-400 text-xs'>
-                      {new Date(entry.created_at).toLocaleString('ar-IQ')}
-                    </td>
-                  </tr>
-                ))
+                transactions.map((entry) => {
+                  const isPaid = entry.payment_status === 'paid' || entry.payment_status === 'completed'
+                  const isFailed = entry.payment_status === 'failed' || entry.payment_status === 'cancelled'
+                  return (
+                    <tr key={entry.id} className='hover:bg-slate-800/25 transition-colors'>
+                      <td className='p-4 font-mono text-indigo-400'>#{entry.transaction_number || entry.id.slice(0, 8)}</td>
+                      <td className='p-4 font-medium text-white'>
+                        {entry.payment_method === 'cash' ? 'نقداً' :
+                         entry.payment_method === 'cod' ? 'الدفع عند الاستلام' :
+                         entry.payment_method === 'bank_transfer' ? 'تحويل بنكي' :
+                         entry.payment_method === 'wallet' ? 'محفظة' :
+                         entry.payment_method === 'credit' ? 'ائتمان' :
+                         entry.payment_method}
+                      </td>
+                      <td className='p-4'>
+                        {isPaid ? (
+                          <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'>
+                            مكتملة
+                          </span>
+                        ) : isFailed ? (
+                          <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/25'>
+                            {entry.payment_status === 'cancelled' ? 'ملغاة' : 'فاشلة'}
+                          </span>
+                        ) : entry.payment_status === 'partial' ? (
+                          <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/25'>
+                            جزئية
+                          </span>
+                        ) : entry.payment_status === 'overdue' ? (
+                          <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/25'>
+                            متأخرة
+                          </span>
+                        ) : (
+                          <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/25'>
+                            معلقة
+                          </span>
+                        )}
+                      </td>
+                      <td className={`p-4 font-bold ${isPaid ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {Number(entry.amount).toLocaleString()} د.ع
+                      </td>
+                      <td className='p-4 text-slate-400 text-xs'>
+                        {new Date(entry.created_at).toLocaleString('ar-IQ')}
+                      </td>
+                    </tr>
+                  )
+                })
               ) : (
                 <tr>
                   <td colSpan={5} className='p-8 text-center text-slate-500'>
