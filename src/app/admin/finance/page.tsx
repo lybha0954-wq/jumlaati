@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase/client';
-import { DollarSign, ArrowUpRight, ArrowDownRight, Building2 } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, Building2, RefreshCw } from 'lucide-react';
 
 interface Transaction {
   id: string
@@ -18,91 +18,118 @@ export default function AdminFinancePage() {
   const [totalPending, setTotalPending] = useState(0)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [dataSource, setDataSource] = useState<string>('')
 
-  useEffect(() => {
-    async function fetchFinanceData() {
-      try {
-        // Try transactions table (schema: amount, payment_status: pending/completed/failed)
-        const { data: txData, error: txError } = await supabase
-          .from('transactions')
-          .select('id, created_at, amount, payment_method, payment_status, transaction_number')
-          .order('created_at', { ascending: false })
-          .limit(200)
+  const fetchFinanceData = async () => {
+    setLoading(true)
+    setFetchError(null)
 
-        if (!txError && txData) {
-          const mapped: Transaction[] = txData.map((row: Record<string, unknown>) => ({
-            id: String(row.id ?? ''),
-            created_at: String(row.created_at ?? ''),
-            amount: Number(row.amount ?? row.total_amount ?? 0),
-            payment_method: String(row.payment_method ?? 'cash'),
-            payment_status: String(row.payment_status ?? 'pending'),
-            transaction_number: String(row.transaction_number ?? ''),
-          }))
+    // ── 1. Try transactions table ──────────────────────────────────────────
+    try {
+      const { data: txData, error: txError } = await supabase
+        .from('transactions')
+        .select('id, created_at, amount, payment_method, payment_status, transaction_number')
+        .order('created_at', { ascending: false })
+        .limit(200)
 
-          setTransactions(mapped)
-
-          let completed = 0
-          let pending = 0
-          mapped.forEach(entry => {
-            const amt = entry.amount
-            if (entry.payment_status === 'paid' || entry.payment_status === 'completed') {
-              completed += amt
-            } else {
-              pending += amt
-            }
-          })
-          setTotalCompleted(completed)
-          setTotalPending(pending)
-          return
-        }
-
-        // Fallback: derive financial summary from orders table
-        const { data: ordersData, error: ordersError } = await supabase
-          .from('orders')
-          .select('id, order_number, total, payment_status, payment_method, created_at')
-          .order('created_at', { ascending: false })
-          .limit(200)
-
-        if (ordersError) {
-          console.error('Error fetching admin finance data (orders fallback):', ordersError)
-          setFetchError('تعذّر تحميل البيانات المالية')
-          return
-        }
-
-        if (ordersData) {
-          const mapped: Transaction[] = ordersData.map((row: Record<string, unknown>) => ({
-            id: String(row.id ?? ''),
-            created_at: String(row.created_at ?? ''),
-            amount: Number(row.total ?? 0),
-            payment_method: String(row.payment_method ?? 'cash'),
-            payment_status: String(row.payment_status ?? 'pending'),
-            transaction_number: String(row.order_number ?? ''),
-          }))
-
-          setTransactions(mapped)
-
-          let completed = 0
-          let pending = 0
-          mapped.forEach(entry => {
-            const amt = entry.amount
-            if (entry.payment_status === 'paid' || entry.payment_status === 'completed') {
-              completed += amt
-            } else {
-              pending += amt
-            }
-          })
-          setTotalCompleted(completed)
-          setTotalPending(pending)
-        }
-      } catch (err) {
-        console.error('Error fetching admin finance data:', err)
-        setFetchError('تعذّر الاتصال بقاعدة البيانات')
-      } finally {
+      if (!txError && txData && txData.length > 0) {
+        const mapped: Transaction[] = txData.map((row: Record<string, unknown>) => ({
+          id: String(row.id ?? ''),
+          created_at: String(row.created_at ?? ''),
+          amount: Number(row.amount ?? 0),
+          payment_method: String(row.payment_method ?? 'cash'),
+          payment_status: String(row.payment_status ?? 'pending'),
+          transaction_number: String(row.transaction_number ?? ''),
+        }))
+        applyTransactions(mapped)
+        setDataSource('transactions')
         setLoading(false)
+        return
       }
+    } catch (_) {
+      // fall through to next source
     }
 
+    // ── 2. Try orders table ────────────────────────────────────────────────
+    try {
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, order_number, total, payment_status, payment_method, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      if (!ordersError && ordersData) {
+        const mapped: Transaction[] = ordersData.map((row: Record<string, unknown>) => ({
+          id: String(row.id ?? ''),
+          created_at: String(row.created_at ?? ''),
+          amount: Number(row.total ?? 0),
+          payment_method: String(row.payment_method ?? 'cash'),
+          payment_status: String(row.payment_status ?? 'pending'),
+          transaction_number: String(row.order_number ?? ''),
+        }))
+        applyTransactions(mapped)
+        setDataSource('orders')
+        setLoading(false)
+        return
+      }
+
+      if (ordersError) {
+        console.warn('Orders table blocked (RLS):', (ordersError as any).message)
+      }
+    } catch (_) {
+      // fall through to next source
+    }
+
+    // ── 3. Try ledger_entries table ────────────────────────────────────────
+    try {
+      const { data: ledgerData, error: ledgerError } = await supabase
+        .from('ledger_entries')
+        .select('id, created_at, amount, entry_type')
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      if (!ledgerError && ledgerData) {
+        const mapped: Transaction[] = ledgerData.map((row: Record<string, unknown>) => ({
+          id: String(row.id ?? ''),
+          created_at: String(row.created_at ?? ''),
+          amount: Number(row.amount ?? 0),
+          payment_method: 'cash',
+          payment_status: row.entry_type === 'payment' ? 'completed' : 'pending',
+          transaction_number: String(row.id ?? '').slice(0, 8),
+        }))
+        applyTransactions(mapped)
+        setDataSource('ledger')
+        setLoading(false)
+        return
+      }
+    } catch (_) {
+      // all sources failed
+    }
+
+    // ── All sources failed ─────────────────────────────────────────────────
+    setFetchError('تعذّر تحميل البيانات المالية. يرجى التحقق من صلاحيات المدير في قاعدة البيانات أو تطبيق ملف الهجرة الجديد.')
+    setLoading(false)
+  }
+
+  function applyTransactions(mapped: Transaction[]) {
+    setTransactions(mapped)
+    let completed = 0
+    let pending = 0
+    mapped.forEach(entry => {
+      const amt = entry.amount
+      if (entry.payment_status === 'paid' || entry.payment_status === 'completed') {
+        completed += amt
+      } else {
+        pending += amt
+      }
+    })
+    setTotalCompleted(completed)
+    setTotalPending(pending)
+  }
+
+  useEffect(() => {
     fetchFinanceData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) {
@@ -128,6 +155,13 @@ export default function AdminFinancePage() {
           </p>
         </div>
         <div className='flex items-center gap-3'>
+          <button
+            onClick={fetchFinanceData}
+            className='px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-400 hover:text-white hover:border-indigo-500/40 transition-all flex items-center gap-2 text-sm'
+          >
+            <RefreshCw className='w-4 h-4' />
+            تحديث
+          </button>
           <div className='px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium flex items-center gap-2'>
             <Building2 className='w-4 h-4' />
             حسابات المنصة المركزية
@@ -137,8 +171,19 @@ export default function AdminFinancePage() {
 
       {/* Error Banner */}
       {fetchError && (
-        <div className='bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm'>
-          ⚠️ {fetchError}
+        <div className='bg-red-500/10 border border-red-500/30 rounded-xl p-5 text-red-400 text-sm space-y-2'>
+          <p className='font-semibold'>⚠️ {fetchError}</p>
+          <p className='text-red-400/70 text-xs leading-relaxed'>
+            السبب المحتمل: سياسات RLS في Supabase تمنع المدير من قراءة جداول الطلبات والمعاملات.
+            يرجى تطبيق ملف الهجرة <span className='font-mono bg-red-500/10 px-1 rounded'>supabase/migrations/20260826_admin_rls_policies.sql</span> على قاعدة البيانات.
+          </p>
+          <button
+            onClick={fetchFinanceData}
+            className='mt-2 px-4 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition-all text-xs flex items-center gap-2'
+          >
+            <RefreshCw className='w-3 h-3' />
+            إعادة المحاولة
+          </button>
         </div>
       )}
 
@@ -201,7 +246,14 @@ export default function AdminFinancePage() {
         <div className='p-6 border-b border-slate-800/80 flex items-center justify-between'>
           <div>
             <h2 className='text-lg font-bold text-white'>سجل المعاملات المالية</h2>
-            <p className='text-slate-400 text-xs mt-0.5'>تفاصيل المعاملات المالية المسجلة في النظام</p>
+            <p className='text-slate-400 text-xs mt-0.5'>
+              تفاصيل المعاملات المالية المسجلة في النظام
+              {dataSource && (
+                <span className='mr-2 text-indigo-400/60'>
+                  ({dataSource === 'transactions' ? 'جدول المعاملات' : dataSource === 'orders' ? 'جدول الطلبات' : 'دفتر الأستاذ'})
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
@@ -229,7 +281,7 @@ export default function AdminFinancePage() {
                          entry.payment_method === 'cod' ? 'الدفع عند الاستلام' :
                          entry.payment_method === 'bank_transfer' ? 'تحويل بنكي' :
                          entry.payment_method === 'wallet' ? 'محفظة' :
-                         entry.payment_method === 'credit'? 'ائتمان' : entry.payment_method ||'نقداً'}
+                         entry.payment_method === 'credit' ? 'ائتمان' : entry.payment_method || 'نقداً'}
                       </td>
                       <td className='p-4'>
                         {isPaid ? (

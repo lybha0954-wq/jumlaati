@@ -133,7 +133,7 @@ function ProductDetailModal({ group, onClose, onAddToCart, getCartItem, onUpdate
             <div>
               <p className="text-xs font-arabic font-semibold text-muted-foreground mb-2">{group.offers.length} موردين نشطين — اختر الأفضل:</p>
               <div className="space-y-2">
-                {group.offers.sort((a, b) => a.finalPrice - b.finalPrice).map((offer, idx) => (
+                {group.offers.sort((a, b) => (a.finalPrice ?? 0) - (b.finalPrice ?? 0)).map((offer, idx) => (
                   <button
                     key={offer.id}
                     onClick={() => setSelectedOffer(offer)}
@@ -151,7 +151,7 @@ function ProductDetailModal({ group, onClose, onAddToCart, getCartItem, onUpdate
                       </div>
                     </div>
                     <div className="text-left flex-shrink-0">
-                      <p className="font-arabic font-bold text-base text-foreground tabular-nums">{offer.finalPrice.toLocaleString('ar-IQ')}</p>
+                      <p className="font-arabic font-bold text-base text-foreground tabular-nums">{(offer.finalPrice ?? 0).toLocaleString('ar-IQ')}</p>
                       <p className="text-xs text-muted-foreground font-arabic">د.ع</p>
                     </div>
                     {selectedOffer.id === offer.id && <CheckCircle2 size={16} className="text-primary flex-shrink-0" />}
@@ -166,15 +166,15 @@ function ProductDetailModal({ group, onClose, onAddToCart, getCartItem, onUpdate
         <div className="px-5 pb-5 pt-3 border-t border-border flex-shrink-0">
           {cartItem ? (
             <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3">
-              <button onClick={() => onUpdateQty(selectedOffer.id, -selectedOffer.minOrderQty, selectedOffer.minOrderQty)}
+              <button onClick={() => onUpdateQty(selectedOffer.id, -(selectedOffer.minOrderQty ?? 1), selectedOffer.minOrderQty ?? 1)}
                 className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center hover:bg-red-50 active:scale-95 transition-all">
-                {cartItem.quantity <= selectedOffer.minOrderQty ? <Trash2 size={14} className="text-red-500" /> : <Minus size={14} />}
+                {cartItem.quantity <= (selectedOffer.minOrderQty ?? 1) ? <Trash2 size={14} className="text-red-500" /> : <Minus size={14} />}
               </button>
               <div className="text-center">
                 <span className="font-arabic text-xl font-bold text-primary tabular-nums">{cartItem.quantity}</span>
                 <p className="font-arabic text-xs text-muted-foreground">{group.unit} في السلة</p>
               </div>
-              <button onClick={() => onUpdateQty(selectedOffer.id, selectedOffer.minOrderQty, selectedOffer.minOrderQty)}
+              <button onClick={() => onUpdateQty(selectedOffer.id, selectedOffer.minOrderQty ?? 1, selectedOffer.minOrderQty ?? 1)}
                 className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all">
                 <Plus size={14} className="text-white" />
               </button>
@@ -674,7 +674,7 @@ export default function ProductBrowseContent() {
                   <span className="bg-blue-100 text-blue-600 text-xs font-bold rounded-xl px-2.5 py-1 font-arabic">{group.offers.length} موردين</span>
                 </div>
                 <div className="divide-y divide-border">
-                  {group.offers.sort((a, b) => a.finalPrice - b.finalPrice).map((offer, idx) => {
+                  {group.offers.sort((a, b) => (a.finalPrice ?? 0) - (b.finalPrice ?? 0)).map((offer, idx) => {
                     const cartItem = getCartItem(offer.id);
                     return (
                       <div key={offer.id} className={`flex items-center gap-3 px-4 py-3 ${idx === 0 ? 'bg-emerald-50/50' : ''}`}>
@@ -693,7 +693,7 @@ export default function ProductBrowseContent() {
                           </div>
                         </div>
                         <div className="text-left flex-shrink-0">
-                          <p className="font-arabic font-bold text-sm text-foreground tabular-nums">{offer.finalPrice.toLocaleString('ar-IQ')}</p>
+                          <p className="font-arabic font-bold text-sm text-foreground tabular-nums">{(offer.finalPrice ?? 0).toLocaleString('ar-IQ')}</p>
                           <p className="text-[10px] text-muted-foreground font-arabic">د.ع</p>
                         </div>
                         <div className="flex-shrink-0">
