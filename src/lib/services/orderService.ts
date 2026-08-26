@@ -17,7 +17,7 @@ export interface IncomingOrder {
   retailerName?: string;
   retailerPhone?: string;
   supplierId?: string;
-  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'delivering' | 'assigned' | 'completed' | 'cancelled';
   items: LineItem[];
   totalAmount: number;
   notes?: string;
@@ -44,7 +44,7 @@ export interface SupplierOrder {
   supplierId: string;
   supplierName?: string;
   retailerId?: string;
-  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'delivering' | 'assigned' | 'completed' | 'cancelled';
   items: LineItem[];
   totalAmount: number;
   notes?: string;

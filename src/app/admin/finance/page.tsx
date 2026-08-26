@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { createClient } from '../../../lib/supabase/client';
+import { supabase } from '../../../lib/supabase/client';
 import { DollarSign, ArrowUpRight, ArrowDownRight, Building2 } from 'lucide-react';
 
 interface Transaction {
@@ -12,8 +12,6 @@ interface Transaction {
   transaction_number: string
 }
 
-const supabase = createClient();
-
 export default function AdminFinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [totalCompleted, setTotalCompleted] = useState(0)
@@ -24,21 +22,21 @@ export default function AdminFinancePage() {
   useEffect(() => {
     async function fetchFinanceData() {
       try {
-        // Try v2 schema first (total_amount column)
-        const { data: v2Data, error: v2Error } = await supabase
+        // Try transactions table (schema: amount, payment_status: pending/completed/failed)
+        const { data: txData, error: txError } = await supabase
           .from('transactions')
-          .select('id, created_at, total_amount, payment_method, payment_status, transaction_number')
+          .select('id, created_at, amount, payment_method, payment_status, transaction_number')
           .order('created_at', { ascending: false })
+          .limit(200)
 
-        if (!v2Error && v2Data) {
-          // v2 schema: total_amount column, statuses: 'paid'/'partial'/'pending'/'overdue'/'cancelled'
-          const mapped: Transaction[] = v2Data.map((row: Record<string, unknown>) => ({
-            id: row.id as string,
-            created_at: row.created_at as string,
-            amount: Number(row.total_amount ?? 0),
-            payment_method: (row.payment_method as string) ?? 'cash',
-            payment_status: (row.payment_status as string) ?? 'pending',
-            transaction_number: (row.transaction_number as string) ?? '',
+        if (!txError && txData) {
+          const mapped: Transaction[] = txData.map((row: Record<string, unknown>) => ({
+            id: String(row.id ?? ''),
+            created_at: String(row.created_at ?? ''),
+            amount: Number(row.amount ?? row.total_amount ?? 0),
+            payment_method: String(row.payment_method ?? 'cash'),
+            payment_status: String(row.payment_status ?? 'pending'),
+            transaction_number: String(row.transaction_number ?? ''),
           }))
 
           setTransactions(mapped)
@@ -58,26 +56,27 @@ export default function AdminFinancePage() {
           return
         }
 
-        // Fallback: try legacy schema (amount column)
-        const { data: legacyData, error: legacyError } = await supabase
-          .from('transactions')
-          .select('id, created_at, amount, payment_method, payment_status, transaction_number')
+        // Fallback: derive financial summary from orders table
+        const { data: ordersData, error: ordersError } = await supabase
+          .from('orders')
+          .select('id, order_number, total, payment_status, payment_method, created_at')
           .order('created_at', { ascending: false })
+          .limit(200)
 
-        if (legacyError) {
-          console.error('Error fetching admin finance data:', legacyError)
-          setFetchError(legacyError.message || 'تعذّر تحميل البيانات المالية')
+        if (ordersError) {
+          console.error('Error fetching admin finance data (orders fallback):', ordersError)
+          setFetchError('تعذّر تحميل البيانات المالية')
           return
         }
 
-        if (legacyData) {
-          const mapped: Transaction[] = legacyData.map((row: Record<string, unknown>) => ({
-            id: row.id as string,
-            created_at: row.created_at as string,
-            amount: Number(row.amount ?? 0),
-            payment_method: (row.payment_method as string) ?? 'cash',
-            payment_status: (row.payment_status as string) ?? 'pending',
-            transaction_number: (row.transaction_number as string) ?? '',
+        if (ordersData) {
+          const mapped: Transaction[] = ordersData.map((row: Record<string, unknown>) => ({
+            id: String(row.id ?? ''),
+            created_at: String(row.created_at ?? ''),
+            amount: Number(row.total ?? 0),
+            payment_method: String(row.payment_method ?? 'cash'),
+            payment_status: String(row.payment_status ?? 'pending'),
+            transaction_number: String(row.order_number ?? ''),
           }))
 
           setTransactions(mapped)
@@ -86,7 +85,7 @@ export default function AdminFinancePage() {
           let pending = 0
           mapped.forEach(entry => {
             const amt = entry.amount
-            if (entry.payment_status === 'completed' || entry.payment_status === 'paid') {
+            if (entry.payment_status === 'paid' || entry.payment_status === 'completed') {
               completed += amt
             } else {
               pending += amt
@@ -230,8 +229,7 @@ export default function AdminFinancePage() {
                          entry.payment_method === 'cod' ? 'الدفع عند الاستلام' :
                          entry.payment_method === 'bank_transfer' ? 'تحويل بنكي' :
                          entry.payment_method === 'wallet' ? 'محفظة' :
-                         entry.payment_method === 'credit' ? 'ائتمان' :
-                         entry.payment_method}
+                         entry.payment_method === 'credit'? 'ائتمان' : entry.payment_method ||'نقداً'}
                       </td>
                       <td className='p-4'>
                         {isPaid ? (
@@ -256,19 +254,21 @@ export default function AdminFinancePage() {
                           </span>
                         )}
                       </td>
-                      <td className={`p-4 font-bold ${isPaid ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {Number(entry.amount).toLocaleString()} د.ع
-                      </td>
+                      <td className='p-4 font-bold text-white'>{entry.amount.toLocaleString()} د.ع</td>
                       <td className='p-4 text-slate-400 text-xs'>
-                        {new Date(entry.created_at).toLocaleString('ar-IQ')}
+                        {entry.created_at ? new Date(entry.created_at).toLocaleDateString('ar-IQ', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                          hour: '2-digit', minute: '2-digit'
+                        }) : '—'}
                       </td>
                     </tr>
                   )
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className='p-8 text-center text-slate-500'>
-                    لا توجد معاملات مالية مسجلة حتى الآن.
+                  <td colSpan={5} className='p-12 text-center text-slate-500'>
+                    <DollarSign className='w-10 h-10 mx-auto mb-3 opacity-30' />
+                    <p className='text-sm'>لا توجد معاملات مالية مسجلة بعد</p>
                   </td>
                 </tr>
               )}

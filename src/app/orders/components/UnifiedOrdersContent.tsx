@@ -304,7 +304,7 @@ function IncomingOrdersTab() {
             </div>
           )}
           {filtered.map((order) => {
-            const cfg = incomingStatusConfig[order.status];
+            const cfg = incomingStatusConfig[order.status as IncomingStatus] ?? incomingStatusConfig['reviewing'];
             return (
               <OrderRow key={order.id} id={order.id} orderNumber={order.orderNumber}
                 placedAt={new Date(order.placedAt).toLocaleString('ar-IQ')}
