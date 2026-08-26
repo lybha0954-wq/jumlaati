@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '../../../lib/supabase/client';
 import { ShoppingCart, Clock, CheckCircle2, Truck, XCircle, Search, Package } from 'lucide-react';
 
+const supabase = createClient();
+
 interface AdminOrder {
   id: string
   created_at: string
@@ -27,7 +29,6 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchOrders() {
@@ -97,7 +98,7 @@ export default function AdminOrdersPage() {
     }
 
     fetchOrders()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     let result = orders

@@ -44,11 +44,21 @@ export interface SupplierOrder {
   supplierId: string;
   supplierName?: string;
   retailerId?: string;
-  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'delivering' | 'assigned' | 'completed' | 'cancelled';
+  status: 'pending' | 'reviewing' | 'processing' | 'ready' | 'shipped' | 'delivered' | 'delivering' | 'assigned' | 'completed' | 'cancelled';
   items: LineItem[];
   totalAmount: number;
   notes?: string;
   createdAt?: string;
+  customer: {
+    name: string;
+    storeName: string;
+    phone: string;
+  };
+  delivery: {
+    city: string;
+    address: string;
+    notes?: string;
+  };
 }
 
 function mapOrder(o: Record<string, unknown>): IncomingOrder {
@@ -114,11 +124,24 @@ export const orderService = {
         .select('*, order_items(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []).map((o) => ({
-        ...mapOrder(o),
-        supplierId: String(o.supplier_id ?? ''),
-        supplierName: o.supplier_name ? String(o.supplier_name) : undefined,
-      })) as SupplierOrder[];
+      return (data || []).map((o) => {
+        const mapped = mapOrder(o);
+        return {
+          ...mapped,
+          supplierId: String(o.supplier_id ?? ''),
+          supplierName: o.supplier_name ? String(o.supplier_name) : undefined,
+          customer: {
+            name: String(o.buyer_name ?? o.retailer_name ?? ''),
+            storeName: String(o.buyer_store_name ?? o.store_name ?? ''),
+            phone: String(o.buyer_phone ?? o.retailer_phone ?? ''),
+          },
+          delivery: {
+            city: String(o.delivery_city ?? ''),
+            address: String(o.delivery_address ?? ''),
+            notes: o.delivery_notes ? String(o.delivery_notes) : undefined,
+          },
+        } as SupplierOrder;
+      });
     } catch {
       return [];
     }
@@ -152,6 +175,10 @@ export const orderService = {
 
   async updateIncomingOrderStatus(id: string, status: IncomingOrder['status']): Promise<boolean> {
     return orderService.updateOrderStatus(id, status);
+  },
+
+  async updateSupplierOrderStatus(id: string, status: SupplierOrder['status']): Promise<boolean> {
+    return orderService.updateOrderStatus(id, status as IncomingOrder['status']);
   },
 
   async createOrder(order: Partial<IncomingOrder>): Promise<IncomingOrder | null> {
