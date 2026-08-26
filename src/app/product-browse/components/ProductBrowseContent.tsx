@@ -307,11 +307,11 @@ export default function ProductBrowseContent() {
           ...p,
           supplierId: p.supplierId ?? '',
           supplierName: p.supplierName ?? 'مورد غير محدد',
-          supplierRating: p.supplierRating ?? 4.5,
-          deliveryDays: p.deliveryDays ?? 1,
+          supplierRating: (p as any).supplierRating ?? 4.5,
+          deliveryDays: (p as any).deliveryDays ?? 1,
         })) as SupplierProduct[];
       setAllProducts(shopProducts);
-      const max = Math.max(...shopProducts.map((p) => p.finalPrice), 0);
+      const max = Math.max(...shopProducts.map((p) => p.finalPrice ?? 0), 0);
       setMaxPrice(max || 999999);
       setPriceRange(max || 999999);
     } catch { } finally { setLoading(false); }
@@ -343,7 +343,7 @@ export default function ProductBrowseContent() {
 
   const filtered = useMemo(() => {
     return allProducts.filter((p) => {
-      const matchSearch = !search || p.name.includes(search) || p.barcode.includes(search) || p.category.includes(search);
+      const matchSearch = !search || p.name.includes(search) || (p.barcode ?? '').includes(search) || (p.category ?? '').includes(search);
       const matchCat = categoryFilter === 'الكل' || p.category === categoryFilter;
       const matchSup = supplierFilter === 'الكل' || p.supplierId === supplierFilter;
       const matchPrice = p.finalPrice <= priceRange;

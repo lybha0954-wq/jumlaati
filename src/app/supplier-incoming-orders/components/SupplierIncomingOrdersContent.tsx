@@ -189,21 +189,30 @@ export default function SupplierIncomingOrdersContent() {
   const advanceStatus = (orderId: string) => {
     setAdvancingId(orderId);
     setTimeout(() => {
+      // Find the order and its config BEFORE calling setOrders
+      const order = orders.find((o) => o.id === orderId);
+      if (!order) { setAdvancingId(null); return; }
+      const cfg = statusConfig[order.status];
+      if (!cfg.nextStatus) { setAdvancingId(null); return; }
+
+      // Perform side effects OUTSIDE the setOrders updater
+      showToast(cfg.toastMsg, 'success');
+      if (cfg.nextStatus === 'shipped') {
+        const itemsList = order.items.map((item, idx) => `${idx + 1}. ${item.name} (${item.qty} ${item.unit})`).join('\n');
+        const totalAmount = orderTotal(order.items);
+        const message = `مرحباً ${order.customer.name} (${order.customer.storeName}) 👋\n\nنود إعلامكم بأنه تم شحن طلبكم رقم: *${order.orderNumber}* 🚚\n\n📦 *تفاصيل المنتجات:* \n${itemsList}\n\n💰 *الإجمالي الكلي:* ${fmt(totalAmount)}\n\nشكراً لتعاملكم مع منصة جملتي.`;
+        const cleanPhone = order.customer.phone.startsWith('0') ? '964' + order.customer.phone.slice(1) : order.customer.phone;
+        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+
+      // Pure state update with no side effects inside
       setOrders((prev) =>
         prev.map((o) => {
           if (o.id !== orderId) return o;
-          const cfg = statusConfig[o.status];
-          if (cfg.nextStatus) {
-            showToast('success', cfg.toastMsg, o.customer.storeName, 3000);
-            if (cfg.nextStatus === 'shipped') {
-              const itemsList = o.items.map((item, idx) => `${idx + 1}. ${item.name} (${item.qty} ${item.unit})`).join('\n');
-              const totalAmount = orderTotal(o.items);
-              const message = `مرحباً ${o.customer.name} (${o.customer.storeName}) 👋\n\nنود إعلامكم بأنه تم شحن طلبكم رقم: *${o.orderNumber}* 🚚\n\n📦 *تفاصيل المنتجات:* \n${itemsList}\n\n💰 *الإجمالي الكلي:* ${fmt(totalAmount)}\n\nشكراً لتعاملكم مع منصة جملتي.`;
-              const cleanPhone = o.customer.phone.startsWith('0') ? '964' + o.customer.phone.slice(1) : o.customer.phone;
-              const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-              window.open(whatsappUrl, '_blank');
-            }
-            return { ...o, status: cfg.nextStatus };
+          const c = statusConfig[o.status];
+          if (c.nextStatus) {
+            return { ...o, status: c.nextStatus };
           }
           return o;
         })
