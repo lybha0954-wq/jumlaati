@@ -1,19 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { 
-  Users, 
-  Shield, 
-  Store, 
-  Truck, 
-  UserCheck, 
-  Phone, 
-  MapPin, 
-  Search,
-  CheckCircle,
-  XCircle
-} from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { Users, Shield, Store, Truck, UserCheck, Phone, MapPin, Search } from 'lucide-react';
 
 interface UserProfile {
   id: string
@@ -25,13 +13,14 @@ interface UserProfile {
   created_at: string
 }
 
+const supabase = createClient();
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState<string>('all')
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchUsers() {
@@ -55,7 +44,7 @@ export default function AdminUsersPage() {
     }
 
     fetchUsers()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     let result = users
@@ -139,9 +128,7 @@ export default function AdminUsersPage() {
           <button
             onClick={() => setSelectedRole('all')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedRole === 'all'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedRole === 'all' ?'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             الكل
@@ -149,9 +136,7 @@ export default function AdminUsersPage() {
           <button
             onClick={() => setSelectedRole('supplier')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedRole === 'supplier'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedRole === 'supplier' ?'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             الموردين
@@ -159,9 +144,7 @@ export default function AdminUsersPage() {
           <button
             onClick={() => setSelectedRole('retailer')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedRole === 'retailer'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedRole === 'retailer' ?'bg-blue-600 text-white shadow-lg shadow-blue-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             التجار
@@ -169,9 +152,7 @@ export default function AdminUsersPage() {
           <button
             onClick={() => setSelectedRole('courier')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedRole === 'courier'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+              selectedRole === 'courier' ?'bg-purple-600 text-white shadow-lg shadow-purple-600/20' :'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
             الموصلين

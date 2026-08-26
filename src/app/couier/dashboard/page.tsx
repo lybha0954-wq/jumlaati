@@ -1,16 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { 
-  Truck, 
-  Package, 
-  CheckCircle2, 
-  Clock, 
-  MapPin, 
-  ArrowUpRight,
-  Navigation
-} from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { Truck, Package, CheckCircle2, Clock, Navigation } from 'lucide-react';
 
 interface CourierStats {
   assignedTasks: number

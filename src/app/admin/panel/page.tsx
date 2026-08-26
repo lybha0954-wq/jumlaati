@@ -1,7 +1,6 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
 import { 
   ShieldAlert, 
   Users, 
@@ -12,7 +11,7 @@ import {
   CheckCircle2,
   Clock,
   UserCheck
-} from 'lucide-react'
+} from 'lucide-react';
 
 interface AdminStats {
   totalUsers: number

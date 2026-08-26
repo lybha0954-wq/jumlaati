@@ -1,8 +1,7 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { ShoppingBag, Clock, Package, CheckCircle2, Truck } from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '../../../lib/supabase/client';
+import { ShoppingBag, Clock, Package, CheckCircle2, Truck } from 'lucide-react';
 
 interface SupplierOrder {
   id: string

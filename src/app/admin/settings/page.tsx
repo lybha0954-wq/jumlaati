@@ -1,8 +1,7 @@
-'use client'
+'use client';
+import React, { useState } from 'react';
 
-import React, { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { Settings, Shield, Bell, Database, Save, CheckCircle2 } from 'lucide-react'
+import { Settings, Save, CheckCircle2 } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const [platformName, setPlatformName] = useState('منصة جملتي')

@@ -1,35 +1,17 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { 
-  ShoppingCart, 
-  Clock, 
-  CheckCircle2, 
-  Truck, 
-  XCircle, 
-  Search, 
-  DollarSign,
-  Package,
-  MapPin,
-  Phone,
-  Store
-} from 'lucide-react'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../../../lib/supabase/client';
+import { ShoppingCart, Clock, CheckCircle2, Truck, XCircle, Search, Package } from 'lucide-react';
 
 interface AdminOrder {
   id: string
-  created_at: string
+  placed_at: string
   status: string
-  total_amount: number
-  supplier: {
-    full_name: string
-    store_name: string
-  }
-  retailer: {
-    full_name: string
-    store_name: string
-    phone: string
-  }
+  total: number
+  store_id: string | null
+  buyer_name: string
+  buyer_store_name: string
+  buyer_phone: string
 }
 
 export default function AdminOrdersPage() {
@@ -38,29 +20,19 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const { data, error } = await supabase
+        const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
-          .select(`
-            id,
-            created_at,
-            status,
-            total_amount,
-            supplier:user_profiles!orders_supplier_id_fkey(full_name, store_name),
-            retailer:user_profiles!orders_retailer_id_fkey(full_name, store_name, phone)
-          `)
-          .order('created_at', { ascending: false })
+          .select('id, placed_at, status, total, store_id, buyer_name, buyer_store_name, buyer_phone')
+          .order('placed_at', { ascending: false })
 
-        if (error) throw error
+        if (ordersError) throw ordersError
 
-        if (data) {
-          setOrders(data as unknown as AdminOrder[])
-          setFilteredOrders(data as unknown as AdminOrder[])
-        }
+        setOrders(ordersData || [])
+        setFilteredOrders(ordersData || [])
       } catch (error) {
         console.error('Error fetching admin orders:', error)
       } finally {
@@ -69,7 +41,7 @@ export default function AdminOrdersPage() {
     }
 
     fetchOrders()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     let result = orders
@@ -80,11 +52,11 @@ export default function AdminOrdersPage() {
 
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase()
-      result = result.filter(order => 
+      result = result.filter(order =>
         order.id.toLowerCase().includes(term) ||
-        (order.retailer?.store_name && order.retailer.store_name.toLowerCase().includes(term)) ||
-        (order.supplier?.store_name && order.supplier.store_name.toLowerCase().includes(term)) ||
-        (order.retailer?.phone && order.retailer.phone.includes(term))
+        (order.buyer_store_name && order.buyer_store_name.toLowerCase().includes(term)) ||
+        (order.buyer_name && order.buyer_name.toLowerCase().includes(term)) ||
+        (order.buyer_phone && order.buyer_phone.includes(term))
       )
     }
 
@@ -95,11 +67,13 @@ export default function AdminOrdersPage() {
     switch (status) {
       case 'pending':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20'><Clock className='w-3 h-3' /> قيد الانتظار</span>
-      case 'processing':
+      case 'reviewing':
+        return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20'><Clock className='w-3 h-3' /> قيد المراجعة</span>
+      case 'processing': case 'assigned':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20'><Package className='w-3 h-3' /> قيد التجهيز</span>
-      case 'out_for_delivery':
+      case 'out_for_delivery': case 'delivering':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20'><Truck className='w-3 h-3' /> مع الموصل</span>
-      case 'delivered':
+      case 'delivered': case 'completed':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'><CheckCircle2 className='w-3 h-3' /> تم التوصيل</span>
       case 'cancelled':
         return <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20'><XCircle className='w-3 h-3' /> ملغي</span>
@@ -152,46 +126,37 @@ export default function AdminOrdersPage() {
 
         {/* Status Filters */}
         <div className='flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0'>
-          <button
-            onClick={() => setSelectedStatus('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'all'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
-            }`}
-          >
-            الكل
-          </button>
-          <button
-            onClick={() => setSelectedStatus('pending')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'pending'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
-            }`}
-          >
-            قيد الانتظار
-          </button>
-          <button
-            onClick={() => setSelectedStatus('processing')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'processing'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
-            }`}
-          >
-            قيد التجهيز
-          </button>
-          <button
-            onClick={() => setSelectedStatus('delivered')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              selectedStatus === 'delivered'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
-            }`}
-          >
-            تم التوصيل
-          </button>
+          {['all', 'pending', 'reviewing', 'processing', 'delivered', 'cancelled'].map((status) => {
+            const labels: Record<string, string> = {
+              all: 'الكل',
+              pending: 'قيد الانتظار',
+              reviewing: 'قيد المراجعة',
+              processing: 'قيد التجهيز',
+              delivered: 'تم التوصيل',
+              cancelled: 'ملغي',
+            }
+            const activeColors: Record<string, string> = {
+              all: 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20',
+              pending: 'bg-amber-600 text-white shadow-lg shadow-amber-600/20',
+              reviewing: 'bg-amber-600 text-white shadow-lg shadow-amber-600/20',
+              processing: 'bg-blue-600 text-white shadow-lg shadow-blue-600/20',
+              delivered: 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20',
+              cancelled: 'bg-red-600 text-white shadow-lg shadow-red-600/20',
+            }
+            return (
+              <button
+                key={status}
+                onClick={() => setSelectedStatus(status)}
+                className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
+                  selectedStatus === status
+                    ? activeColors[status]
+                    : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-white'
+                }`}
+              >
+                {labels[status]}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -203,7 +168,7 @@ export default function AdminOrdersPage() {
               <tr className='border-b border-slate-800 text-slate-400 text-xs font-medium bg-slate-950/40'>
                 <th className='p-4'>رقم الطلب</th>
                 <th className='p-4'>التاجر (المشتري)</th>
-                <th className='p-4'>المورد (البائع)</th>
+                <th className='p-4'>اسم المتجر</th>
                 <th className='p-4'>المبلغ الإجمالي</th>
                 <th className='p-4'>الحالة</th>
                 <th className='p-4'>التاريخ</th>
@@ -211,32 +176,28 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody className='divide-y divide-slate-800/60 text-sm text-slate-300'>
               {filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => {
-                  const retailerObj = Array.isArray(order.retailer) ? order.retailer[0] : order.retailer
-                  const supplierObj = Array.isArray(order.supplier) ? order.supplier[0] : order.supplier
-
-                  return (
-                    <tr key={order.id} className='hover:bg-slate-800/25 transition-colors'>
-                      <td className='p-4 font-mono text-indigo-400'>#{order.id.slice(0, 8)}</td>
-                      <td className='p-4'>
-                        <div className='font-medium text-white'>{retailerObj?.store_name || retailerObj?.full_name || 'تاجر'}</div>
-                        <div className='text-xs text-slate-500 mt-0.5'>{retailerObj?.phone || ''}</div>
-                      </td>
-                      <td className='p-4'>
-                        <div className='font-medium text-slate-300'>{supplierObj?.store_name || supplierObj?.full_name || 'مورد جملة'}</div>
-                      </td>
-                      <td className='p-4 font-bold text-emerald-400'>{Number(order.total_amount).toLocaleString()} د.ع</td>
-                      <td className='p-4'>{getStatusBadge(order.status)}</td>
-                      <td className='p-4 text-slate-400 text-xs'>
-                        {new Date(order.created_at).toLocaleDateString('ar-IQ')}
-                      </td>
-                    </tr>
-                  )
-                })
+                filteredOrders.map((order) => (
+                  <tr key={order.id} className='hover:bg-slate-800/25 transition-colors'>
+                    <td className='p-4 font-mono text-indigo-400'>#{order.id.slice(0, 8)}</td>
+                    <td className='p-4'>
+                      <div className='font-medium text-white'>{order.buyer_name || 'تاجر'}</div>
+                      <div className='text-xs text-slate-500 mt-0.5'>{order.buyer_phone || ''}</div>
+                    </td>
+                    <td className='p-4'>
+                      <div className='font-medium text-slate-300'>{order.buyer_store_name || '—'}</div>
+                    </td>
+                    <td className='p-4 font-bold text-emerald-400'>{Number(order.total).toLocaleString()} د.ع</td>
+                    <td className='p-4'>{getStatusBadge(order.status)}</td>
+                    <td className='p-4 text-slate-400 text-xs'>
+                      {order.placed_at ? new Date(order.placed_at).toLocaleDateString('ar-IQ') : '—'}
+                    </td>
+                  </tr>
+                ))
               ) : (
                 <tr>
-                  <td colSpan={6} className='p-8 text-center text-slate-500'>
-                    لا توجد طلبات مطابقة للبحث.
+                  <td colSpan={6} className='p-12 text-center text-slate-500'>
+                    <ShoppingCart className='w-10 h-10 mx-auto mb-3 opacity-30' />
+                    <p className='text-sm'>لا توجد طلبات مطابقة للبحث</p>
                   </td>
                 </tr>
               )}
