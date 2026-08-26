@@ -214,11 +214,11 @@ function BarcodeScannerModal({ onClose, onFound, allProducts }: {
       if (found) {
         const group: ProductGroup = {
           name: found.name,
-          category: found.category,
-          unit: found.unit,
+          category: found.category ?? '',
+          unit: found.unit ?? '',
           offers: [found],
-          bestPrice: found.finalPrice,
-          highestPrice: found.finalPrice,
+          bestPrice: found.finalPrice ?? 0,
+          highestPrice: found.finalPrice ?? 0,
         };
         onFound(group);
       } else {

@@ -5,10 +5,11 @@ import { ShoppingCart, Clock, CheckCircle2, Truck, XCircle, Search, Package } fr
 
 interface AdminOrder {
   id: string
-  placed_at: string
+  created_at: string
   status: string
   total: number
-  store_id: string | null
+  order_number: string
+  retailer_id: string | null
   buyer_name: string
   buyer_store_name: string
   buyer_phone: string
@@ -18,6 +19,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [filteredOrders, setFilteredOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
 
@@ -26,15 +28,40 @@ export default function AdminOrdersPage() {
       try {
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
-          .select('id, placed_at, status, total, store_id, buyer_name, buyer_store_name, buyer_phone')
-          .order('placed_at', { ascending: false })
+          .select(`
+            id,
+            order_number,
+            created_at,
+            status,
+            total,
+            retailer_id,
+            retailer:user_profiles!orders_retailer_id_fkey (
+              full_name,
+              phone,
+              business_name
+            )
+          `)
+          .order('created_at', { ascending: false })
 
         if (ordersError) throw ordersError
 
-        setOrders(ordersData || [])
-        setFilteredOrders(ordersData || [])
-      } catch (error) {
-        console.error('Error fetching admin orders:', error)
+        const mapped: AdminOrder[] = (ordersData || []).map((o: any) => ({
+          id: o.id,
+          order_number: o.order_number || o.id,
+          created_at: o.created_at,
+          status: o.status,
+          total: o.total,
+          retailer_id: o.retailer_id,
+          buyer_name: o.retailer?.full_name || 'تاجر',
+          buyer_store_name: o.retailer?.business_name || '—',
+          buyer_phone: o.retailer?.phone || '',
+        }))
+
+        setOrders(mapped)
+        setFilteredOrders(mapped)
+      } catch (err: any) {
+        console.error('Error fetching admin orders:', err)
+        setError('تعذّر تحميل الطلبات. تحقق من صلاحيات RLS أو اتصال الشبكة.')
       } finally {
         setLoading(false)
       }
@@ -54,6 +81,7 @@ export default function AdminOrdersPage() {
       const term = searchTerm.toLowerCase()
       result = result.filter(order =>
         order.id.toLowerCase().includes(term) ||
+        order.order_number.toLowerCase().includes(term) ||
         (order.buyer_store_name && order.buyer_store_name.toLowerCase().includes(term)) ||
         (order.buyer_name && order.buyer_name.toLowerCase().includes(term)) ||
         (order.buyer_phone && order.buyer_phone.includes(term))
@@ -110,6 +138,19 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className='bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm flex items-center justify-between'>
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); setLoading(true); window.location.reload(); }}
+            className='px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-xs transition-colors'
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      )}
+
       {/* Filters & Search Toolbar */}
       <div className='bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-4'>
         {/* Search Input */}
@@ -117,7 +158,7 @@ export default function AdminOrdersPage() {
           <Search className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
           <input
             type='text'
-            placeholder='بحث برقم الطلب، اسم المتجر، المورد أو الهاتف...'
+            placeholder='بحث برقم الطلب، اسم المتجر، التاجر أو الهاتف...'
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className='w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors'
@@ -126,21 +167,21 @@ export default function AdminOrdersPage() {
 
         {/* Status Filters */}
         <div className='flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0'>
-          {['all', 'pending', 'reviewing', 'processing', 'delivered', 'cancelled'].map((status) => {
+          {['all', 'reviewing', 'assigned', 'delivering', 'completed', 'cancelled'].map((status) => {
             const labels: Record<string, string> = {
               all: 'الكل',
-              pending: 'قيد الانتظار',
               reviewing: 'قيد المراجعة',
-              processing: 'قيد التجهيز',
-              delivered: 'تم التوصيل',
+              assigned: 'قيد التجهيز',
+              delivering: 'مع الموصل',
+              completed: 'مكتمل',
               cancelled: 'ملغي',
             }
             const activeColors: Record<string, string> = {
               all: 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20',
-              pending: 'bg-amber-600 text-white shadow-lg shadow-amber-600/20',
               reviewing: 'bg-amber-600 text-white shadow-lg shadow-amber-600/20',
-              processing: 'bg-blue-600 text-white shadow-lg shadow-blue-600/20',
-              delivered: 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20',
+              assigned: 'bg-blue-600 text-white shadow-lg shadow-blue-600/20',
+              delivering: 'bg-purple-600 text-white shadow-lg shadow-purple-600/20',
+              completed: 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20',
               cancelled: 'bg-red-600 text-white shadow-lg shadow-red-600/20',
             }
             return (
@@ -178,18 +219,18 @@ export default function AdminOrdersPage() {
               {filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
                   <tr key={order.id} className='hover:bg-slate-800/25 transition-colors'>
-                    <td className='p-4 font-mono text-indigo-400'>#{order.id.slice(0, 8)}</td>
+                    <td className='p-4 font-mono text-indigo-400'>#{order.order_number?.slice(0, 8) || order.id.slice(0, 8)}</td>
                     <td className='p-4'>
-                      <div className='font-medium text-white'>{order.buyer_name || 'تاجر'}</div>
-                      <div className='text-xs text-slate-500 mt-0.5'>{order.buyer_phone || ''}</div>
+                      <div className='font-medium text-white'>{order.buyer_name}</div>
+                      <div className='text-xs text-slate-500 mt-0.5'>{order.buyer_phone}</div>
                     </td>
                     <td className='p-4'>
-                      <div className='font-medium text-slate-300'>{order.buyer_store_name || '—'}</div>
+                      <div className='font-medium text-slate-300'>{order.buyer_store_name}</div>
                     </td>
                     <td className='p-4 font-bold text-emerald-400'>{Number(order.total).toLocaleString()} د.ع</td>
                     <td className='p-4'>{getStatusBadge(order.status)}</td>
                     <td className='p-4 text-slate-400 text-xs'>
-                      {order.placed_at ? new Date(order.placed_at).toLocaleDateString('ar-IQ') : '—'}
+                      {order.created_at ? new Date(order.created_at).toLocaleDateString('ar-IQ') : '—'}
                     </td>
                   </tr>
                 ))
