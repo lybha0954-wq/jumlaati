@@ -199,14 +199,12 @@ export default function SupplierDashboardContent() {
   useRealtimeSubscription({ table: 'supplier_orders', event: '*', onData: () => { setRealtimePulse(true); setTimeout(() => setRealtimePulse(false), 1500); loadOrders(); } });
 
   const togglePromo = (id: string) => {
-    let toastArgs: Parameters<typeof showToast> | null = null;
     setPromos((prev) => prev.map((p) => {
       if (p.id !== id) return p;
       const next = { ...p, active: !p.active };
-      toastArgs = [next.active ? 'success' : 'info', next.active ? 'تم تفعيل العرض' : 'تم إيقاف العرض', next.title, 2500];
+      showToast(next.active ? 'success' : 'info', next.active ? 'تم تفعيل العرض' : 'تم إيقاف العرض', next.title, 2500);
       return next;
     }));
-    if (toastArgs) showToast(...toastArgs);
   };
 
   const deletePromo = (id: string) => {
