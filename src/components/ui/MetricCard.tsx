@@ -1,72 +1,84 @@
-'use client';
 import React from 'react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface MetricCardProps {
-  label?: string;
-  value?: string;
+  label: string;
+  value: string;
   subValue?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
-  icon?: React.ReactNode;
-  variant?: 'default' | 'primary' | 'warning' | 'danger' | 'success';
+  icon: React.ReactNode;
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'primary';
   size?: 'default' | 'hero';
   className?: string;
 }
 
-const variantStyles: Record<string, string> = {
+const variantStyles = {
   default: 'bg-card border-border',
-  primary: 'bg-primary/10 border-primary/30',
-  warning: 'bg-amber-500/10 border-amber-500/30',
-  danger: 'bg-red-500/10 border-red-500/30',
-  success: 'bg-emerald-500/10 border-emerald-500/30',
+  success: 'bg-green-50 border-green-200',
+  warning: 'bg-amber-50 border-amber-200',
+  danger: 'bg-red-50 border-red-200',
+  primary: 'bg-primary border-primary/20 text-primary-foreground',
 };
 
-const trendColors: Record<string, string> = {
-  up: 'text-emerald-500',
+const trendIconMap = {
+  up: TrendingUp,
+  down: TrendingDown,
+  neutral: Minus,
+};
+
+const trendColorMap = {
+  up: 'text-green-600',
   down: 'text-red-500',
   neutral: 'text-muted-foreground',
 };
 
-const MetricCard: React.FC<MetricCardProps> = ({
+export default function MetricCard({
   label,
   value,
   subValue,
-  trend = 'neutral',
+  trend,
   trendValue,
   icon,
   variant = 'default',
   size = 'default',
   className = '',
-}) => {
-  const isHero = size === 'hero';
+}: MetricCardProps) {
+  const TrendIcon = trend ? trendIconMap[trend] : null;
+  const trendColor = trend ? trendColorMap[trend] : '';
+  const isPrimary = variant === 'primary';
 
   return (
     <div
-      className={`rounded-xl border p-4 flex flex-col gap-2 ${variantStyles[variant] ?? variantStyles.default} ${isHero ? 'p-6' : ''} ${className}`}
+      className={`
+        relative rounded-xl border p-4 card-hover
+        ${variantStyles[variant]}
+        ${size === 'hero' ? 'p-6' : 'p-4'}
+        ${className}
+      `}
     >
-      <div className="flex items-center justify-between">
-        <span className={`text-muted-foreground font-medium ${isHero ? 'text-base' : 'text-sm'}`}>
+      <div className="flex items-start justify-between mb-3">
+        <p className={`text-xs font-semibold uppercase tracking-wide font-arabic ${isPrimary ? 'text-white/70' : 'text-muted-foreground'}`}>
           {label}
-        </span>
-        {icon && (
-          <div className="w-8 h-8 rounded-lg bg-muted/40 flex items-center justify-center">
-            {icon}
-          </div>
-        )}
+        </p>
+        <div className={`rounded-lg p-2 ${isPrimary ? 'bg-white/15' : 'bg-muted'}`}>
+          {icon}
+        </div>
       </div>
-      <div className={`font-bold text-foreground ${isHero ? 'text-3xl' : 'text-2xl'}`}>
-        {value ?? '—'}
-      </div>
+      <p className={`tabular-nums font-bold ${size === 'hero' ? 'text-3xl' : 'text-2xl'} ${isPrimary ? 'text-white' : 'text-foreground'}`}>
+        {value}
+      </p>
       {subValue && (
-        <div className="text-xs text-muted-foreground">{subValue}</div>
+        <p className={`text-xs font-arabic mt-0.5 ${isPrimary ? 'text-white/60' : 'text-muted-foreground'}`}>
+          {subValue}
+        </p>
       )}
-      {trendValue && (
-        <div className={`text-xs font-medium ${trendColors[trend] ?? trendColors.neutral}`}>
-          {trendValue}
+      {trend && trendValue && TrendIcon && (
+        <div className={`flex items-center gap-1 mt-2 ${trendColor}`}>
+          <TrendIcon size={13} />
+          <span className="text-xs font-semibold tabular-nums font-arabic">{trendValue}</span>
         </div>
       )}
     </div>
   );
-};
-
-export default MetricCard;
+}

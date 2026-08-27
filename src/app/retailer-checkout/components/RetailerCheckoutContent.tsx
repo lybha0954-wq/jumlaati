@@ -12,7 +12,7 @@ import type { CartItem } from '@/app/retailer-shop/components/RetailerShopConten
 import { COMMISSION_RATE, CURRENCY } from '@/lib/commissionStore';
 import { financialService } from '@/lib/services/financialService';
 import { createClient } from '@/lib/supabase/client';
-import { getStripe } from '../../../lib/supabase/client';
+import { getStripe } from '@/lib/stripe/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 type PaymentMethod = 'cod' | 'credit';

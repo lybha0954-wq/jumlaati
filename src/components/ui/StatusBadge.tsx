@@ -1,44 +1,44 @@
 import React from 'react';
 
+type OrderStatus = 'جديد' | 'مقبول' | 'قيد التجهيز' | 'خرج للتوصيل' | 'مُسلَّم' | 'ملغي';
+type StockStatus = 'متوفر' | 'منخفض' | 'نفد' | 'موقوف';
+type PaymentStatus = 'مدفوع' | 'آجل' | 'جزئي' | 'متأخر';
+
+type BadgeVariant = OrderStatus | StockStatus | PaymentStatus | string;
+
+const variantMap: Record<string, string> = {
+  'جديد': 'bg-blue-100 text-blue-700 border-blue-200',
+  'مقبول': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'قيد التجهيز': 'bg-amber-100 text-amber-700 border-amber-200',
+  'خرج للتوصيل': 'bg-purple-100 text-purple-700 border-purple-200',
+  'مُسلَّم': 'bg-green-100 text-green-700 border-green-200',
+  'ملغي': 'bg-red-100 text-red-700 border-red-200',
+  'متوفر': 'bg-green-100 text-green-700 border-green-200',
+  'منخفض': 'bg-amber-100 text-amber-700 border-amber-200',
+  'نفد': 'bg-red-100 text-red-700 border-red-200',
+  'موقوف': 'bg-slate-100 text-slate-600 border-slate-200',
+  'مدفوع': 'bg-green-100 text-green-700 border-green-200',
+  'آجل': 'bg-blue-100 text-blue-700 border-blue-200',
+  'جزئي': 'bg-amber-100 text-amber-700 border-amber-200',
+  'متأخر': 'bg-red-100 text-red-700 border-red-200',
+};
+
 interface StatusBadgeProps {
-  status: string;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  status: BadgeVariant;
+  size?: 'sm' | 'md';
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: 'قيد الانتظار', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  reviewing: { label: 'قيد المراجعة', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  processing: { label: 'قيد التجهيز', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  assigned: { label: 'تم التعيين', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  shipped: { label: 'تم الشحن', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-  delivering: { label: 'مع الموصل', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-  out_for_delivery: { label: 'مع الموصل', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-  delivered: { label: 'تم التوصيل', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  completed: { label: 'مكتمل', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  cancelled: { label: 'ملغي', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
-  active: { label: 'نشط', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  inactive: { label: 'غير نشط', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
-  paid: { label: 'مدفوع', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  unpaid: { label: 'غير مدفوع', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
-  overdue: { label: 'متأخر', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
-};
-
-const sizeClasses = {
-  sm: 'px-2 py-0.5 text-xs',
-  md: 'px-3 py-1 text-xs',
-  lg: 'px-4 py-1.5 text-sm',
-};
-
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md', className = '' }) => {
-  const config = statusConfig[status] ?? { label: status, color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' };
+export default function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
+  const classes = variantMap[status] || 'bg-slate-100 text-slate-600 border-slate-200';
   return (
     <span
-      className={`inline-flex items-center rounded-full border font-medium ${sizeClasses[size]} ${config.color} ${className}`}
+      className={`
+        inline-flex items-center border rounded-full font-arabic font-semibold
+        ${size === 'sm' ? 'text-xs px-2 py-0.5' : 'text-xs px-2.5 py-1'}
+        ${classes}
+      `}
     >
-      {config.label}
+      {status}
     </span>
   );
-};
-
-export default StatusBadge;
+}

@@ -39,13 +39,13 @@
     "warning": "🚨 CRITICAL: DO NOT REMOVE OR MODIFY ABOVE DEPENDENCIES - Required for Next.js 15 TypeScript app functionality"
   },
   "scripts": {
-    "dev": "node scripts/prune-duplicate-pages.js && next dev -p 4028",
-    "build": "node scripts/prune-duplicate-pages.js && next build",
-    "start": "next start -p 4028",
-    "serve": "next start -p 4028",
+    "dev": "next dev -p 4028",
+    "build": "next build",
+    "start": "next dev -p 4028",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md,json}\"",
+    "serve": "next start",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -53,7 +53,6 @@
     "@heroicons/react": "^2.2.0",
     "@stripe/react-stripe-js": "6.8.0",
     "@stripe/stripe-js": "9.13.0",
-    "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.0",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
@@ -63,7 +62,7 @@
     "react-dom": "19.0.3",
     "react-hook-form": "^7.84.0",
     "recharts": "^2.15.2",
-    "sonner": "^1.7.4"
+    "sonner": "latest"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -82,7 +81,7 @@
     "prettier": "^3.5.3",
     "tailwindcss": "3.4.6",
     "tailwindcss-animate": "^1.0.7",
-    "tailwindcss-rtl": "^0.9.0",
+    "tailwindcss-rtl": "latest",
     "typescript": "^5"
   }
 }

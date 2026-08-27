@@ -6,7 +6,7 @@ import ProductModal from './ProductModal';
 import BarcodeScanner, { type ScannedProduct } from './BarcodeScanner';
 import { Plus, ScanLine } from 'lucide-react';
 import { toast } from 'sonner';
-import { productService, type Product } from '../../../lib/services/productService';
+import { productService, type Product } from '@/lib/services/productService';
 
 export type { Product };
 
@@ -39,8 +39,8 @@ export default function InventoryContent() {
   const filtered = products.filter((p) => {
     const matchSearch =
       p.name.includes(search) ||
-      (p.barcode ?? '').includes(search) ||
-      (p.category ?? '').includes(search);
+      p.barcode.includes(search) ||
+      p.category.includes(search);
     const matchCat = categoryFilter === 'الكل' || p.category === categoryFilter;
     const matchStatus = statusFilter === 'الكل' || p.status === statusFilter;
     return matchSearch && matchCat && matchStatus;
@@ -51,7 +51,7 @@ export default function InventoryContent() {
       if (editingProduct) {
         const updated = await productService.update(product.id, product);
         if (updated) {
-          setProducts((prev) => prev.map((p) => (p.id === product.id ? product : p)));
+          setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)));
           toast.success('تم تحديث المنتج بنجاح');
         }
       } else {

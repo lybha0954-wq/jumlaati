@@ -15,76 +15,77 @@ const corsHeaders = {
 
 interface ConfirmPaymentBody {
   paymentIntentId: string;
-  orderId?: string;
 }
 
 Deno.serve(async (req: Request) => {
-  // التعامل مع طلبات Preflight المسبقة لـ CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
     if (!stripeKey) throw new Error('STRIPE_SECRET_KEY is not configured');
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase environment variables are missing');
-    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    // استقبال البيانات المرسلة من الطلب
-    const body: ConfirmPaymentBody = await req.json();
-    const { paymentIntentId, orderId } = body;
+    const { paymentIntentId }: ConfirmPaymentBody = await req.json();
+    if (!paymentIntentId) throw new Error('paymentIntentId is required');
 
-    if (!paymentIntentId) {
-      throw new Error('paymentIntentId is required');
-    }
-
-    // التحقق من حالة الدفع مباشرة من Stripe
+    // Retrieve payment intent from Stripe to verify status
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    if (paymentIntent.status === 'succeeded') {
-      // إذا تم الدفع بنجاح، قم بتحديث حالة الطلب في قاعدة بيانات Supabase إذا توفر الـ orderId
-      if (orderId) {
-        const { error: updateError } = await supabase
-          .from('orders')
-          .update({ status: 'paid', payment_intent_id: paymentIntentId })
-          .eq('id', orderId);
+    // Find order by payment_intent_id
+    const { data: order, error: findError } = await supabase
+      .from('orders')
+      .select('id, order_number')
+      .eq('payment_intent_id', paymentIntentId)
+      .single();
 
-        if (updateError) {
-          throw new Error(`Failed to update order status: ${updateError.message}`);
-        }
-      }
-
-      return new Response(
-        JSON.stringify({ success: true, status: paymentIntent.status }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ success: false, status: paymentIntent.status, message: 'Payment not completed' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      );
+    if (findError || !order) {
+      throw new Error('Order not found for payment intent: ' + paymentIntentId);
     }
 
-  } catch (error: any) {
+    // Map Stripe status to our payment_status enum
+    const paymentStatus = paymentIntent.status === 'succeeded' ? 'paid' : 'pending';
+    const stripeChargeId =
+      typeof paymentIntent.latest_charge === 'string'
+        ? paymentIntent.latest_charge
+        : (paymentIntent.latest_charge as { id?: string } | null)?.id ?? null;
+
+    // Update order payment status
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        payment_status: paymentStatus,
+        stripe_charge_id: stripeChargeId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', order.id);
+
+    if (updateError) {
+      console.error('Order update error:', updateError);
+      throw new Error('Failed to update order: ' + updateError.message);
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      JSON.stringify({
+        success: true,
+        orderId: order.id,
+        orderNumber: order.order_number,
+        paymentStatus,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Confirmation failed';
+    console.error('confirm-payment error:', message);
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

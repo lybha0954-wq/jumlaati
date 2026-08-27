@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Bell, Shield, FileText, Settings, HelpCircle, MessageSquare, ChevronRight, Send, CheckCircle, AlertTriangle, ToggleLeft, ToggleRight, Trash2, Megaphone, BookOpen, LogOut } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
-import UnifiedNotificationCenter from '../../../components/UnifiedNotificationCenter';
+import UnifiedNotificationCenter from '@/components/UnifiedNotificationCenter';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -63,7 +63,7 @@ export default function AdminSettingsContent() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [replyText, setReplyText] = useState('');
   const [showNotifForm, setShowNotifForm] = useState(false);
-  const [newNotif, setNewNotif] = useState({ title: '', body: '', target: 'all' as 'all' | 'suppliers' | 'retailers' });
+  const [newNotif, setNewNotif] = useState({ title: '', body: '', target: 'all\' as \'all\' | \'suppliers\' | \'retailers' });
   const [notifications, setNotifications] = useState<Notification[]>(sentNotifications);
   const [sentSuccess, setSentSuccess] = useState(false);
 
@@ -431,7 +431,7 @@ export default function AdminSettingsContent() {
       )}
 
       {/* Reply Modal */}
-      <Modal isOpen={!!selectedTicket} onClose={() => setSelectedTicket(null)} title="الرد على التذكرة" size="md" footer={null}>
+      <Modal open={!!selectedTicket} onClose={() => setSelectedTicket(null)} title="الرد على التذكرة" size="md">
         {selectedTicket && (
           <div className="space-y-4" dir="rtl">
             <div className="bg-muted/50 rounded-xl p-3">

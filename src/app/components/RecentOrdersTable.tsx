@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import StatusBadge from '../../components/ui/StatusBadge';
+import StatusBadge from '@/components/ui/StatusBadge';
 import { Eye, CheckCircle, XCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { orderService } from '@/lib/services/orderService';
