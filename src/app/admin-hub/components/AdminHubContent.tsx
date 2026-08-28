@@ -6,8 +6,8 @@ import { financialService } from '@/lib/services/financialService';
 import { storeService } from '@/lib/services/storeService';
 import { supplierService } from '@/lib/services/supplierService';
 import { orderService } from '@/lib/services/orderService';
-import { useRealtimeSubscription } from '../../../hooks/useRealtimeSubscription';
-import { useToast } from '../../../components/ui/Toast';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
 function fmt(n: number) {
@@ -203,7 +203,7 @@ export default function AdminHubContent() {
 
   const handleSignOut = () => {
     setShowSignOut(false);
-    showToast('جاري تسجيل الخروج...', 'info');
+    showToast('info', 'جاري تسجيل الخروج...', undefined, 2000);
     setTimeout(() => {
       if (typeof window !== 'undefined') window.location.href = '/sign-up-login';
     }, 1500);

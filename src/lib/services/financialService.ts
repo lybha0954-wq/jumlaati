@@ -1,119 +1,143 @@
-import { supabase } from '@/lib/supabase/client';
+'use client';
+
+import { createClient } from '@/lib/supabase/client';
+
+export interface CommissionEntry {
+  id: string;
+  orderId: string;
+  orderDate: string;
+  retailerName: string;
+  orderTotal: number;
+  commission: number;
+  createdAt: string;
+}
 
 export interface LedgerEntry {
   id: string;
-  type: 'credit' | 'debit' | 'payment';
+  entryDate: string;
+  supplierId: string;
+  supplierName: string;
+  entryType: 'order' | 'payment' | 'adjustment';
+  description: string;
   amount: number;
-  description?: string;
-  supplierId?: string;
-  supplierName?: string;
-  retailerId?: string;
+  direction: 'debit' | 'credit';
+  balance: number;
   orderId?: string;
-  orderNumber?: string;
-  date?: string;
-  createdAt?: string;
-  balance?: number;
   paymentMethod?: string;
-  status?: string;
+  status: 'completed' | 'pending' | 'overdue';
 }
 
-export interface FinancialTotals {
-  totalCommission: number;
-  totalSales: number;
-  totalOrders: number;
+function isSchemaError(error: any): boolean {
+  if (!error) return false;
+  if (error.code && typeof error.code === 'string') {
+    const cls = error.code.substring(0, 2);
+    if (cls === '42' || cls === '08') return true;
+    if (cls === '23') return false;
+  }
+  return false;
 }
 
-function mapLedger(t: Record<string, unknown>): LedgerEntry {
+function toCommission(row: any): CommissionEntry {
   return {
-    id: String(t.id ?? ''),
-    type: (t.type as LedgerEntry['type']) ?? 'debit',
-    amount: Number(t.amount ?? t.total_amount ?? 0),
-    description: t.description ? String(t.description) : undefined,
-    supplierId: t.supplier_id ? String(t.supplier_id) : undefined,
-    supplierName: t.supplier_name ? String(t.supplier_name) : undefined,
-    retailerId: t.retailer_id ? String(t.retailer_id) : undefined,
-    orderId: t.order_id ? String(t.order_id) : undefined,
-    orderNumber: t.order_number ? String(t.order_number) : undefined,
-    date: t.date ? String(t.date) : t.created_at ? String(t.created_at) : undefined,
-    createdAt: t.created_at ? String(t.created_at) : undefined,
-    balance: t.balance ? Number(t.balance) : undefined,
-    paymentMethod: t.payment_method ? String(t.payment_method) : undefined,
-    status: t.payment_status ? String(t.payment_status) : undefined,
+    id: row.id,
+    orderId: row.order_id,
+    orderDate: row.order_date,
+    retailerName: row.retailer_name,
+    orderTotal: row.order_total,
+    commission: row.commission,
+    createdAt: row.created_at,
+  };
+}
+
+function toLedger(row: any): LedgerEntry {
+  return {
+    id: row.id,
+    entryDate: row.entry_date,
+    supplierId: row.supplier_id,
+    supplierName: row.supplier_name,
+    entryType: row.entry_type,
+    description: row.description,
+    amount: row.amount,
+    direction: row.direction,
+    balance: row.balance ?? 0,
+    orderId: row.order_id ?? '',
+    paymentMethod: row.payment_method ?? 'cash',
+    status: row.status,
   };
 }
 
 export const financialService = {
-  async getTotals(): Promise<FinancialTotals> {
+  async getCommissions(): Promise<CommissionEntry[]> {
+    const supabase = createClient();
     try {
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('total_amount, status');
-      if (error) throw error;
-
-      const delivered = (orders || []).filter((o) => o.status === 'delivered');
-      const totalSales = delivered.reduce((sum, o) => sum + Number(o.total_amount ?? 0), 0);
-      const totalCommission = Math.round(totalSales * 0.05);
-      const totalOrders = (orders || []).length;
-
-      return { totalCommission, totalSales, totalOrders };
-    } catch {
-      return { totalCommission: 0, totalSales: 0, totalOrders: 0 };
-    }
-  },
-
-  async getLedger(retailerId?: string): Promise<LedgerEntry[]> {
-    try {
-      let query = supabase
-        .from('transactions')
+      const { data, error } = await supabase
+        .from('commissions')
         .select('*')
         .order('created_at', { ascending: false });
-
-      if (retailerId) {
-        query = query.eq('retailer_id', retailerId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []).map(mapLedger);
-    } catch {
-      return [];
-    }
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toCommission);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
-  async getSupplierLedger(supplierId?: string): Promise<LedgerEntry[]> {
+  async addCommission(entry: Omit<CommissionEntry, 'id' | 'createdAt'>): Promise<boolean> {
+    const supabase = createClient();
     try {
-      let query = supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (supplierId) {
-        query = query.eq('supplier_id', supplierId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []).map(mapLedger);
-    } catch {
-      return [];
-    }
-  },
-
-  async recordPayment(entry: Partial<LedgerEntry>): Promise<boolean> {
-    try {
-      const { error } = await supabase.from('transactions').insert({
-        type: entry.type ?? 'payment',
-        amount: entry.amount,
-        description: entry.description,
-        supplier_id: entry.supplierId,
-        retailer_id: entry.retailerId,
+      const { error } = await supabase.from('commissions').insert({
         order_id: entry.orderId,
-        payment_method: entry.paymentMethod,
-        payment_status: entry.status ?? 'paid',
+        order_date: entry.orderDate,
+        retailer_name: entry.retailerName,
+        order_total: entry.orderTotal,
+        commission: entry.commission,
       });
-      return !error;
-    } catch {
-      return false;
-    }
+      if (error) { if (isSchemaError(error)) throw error; return false; }
+      return true;
+    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
+  },
+
+  async getLedgerEntries(): Promise<LedgerEntry[]> {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from('ledger_entries')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toLedger);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
+  },
+
+  async addLedgerEntry(entry: Omit<LedgerEntry, 'id'>): Promise<boolean> {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.from('ledger_entries').insert({
+        entry_date: entry.entryDate,
+        supplier_id: entry.supplierId,
+        supplier_name: entry.supplierName,
+        entry_type: entry.entryType,
+        description: entry.description,
+        amount: entry.amount,
+        direction: entry.direction,
+        balance: entry.balance ?? 0,
+        order_id: entry.orderId ?? '',
+        payment_method: entry.paymentMethod ?? 'cash',
+        status: entry.status,
+      });
+      if (error) { if (isSchemaError(error)) throw error; return false; }
+      return true;
+    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
+  },
+
+  async getTotals(): Promise<{ totalCommission: number; totalSales: number; totalOrders: number }> {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.from('commissions').select('order_total, commission');
+      if (error) { if (isSchemaError(error)) throw error; return { totalCommission: 0, totalSales: 0, totalOrders: 0 }; }
+      const rows = data ?? [];
+      return {
+        totalCommission: rows.reduce((s: number, r: any) => s + (r.commission ?? 0), 0),
+        totalSales: rows.reduce((s: number, r: any) => s + (r.order_total ?? 0), 0),
+        totalOrders: rows.length,
+      };
+    } catch (e: any) { if (isSchemaError(e)) throw e; return { totalCommission: 0, totalSales: 0, totalOrders: 0 }; }
   },
 };

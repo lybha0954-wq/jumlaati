@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import MetricCard from '../../components/ui/MetricCard';
+import MetricCard from '@/components/ui/MetricCard';
 import {
   ShoppingCart, Clock, TrendingUp, AlertTriangle, CheckCircle, DollarSign,
 } from 'lucide-react';

@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
 import RoleSelector from './RoleSelector';
-import AppLogo from '../../../components/ui/AppLogo';
+import AppLogo from '@/components/ui/AppLogo';
 import { ShoppingBag, Truck, Shield, Moon, Sun } from 'lucide-react';
-import { useTheme } from '../../../contexts/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export type UserRole = 'retailer' | 'supplier' | 'admin';
 export type AuthMode = 'login' | 'signup';

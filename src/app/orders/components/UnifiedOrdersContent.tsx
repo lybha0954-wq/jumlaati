@@ -71,7 +71,7 @@ function formatPrice(n: number) {
 }
 
 function orderTotal(items: LineItem[]) {
-  return items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+  return items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
 }
 
 // ─── Shared Order Row ─────────────────────────────────────────────────────────
@@ -186,17 +186,17 @@ function OrderRow({
                           <div className="w-6 h-6 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
                             <Package size={12} className="text-accent" />
                           </div>
-                          <span className="font-arabic text-foreground text-sm">{item.productName}</span>
+                          <span className="font-arabic text-foreground text-sm">{item.name}</span>
                         </div>
                       </td>
                       <td className="px-3 py-3 text-center">
-                        <span className="font-arabic text-sm text-foreground tabular-nums">{item.quantity} {item.unit}</span>
+                        <span className="font-arabic text-sm text-foreground tabular-nums">{item.qty} {item.unit}</span>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span className="font-arabic text-sm text-muted-foreground tabular-nums">{formatPrice(item.unitPrice)}</span>
                       </td>
                       <td className="px-4 py-3 text-left">
-                        <span className="font-arabic text-sm font-semibold text-foreground tabular-nums">{formatPrice(item.quantity * item.unitPrice)}</span>
+                        <span className="font-arabic text-sm font-semibold text-foreground tabular-nums">{formatPrice(item.qty * item.unitPrice)}</span>
                       </td>
                     </tr>
                   ))}
@@ -304,7 +304,7 @@ function IncomingOrdersTab() {
             </div>
           )}
           {filtered.map((order) => {
-            const cfg = incomingStatusConfig[order.status as IncomingStatus] ?? incomingStatusConfig['reviewing'];
+            const cfg = incomingStatusConfig[order.status];
             return (
               <OrderRow key={order.id} id={order.id} orderNumber={order.orderNumber}
                 placedAt={new Date(order.placedAt).toLocaleString('ar-IQ')}
@@ -415,18 +415,15 @@ function SupplierOrdersTab() {
             </div>
           )}
           {filtered.map((order) => {
-            const safeStatus: SupplierStatus = (order.status as SupplierStatus) in supplierStatusConfig
-              ? (order.status as SupplierStatus)
-              : 'pending';
-            const cfg = supplierStatusConfig[safeStatus];
-            const next = supplierNextStatus[safeStatus];
+            const cfg = supplierStatusConfig[order.status];
+            const next = supplierNextStatus[order.status];
             const actionSlot = (
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-1">
                   {supplierStatusFlow.map((s, idx) => {
                     const stepCfg = supplierStatusConfig[s];
                     const StepIcon = stepCfg.icon;
-                    const currentIdx = supplierStatusFlow.indexOf(safeStatus);
+                    const currentIdx = supplierStatusFlow.indexOf(order.status);
                     const isDone = idx <= currentIdx;
                     return (
                       <React.Fragment key={s}>
@@ -442,10 +439,10 @@ function SupplierOrdersTab() {
                   })}
                 </div>
                 {next ? (
-                  <button onClick={() => advanceStatus(order.id, safeStatus)}
+                  <button onClick={() => advanceStatus(order.id, order.status)}
                     className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-xl text-sm font-arabic font-semibold hover:bg-accent/90 active:scale-95 transition-all shadow-sm">
                     {React.createElement(supplierStatusConfig[next].icon, { size: 15 })}
-                    {supplierNextLabel[safeStatus]}
+                    {supplierNextLabel[order.status]}
                   </button>
                 ) : (
                   <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm font-arabic font-semibold">

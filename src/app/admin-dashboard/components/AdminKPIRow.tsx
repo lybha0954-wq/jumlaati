@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Users, ShoppingBag, Store, Percent, Truck } from 'lucide-react';
-import { CURRENCY } from '../../../lib/commissionStore';
-import { financialService } from '../../../lib/services/financialService';
-import { storeService } from '../../../lib/services/storeService';
-import { supplierService } from '../../../lib/services/supplierService';
-import { orderService } from '../../../lib/services/orderService';
+import { CURRENCY } from '@/lib/commissionStore';
+import { financialService } from '@/lib/services/financialService';
+import { storeService } from '@/lib/services/storeService';
+import { supplierService } from '@/lib/services/supplierService';
+import { orderService } from '@/lib/services/orderService';
 
 export default function AdminKPIRow() {
   const [totalCommission, setTotalCommission] = useState(0);

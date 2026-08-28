@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { User, Phone, Mail, Lock, Save, CheckCircle, MapPin, Bell, Shield, LogOut, HelpCircle, FileText, ChevronDown, ChevronUp, Building2, Eye, EyeOff, MessageCircle, Star, DollarSign } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import Icon from '../../../components/ui/AppIcon';
+import Icon from '@/components/ui/AppIcon';
 import UnifiedNotificationCenter from '@/components/UnifiedNotificationCenter';
-import DebtPaymentModal from '../../../components/ui/DebtPaymentModal';
+import DebtPaymentModal from '@/components/ui/DebtPaymentModal';
 
 
 type Section = 'account' | 'notifications' | 'support' | 'privacy';

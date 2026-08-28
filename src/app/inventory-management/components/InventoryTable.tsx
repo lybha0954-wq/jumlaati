@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import StatusBadge from '@/components/ui/StatusBadge';
-import EmptyState from '../../../components/ui/EmptyState';
+import EmptyState from '@/components/ui/EmptyState';
 import { Edit2, Trash2, ChevronUp, ChevronDown, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Product } from './InventoryContent';
 
@@ -61,7 +61,6 @@ export default function InventoryTable({
           icon={<Package size={28} />}
           title="لا توجد منتجات"
           description="لم يتم العثور على منتجات تطابق الفلاتر المحددة. جرب تغيير معايير البحث."
-          action={null}
         />
       </div>
     );
@@ -153,17 +152,17 @@ export default function InventoryTable({
                   </td>
                   <td className="px-3 py-3">
                     <span className="font-arabic text-xs text-muted-foreground tabular-nums">
-                      {(product.costPrice ?? 0).toLocaleString('ar-IQ')} د.ع
+                      {product.costPrice.toLocaleString('ar-IQ')} د.ع
                     </span>
                   </td>
                   <td className="px-3 py-3">
                     <span className="font-arabic text-xs text-muted-foreground tabular-nums line-through">
-                      {(product.originalPrice ?? 0).toLocaleString('ar-IQ')} د.ع
+                      {product.originalPrice.toLocaleString('ar-IQ')} د.ع
                     </span>
                   </td>
                   <td className="px-3 py-3">
                     <span className="font-arabic text-sm font-bold text-primary tabular-nums">
-                      {(product.finalPrice ?? 0).toLocaleString('ar-IQ')} د.ع
+                      {product.finalPrice.toLocaleString('ar-IQ')} د.ع
                     </span>
                   </td>
                   <td className="px-3 py-3">
@@ -179,7 +178,7 @@ export default function InventoryTable({
                     </span>
                   </td>
                   <td className="px-3 py-3">
-                    <StatusBadge status={product.status ?? ''} size="sm" />
+                    <StatusBadge status={product.status} size="sm" />
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-1">

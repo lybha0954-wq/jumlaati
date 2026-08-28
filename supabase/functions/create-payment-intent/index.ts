@@ -15,21 +15,22 @@ const corsHeaders = {
 
 interface CreatePaymentIntentRequest {
   amount: number;
-  currency?: string;
+  currency: string;
   orderNumber: string;
   buyerName: string;
   buyerStoreName: string;
   buyerPhone: string;
   deliveryAddress: string;
   deliveryCity: string;
-  deliveryNotes?: string;
+  deliveryNotes: string;
   subtotal: number;
   deliveryFee: number;
   total: number;
   commission: number;
   paymentMethod: string;
-  storeId?: string;
-  items: Array<{ productId: string; name: string; qty: number; unitPrice: number; unit?: string }>;
+  retailerId?: string;
+  supplierId?: string;
+  items: Array<{ productId: string; qty: number; unitPrice: number }>;
 }
 
 Deno.serve(async (req: Request) => {
@@ -39,56 +40,114 @@ Deno.serve(async (req: Request) => {
 
   try {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
     if (!stripeKey) throw new Error('STRIPE_SECRET_KEY is not configured');
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase environment variables are missing');
-    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
     const body: CreatePaymentIntentRequest = await req.json();
-    
-    // التحقق من المبلغ وإجماليات الطلب
-    if (!body.total || body.total <= 0) {
-      throw new Error('Invalid total amount');
+
+    // Validate amount on backend
+    const calculatedTotal = body.subtotal + body.deliveryFee;
+    if (calculatedTotal <= 0) {
+      throw new Error('Invalid order amount');
     }
 
-    // إنشاء Payment Intent في Stripe بالعملة المطلوبة (افتراضياً USD أو IQD حسب إعداداتك)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(body.total * 100), // Stripe يتعامل بالهللات/السنتافات
-      currency: body.currency || 'usd',
+    // Create Stripe customer
+    const stripeCustomer = await stripe.customers.create({
+      name: body.buyerStoreName || body.buyerName,
+      phone: body.buyerPhone || undefined,
       metadata: {
-        orderNumber: body.orderNumber,
-        buyerName: body.buyerName,
-        buyerStoreName: body.buyerStoreName,
-        buyerPhone: body.buyerPhone,
-        storeId: body.storeId || '',
-        commission: body.commission.toString(),
+        store_name: body.buyerStoreName,
+        order_number: body.orderNumber,
       },
     });
+
+    // Create Payment Intent (amount in smallest currency unit)
+    const amountInCents = Math.round(calculatedTotal);
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: (body.currency || 'usd').toLowerCase(),
+      customer: stripeCustomer.id,
+      description: `طلب #${body.orderNumber} — ${body.buyerStoreName}`,
+      metadata: {
+        order_number: body.orderNumber,
+        buyer_name: body.buyerName,
+        delivery_city: body.deliveryCity,
+      },
+      automatic_payment_methods: { enabled: true },
+    });
+
+    // Fallback UUIDs for required FK fields
+    const FALLBACK_UUID = '00000000-0000-0000-0000-000000000000';
+    const retailerId = body.retailerId || FALLBACK_UUID;
+    const supplierId = body.supplierId || (body.items?.[0] ? FALLBACK_UUID : FALLBACK_UUID);
+
+    // Save order to database with payment_intent_id
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        order_number: body.orderNumber,
+        retailer_id: retailerId,
+        supplier_id: supplierId,
+        buyer_name: body.buyerName,
+        buyer_store_name: body.buyerStoreName,
+        buyer_phone: body.buyerPhone,
+        delivery_address: body.deliveryAddress,
+        delivery_city: body.deliveryCity,
+        delivery_notes: body.deliveryNotes,
+        subtotal: body.subtotal,
+        delivery_fee: body.deliveryFee,
+        total: body.total,
+        commission: body.commission,
+        payment_method: body.paymentMethod,
+        status: 'pending',
+        payment_status: 'pending',
+        payment_intent_id: paymentIntent.id,
+      })
+      .select('id')
+      .single();
+
+    if (orderError) {
+      console.error('Order insert error:', orderError);
+      throw new Error('Failed to save order: ' + orderError.message);
+    }
+
+    const orderId = orderData.id;
+
+    // Insert order items using correct schema columns
+    if (body.items && body.items.length > 0) {
+      const { error: itemsError } = await supabase.from('order_items').insert(
+        body.items.map((item) => ({
+          order_id: orderId,
+          product_id: item.productId,
+          quantity: item.qty,
+          unit_price: item.unitPrice,
+          total_price: item.unitPrice * item.qty,
+        }))
+      );
+      if (itemsError) {
+        console.error('Order items insert error:', itemsError);
+      }
+    }
 
     return new Response(
       JSON.stringify({
         clientSecret: paymentIntent.client_secret,
+        orderId,
         paymentIntentId: paymentIntent.id,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
-  } catch (error: any) { // تم ضبطها لمعالجة الأخطاء بدقة
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Payment setup failed';
+    console.error('create-payment-intent error:', message);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

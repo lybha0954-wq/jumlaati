@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, ChevronDown, ChevronUp, Phone, MapPin, CheckCircle, Truck, Package, Check, X, User, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Phone, MapPin, CheckCircle, Truck, Package, Printer, Check, X, User, AlertCircle, ArrowRight } from 'lucide-react';
 import { CURRENCY } from '@/lib/commissionStore';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { orderService } from '@/lib/services/orderService';
 import { useToast } from '@/components/ui/Toast';
-import InvoicePrintModal, { type InvoiceData } from '../../../components/ui/InvoicePrintModal';
+import InvoicePrintModal, { type InvoiceData } from '@/components/ui/InvoicePrintModal';
 
 function fmt(n: number) {
   return n.toLocaleString('ar-IQ') + ' ' + CURRENCY;
@@ -96,20 +96,20 @@ const statusConfig: Record<OrderStatus, {
   reviewing: {
     label: 'قيد المراجعة', icon: AlertCircle,
     bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-300',
-    dot: 'bg-orange-400', nextLabel: 'قبول وبدء التجهيز', nextStatus: 'preparing',
+    dot: 'bg-orange-400', nextLabel: 'قبول الطلب', nextStatus: 'preparing',
     headerBg: 'bg-orange-50/80', toastMsg: 'تم قبول الطلب وبدء التجهيز',
   },
   preparing: {
     label: 'قيد التجهيز', icon: Package,
     bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-300',
-    dot: 'bg-blue-500', nextLabel: 'تم الشحن (إرسال واتساب)', nextStatus: 'shipped',
-    headerBg: 'bg-blue-50/80', toastMsg: 'تم شحن الطلب وإرسال تفاصيل الواتساب للفرع',
+    dot: 'bg-blue-500', nextLabel: 'تم الشحن', nextStatus: 'shipped',
+    headerBg: 'bg-blue-50/80', toastMsg: 'تم شحن الطلب بنجاح',
   },
   shipped: {
     label: 'تم الشحن', icon: Truck,
     bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-300',
-    dot: 'bg-violet-500', nextLabel: 'تأكيد الاستلام والاکتمال', nextStatus: 'completed',
-    headerBg: 'bg-violet-50/80', toastMsg: 'تم تأكيد استلام الطلب بنجاح',
+    dot: 'bg-violet-500', nextLabel: 'تأكيد الاستلام', nextStatus: 'completed',
+    headerBg: 'bg-violet-50/80', toastMsg: 'تم تأكيد استلام الطلب',
   },
   completed: {
     label: 'مكتمل', icon: CheckCircle,
@@ -129,9 +129,6 @@ export default function SupplierIncomingOrdersContent() {
   const [realtimePulse, setRealtimePulse] = useState(false);
   const [advancingId, setAdvancingId] = useState<string | null>(null);
   const [invoiceModal, setInvoiceModal] = useState<InvoiceData | null>(null);
-  const [showAiReportModal, setShowAiReportModal] = useState(false);
-  const [aiReportType, setAiReportType] = useState<'weekly' | 'monthly'>('weekly');
-  const [aiGenerating, setAiGenerating] = useState(false);
 
   const loadLiveOrders = useCallback(async () => {
     try {
@@ -157,7 +154,6 @@ export default function SupplierIncomingOrdersContent() {
     table: 'orders', event: 'INSERT',
     onData: () => { setRealtimePulse(true); setTimeout(() => setRealtimePulse(false), 1500); loadLiveOrders(); },
   });
-
   useRealtimeSubscription({
     table: 'orders', event: 'UPDATE',
     onData: (payload) => {
@@ -184,8 +180,6 @@ export default function SupplierIncomingOrdersContent() {
     completed: orders.filter((o) => o.status === 'completed').length,
   };
 
-  const orderTotal = (items: LineItem[]) => items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
-
   const advanceStatus = (orderId: string) => {
     setAdvancingId(orderId);
     setTimeout(() => {
@@ -195,14 +189,6 @@ export default function SupplierIncomingOrdersContent() {
           const cfg = statusConfig[o.status];
           if (cfg.nextStatus) {
             showToast('success', cfg.toastMsg, o.customer.storeName, 3000);
-            if (cfg.nextStatus === 'shipped') {
-              const itemsList = o.items.map((item, idx) => `${idx + 1}. ${item.name} (${item.qty} ${item.unit})`).join('\n');
-              const totalAmount = orderTotal(o.items);
-              const message = `مرحباً ${o.customer.name} (${o.customer.storeName}) 👋\n\nنود إعلامكم بأنه تم شحن طلبكم رقم: *${o.orderNumber}* 🚚\n\n📦 *تفاصيل المنتجات:* \n${itemsList}\n\n💰 *الإجمالي الكلي:* ${fmt(totalAmount)}\n\nشكراً لتعاملكم مع منصة جملتي.`;
-              const cleanPhone = o.customer.phone.startsWith('0') ? '964' + o.customer.phone.slice(1) : o.customer.phone;
-              const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-              window.open(whatsappUrl, '_blank');
-            }
             return { ...o, status: cfg.nextStatus };
           }
           return o;
@@ -241,34 +227,25 @@ export default function SupplierIncomingOrdersContent() {
     setInvoiceModal(invoiceData);
   };
 
-  const totalRevenue = orders.reduce((acc, o) => acc + orderTotal(o.items), 0);
+  const orderTotal = (items: LineItem[]) => items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
 
   return (
     <div className="space-y-4 pb-6" dir="rtl">
 
-      {/* ── Header & AI Report Button ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground font-arabic">الطلبات الواردة</h1>
           <p className="text-xs text-muted-foreground font-arabic mt-0.5">{orders.length} طلب إجمالي</p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => setShowAiReportModal(true)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-arabic font-bold shadow-md shadow-purple-200 hover:opacity-95 transition-all active:scale-95"
-          >
-            <Sparkles size={15} className="text-amber-300 animate-pulse" />
-            <span>تقرير الذكاء الاصطناعي للأداء</span>
-          </button>
-          <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 flex-shrink-0">
-            <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-            <span className="text-xs font-arabic font-semibold text-orange-700">{counts.reviewing} جديد</span>
-          </div>
+        <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-xl px-3 py-1.5">
+          <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+          <span className="text-xs font-arabic font-semibold text-orange-700">{counts.reviewing} جديد</span>
         </div>
       </div>
 
       {/* ── Order Flow Pipeline ── */}
-      <div className="bg-card border border-border rounded-2xl p-3 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-3">
         <p className="text-[10px] text-muted-foreground font-arabic mb-2 font-semibold uppercase tracking-wide">مسار الطلبات</p>
         <div className="flex items-center gap-1">
           {(['reviewing', 'preparing', 'shipped', 'completed'] as OrderStatus[]).map((s, i) => {
@@ -387,52 +364,58 @@ export default function SupplierIncomingOrdersContent() {
                         <div className="flex items-center gap-2">
                           <span className="w-6 h-6 bg-muted rounded-lg flex items-center justify-center text-[10px] font-bold text-muted-foreground tabular-nums">{item.qty}</span>
                           <div>
-                            <p className="text-xs font-arabic text-foreground">{item.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-arabic">{item.unit} · {fmt(item.unitPrice)}</p>
+                            <span className="text-xs font-arabic text-foreground">{item.name}</span>
+                            <span className="text-[10px] text-muted-foreground font-arabic mr-1">{item.unit}</span>
                           </div>
                         </div>
-                        <p className="text-xs font-bold text-foreground tabular-nums font-arabic">{fmt(item.qty * item.unitPrice)}</p>
+                        <div className="text-left">
+                          <span className="text-xs font-arabic font-semibold text-foreground tabular-nums">{fmt(item.qty * item.unitPrice)}</span>
+                          <p className="text-[10px] text-muted-foreground font-arabic tabular-nums">{fmt(item.unitPrice)} / وحدة</p>
+                        </div>
                       </div>
                     ))}
-                    <div className="flex items-center justify-between pt-2 border-t border-border mt-1">
-                      <span className="text-xs font-arabic font-semibold text-foreground">الإجمالي</span>
-                      <span className="text-sm font-bold text-foreground tabular-nums font-arabic">{fmt(total)}</span>
+                    <div className="flex justify-between pt-2 border-t border-border mt-1">
+                      <span className="text-xs font-bold text-foreground font-arabic">الإجمالي</span>
+                      <span className="text-sm font-bold text-primary tabular-nums font-arabic">{fmt(total)}</span>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="px-3 py-3 bg-muted/20 flex flex-wrap gap-2">
+                  {/* Action Buttons */}
+                  <div className="px-3 pb-3 pt-2 flex gap-2 flex-wrap bg-white border-t border-border">
+                    <button
+                      onClick={() => printInvoice(order.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-arabic font-semibold border transition-all active:scale-95 ${isPrinting ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-muted border-border text-muted-foreground hover:text-foreground'}`}
+                    >
+                      {isPrinting ? <Check size={13} /> : <Printer size={13} />}
+                      {isPrinting ? 'تمت الطباعة ✓' : 'طباعة الفاتورة'}
+                    </button>
+
+                    {order.status === 'reviewing' && (
+                      <button
+                        onClick={() => rejectOrder(order.id)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-arabic font-semibold bg-red-50 border border-red-200 text-red-600 active:scale-95 transition-all hover:bg-red-100"
+                      >
+                        <X size={13} />
+                        رفض الطلب
+                      </button>
+                    )}
+
                     {cfg.nextStatus && (
                       <button
                         onClick={() => advanceStatus(order.id)}
                         disabled={isAdvancing}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-arabic font-bold transition-all active:scale-95 ${cfg.bg} ${cfg.text} border ${cfg.border} hover:opacity-90 disabled:opacity-60`}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-arabic font-semibold bg-primary text-white active:scale-95 transition-all shadow-sm hover:bg-primary/90 disabled:opacity-70"
                       >
                         {isAdvancing ? (
-                          <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <Check size={13} />
+                          <>
+                            {order.status === 'reviewing' ? <Check size={13} /> : order.status === 'preparing' ? <Truck size={13} /> : <CheckCircle size={13} />}
+                            {cfg.nextLabel}
+                          </>
                         )}
-                        {cfg.nextLabel}
                       </button>
                     )}
-                    {order.status === 'reviewing' && (
-                      <button
-                        onClick={() => rejectOrder(order.id)}
-                        className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-arabic font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all active:scale-95"
-                      >
-                        <X size={13} />
-                        رفض
-                      </button>
-                    )}
-                    <button
-                      onClick={() => printInvoice(order.id)}
-                      disabled={isPrinting}
-                      className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-arabic font-bold bg-white text-foreground border border-border hover:bg-muted/30 transition-all active:scale-95 disabled:opacity-60"
-                    >
-                      <span>🖨️</span>
-                      فاتورة
-                    </button>
                   </div>
                 </div>
               )}
@@ -441,77 +424,11 @@ export default function SupplierIncomingOrdersContent() {
         })}
       </div>
 
-      {/* ── AI Report Modal ── */}
-      {showAiReportModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => !aiGenerating && setShowAiReportModal(false)}>
-          <div className="bg-card rounded-2xl w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <Sparkles size={16} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground font-arabic">تقرير الأداء بالذكاء الاصطناعي</p>
-                  <p className="text-[10px] text-muted-foreground font-arabic">تحليل شامل لأداء طلباتك</p>
-                </div>
-              </div>
-              {!aiGenerating && (
-                <button onClick={() => setShowAiReportModal(false)} className="text-muted-foreground hover:text-foreground">
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-            <div className="p-4 space-y-3">
-              <p className="text-xs font-arabic text-muted-foreground">اختر نوع التقرير:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {(['weekly', 'monthly'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setAiReportType(type)}
-                    className={`py-3 rounded-xl text-xs font-arabic font-bold border transition-all ${aiReportType === type ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-muted/30 border-transparent text-muted-foreground'}`}
-                  >
-                    {type === 'weekly' ? '📅 أسبوعي' : '📆 شهري'}
-                  </button>
-                ))}
-              </div>
-              <div className="bg-muted/30 rounded-xl p-3 space-y-1.5">
-                <p className="text-[10px] font-arabic text-muted-foreground font-semibold">سيتضمن التقرير:</p>
-                {['إجمالي الإيرادات والطلبات', 'أكثر المنتجات مبيعاً', 'توصيات لتحسين الأداء', 'تحليل حالات الطلبات'].map((item) => (
-                  <div key={item} className="flex items-center gap-1.5">
-                    <CheckCircle size={11} className="text-emerald-500 flex-shrink-0" />
-                    <span className="text-[10px] font-arabic text-foreground">{item}</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={async () => {
-                  setAiGenerating(true);
-                  await new Promise((r) => setTimeout(r, 2000));
-                  setAiGenerating(false);
-                  setShowAiReportModal(false);
-                  showToast('success', `تم إنشاء التقرير ${aiReportType === 'weekly' ? 'الأسبوعي' : 'الشهري'} بنجاح`, 'تقرير الذكاء الاصطناعي', 4000);
-                }}
-                disabled={aiGenerating}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-arabic font-bold flex items-center justify-center gap-2 hover:opacity-95 transition-all active:scale-95 disabled:opacity-70"
-              >
-                {aiGenerating ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    جاري إنشاء التقرير...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={15} />
-                    إنشاء التقرير
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+      {filtered.length > 0 && (
+        <p className="text-center text-xs text-muted-foreground font-arabic">عرض {filtered.length} من {orders.length} طلب</p>
       )}
 
-      {/* ── Invoice Print Modal ── */}
+      {/* Invoice Print Modal */}
       {invoiceModal && (
         <InvoicePrintModal
           invoice={invoiceModal}

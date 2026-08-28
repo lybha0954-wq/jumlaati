@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Megaphone, Plus, Trash2, Edit3, CheckCircle } from 'lucide-react';
-import Modal from '../../../components/ui/Modal';
+import Modal from '@/components/ui/Modal';
 
 interface Announcement {
   id: string;
@@ -121,6 +121,7 @@ export default function AdminAnnouncements() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editItem ? 'تعديل الإعلان' : 'إعلان جديد'}
+        size="md"
         footer={
           <div className="flex gap-2">
             <button
@@ -134,7 +135,6 @@ export default function AdminAnnouncements() {
             </button>
           </div>
         }
-        isOpen={modalOpen}
       >
         <div className="space-y-4">
           <div>

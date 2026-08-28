@@ -1,206 +1,187 @@
-import { supabase } from '@/lib/supabase/client';
+'use client';
+
+import { createClient } from '@/lib/supabase/client';
 
 export interface LineItem {
   id: string;
-  productId: string;
-  productName: string;
-  quantity: number;
+  name: string;
+  qty: number;
+  unit: string;
   unitPrice: number;
-  total: number;
-  unit?: string;
 }
 
 export interface IncomingOrder {
   id: string;
   orderNumber: string;
-  retailerId: string;
-  retailerName?: string;
-  retailerPhone?: string;
-  supplierId?: string;
-  status: 'pending' | 'reviewing' | 'processing' | 'shipped' | 'delivered' | 'delivering' | 'assigned' | 'completed' | 'cancelled';
-  items: LineItem[];
-  totalAmount: number;
-  notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  deliveryAddress?: string;
   placedAt: string;
+  status: 'reviewing' | 'delivering' | 'completed' | 'cancelled';
   paymentStatus: 'paid' | 'pending' | 'overdue';
-  buyer: {
-    name: string;
-    storeName: string;
-    phone: string;
-  };
-  delivery: {
-    city: string;
-    address: string;
-    notes?: string;
-  };
+  buyer: { name: string; storeName: string; phone: string };
+  delivery: { address: string; city: string; notes?: string };
+  items: LineItem[];
+  total: number;
+  commission: number;
 }
 
 export interface SupplierOrder {
   id: string;
   orderNumber: string;
-  supplierId: string;
-  supplierName?: string;
-  retailerId?: string;
-  status: 'pending' | 'reviewing' | 'processing' | 'ready' | 'shipped' | 'delivered' | 'delivering' | 'assigned' | 'completed' | 'cancelled';
-  items: LineItem[];
-  totalAmount: number;
-  notes?: string;
-  createdAt?: string;
   placedAt: string;
+  status: 'pending' | 'ready' | 'shipped';
   paymentStatus: 'paid' | 'pending' | 'overdue';
-  customer: {
-    name: string;
-    storeName: string;
-    phone: string;
-  };
-  delivery: {
-    city: string;
-    address: string;
-    notes?: string;
+  customer: { name: string; storeName: string; phone: string };
+  delivery: { address: string; city: string; notes?: string };
+  items: LineItem[];
+  total: number;
+}
+
+function isSchemaError(error: any): boolean {
+  if (!error) return false;
+  if (error.code && typeof error.code === 'string') {
+    const cls = error.code.substring(0, 2);
+    if (cls === '42' || cls === '08') return true;
+    if (cls === '23') return false;
+  }
+  if (error.message) {
+    return /relation.*does not exist|column.*does not exist|syntax error/i.test(error.message);
+  }
+  return false;
+}
+
+function toLineItem(row: any): LineItem {
+  return { id: row.id, name: row.name, qty: row.qty, unit: row.unit, unitPrice: row.unit_price };
+}
+
+function toIncomingOrder(row: any): IncomingOrder {
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    placedAt: row.placed_at,
+    status: row.status,
+    paymentStatus: row.payment_status,
+    buyer: { name: row.buyer_name, storeName: row.buyer_store_name, phone: row.buyer_phone ?? '' },
+    delivery: { address: row.delivery_address ?? '', city: row.delivery_city ?? '', notes: row.delivery_notes ?? '' },
+    items: (row.order_items ?? []).map(toLineItem),
+    total: row.total ?? 0,
+    commission: row.commission ?? 0,
   };
 }
 
-function mapOrder(o: Record<string, unknown>): IncomingOrder {
-  const items = Array.isArray(o.order_items)
-    ? (o.order_items as Record<string, unknown>[]).map((i) => ({
-        id: String(i.id ?? ''),
-        productId: String(i.product_id ?? ''),
-        productName: String(i.product_name ?? i.name ?? ''),
-        quantity: Number(i.quantity ?? i.qty ?? 0),
-        unitPrice: Number(i.unit_price ?? i.price ?? 0),
-        total: Number(i.total ?? Number(i.quantity ?? 0) * Number(i.unit_price ?? 0)),
-        unit: i.unit ? String(i.unit) : undefined,
-      }))
-    : [];
-
+function toSupplierOrder(row: any): SupplierOrder {
   return {
-    id: String(o.id ?? ''),
-    orderNumber: String(o.order_number ?? o.id ?? ''),
-    retailerId: String(o.retailer_id ?? o.buyer_id ?? ''),
-    retailerName: o.retailer_name ? String(o.retailer_name) : undefined,
-    retailerPhone: o.retailer_phone ? String(o.retailer_phone) : undefined,
-    supplierId: o.supplier_id ? String(o.supplier_id) : undefined,
-    status: (o.status as IncomingOrder['status']) ?? 'pending',
-    items,
-    totalAmount: Number(o.total_amount ?? o.total ?? o.subtotal ?? 0),
-    notes: o.notes ? String(o.notes) : undefined,
-    createdAt: o.created_at ? String(o.created_at) : undefined,
-    updatedAt: o.updated_at ? String(o.updated_at) : undefined,
-    deliveryAddress: o.delivery_address ? String(o.delivery_address) : undefined,
-    placedAt: String(o.created_at ?? o.placed_at ?? new Date().toISOString()),
-    paymentStatus: (o.payment_status as IncomingOrder['paymentStatus']) ?? 'pending',
-    buyer: {
-      name: String(o.buyer_name ?? o.retailer_name ?? ''),
-      storeName: String(o.buyer_store_name ?? o.store_name ?? ''),
-      phone: String(o.buyer_phone ?? o.retailer_phone ?? ''),
-    },
-    delivery: {
-      city: String(o.delivery_city ?? ''),
-      address: String(o.delivery_address ?? ''),
-      notes: o.delivery_notes ? String(o.delivery_notes) : undefined,
-    },
+    id: row.id,
+    orderNumber: row.order_number,
+    placedAt: row.placed_at,
+    status: row.status,
+    paymentStatus: row.payment_status,
+    customer: { name: row.customer_name, storeName: row.customer_store_name, phone: row.customer_phone ?? '' },
+    delivery: { address: row.delivery_address ?? '', city: row.delivery_city ?? '', notes: row.delivery_notes ?? '' },
+    items: (row.supplier_order_items ?? []).map(toLineItem),
+    total: row.total ?? 0,
   };
 }
 
 export const orderService = {
   async getIncomingOrders(): Promise<IncomingOrder[]> {
+    const supabase = createClient();
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map(mapOrder);
-    } catch {
-      return [];
-    }
+        .order('placed_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toIncomingOrder);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
-  async getSupplierOrders(): Promise<SupplierOrder[]> {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map((o) => {
-        const mapped = mapOrder(o);
-        return {
-          ...mapped,
-          supplierId: String(o.supplier_id ?? ''),
-          supplierName: o.supplier_name ? String(o.supplier_name) : undefined,
-          customer: {
-            name: String(o.buyer_name ?? o.retailer_name ?? ''),
-            storeName: String(o.buyer_store_name ?? o.store_name ?? ''),
-            phone: String(o.buyer_phone ?? o.retailer_phone ?? ''),
-          },
-          delivery: {
-            city: String(o.delivery_city ?? ''),
-            address: String(o.delivery_address ?? ''),
-            notes: o.delivery_notes ? String(o.delivery_notes) : undefined,
-          },
-        } as SupplierOrder;
-      });
-    } catch {
-      return [];
-    }
-  },
-
-  async getOrderById(id: string): Promise<IncomingOrder | null> {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      return data ? mapOrder(data) : null;
-    } catch {
-      return null;
-    }
-  },
-
-  async updateOrderStatus(id: string, status: IncomingOrder['status']): Promise<boolean> {
+  async updateIncomingOrderStatus(id: string, status: IncomingOrder['status']): Promise<boolean> {
+    const supabase = createClient();
     try {
       const { error } = await supabase
         .from('orders')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
-      return !error;
-    } catch {
-      return false;
-    }
+      if (error) { if (isSchemaError(error)) throw error; return false; }
+      return true;
+    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
   },
 
-  async updateIncomingOrderStatus(id: string, status: IncomingOrder['status']): Promise<boolean> {
-    return orderService.updateOrderStatus(id, status);
+  async getSupplierOrders(): Promise<SupplierOrder[]> {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from('supplier_orders')
+        .select('*, supplier_order_items(*)')
+        .order('placed_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toSupplierOrder);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
   async updateSupplierOrderStatus(id: string, status: SupplierOrder['status']): Promise<boolean> {
-    return orderService.updateOrderStatus(id, status as IncomingOrder['status']);
+    const supabase = createClient();
+    try {
+      const { error } = await supabase
+        .from('supplier_orders')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) { if (isSchemaError(error)) throw error; return false; }
+      return true;
+    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
   },
 
-  async createOrder(order: Partial<IncomingOrder>): Promise<IncomingOrder | null> {
+  async createOrder(order: {
+    orderNumber: string;
+    buyerName: string;
+    buyerStoreName: string;
+    buyerPhone: string;
+    deliveryAddress: string;
+    deliveryCity: string;
+    deliveryNotes: string;
+    subtotal: number;
+    deliveryFee: number;
+    total: number;
+    commission: number;
+    paymentMethod: string;
+    items: Array<{ name: string; qty: number; unit: string; unitPrice: number }>;
+  }): Promise<string | null> {
+    const supabase = createClient();
     try {
-      const { data, error } = await supabase
+      const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
-          retailer_id: order.retailerId,
-          supplier_id: order.supplierId,
-          status: order.status ?? 'pending',
-          total_amount: order.totalAmount ?? 0,
-          notes: order.notes,
+          order_number: order.orderNumber,
+          buyer_name: order.buyerName,
+          buyer_store_name: order.buyerStoreName,
+          buyer_phone: order.buyerPhone,
           delivery_address: order.deliveryAddress,
+          delivery_city: order.deliveryCity,
+          delivery_notes: order.deliveryNotes,
+          subtotal: order.subtotal,
+          delivery_fee: order.deliveryFee,
+          total: order.total,
+          commission: order.commission,
+          payment_method: order.paymentMethod,
+          status: 'reviewing',
+          payment_status: 'pending',
         })
-        .select()
+        .select('id')
         .single();
-      if (error) throw error;
-      return data ? mapOrder(data) : null;
-    } catch {
-      return null;
-    }
+      if (orderError) { if (isSchemaError(orderError)) throw orderError; return null; }
+      const orderId = orderData.id;
+      if (order.items.length > 0) {
+        const { error: itemsError } = await supabase.from('order_items').insert(
+          order.items.map((item) => ({
+            order_id: orderId,
+            name: item.name,
+            qty: item.qty,
+            unit: item.unit,
+            unit_price: item.unitPrice,
+          }))
+        );
+        if (itemsError && isSchemaError(itemsError)) throw itemsError;
+      }
+      return orderId;
+    } catch (e: any) { if (isSchemaError(e)) throw e; return null; }
   },
 };
