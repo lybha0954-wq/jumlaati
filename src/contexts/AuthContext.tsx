@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, isSupabaseConfigured } from '../lib/supabase/client';
 
-export type UserRole = 'admin' | 'supplier' | 'retailer';
+// ⚠️ التعديل الأول: إضافة دور التوصيل delivery إلى النوع
+export type UserRole = 'admin' | 'supplier' | 'retailer' | 'delivery';
 
 interface AuthContextValue {
   user: any;
@@ -128,10 +129,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email_confirmed_at: new Date().toISOString(),
         user_metadata: {
           full_name: metadata.full_name || metadata.fullName || '',
-          role: metadata.role || 'retailer',
+          role: metadata.role || 'retailer', // يدعم delivery الآن
           business_name: metadata.business_name || '',
           phone: metadata.phone || '',
           city: metadata.city || '',
+          governorate: metadata.governorate || '',
+          vehicle_type: metadata.vehicle_type || '', // حقل جديد
         },
       };
       users[email] = { ...mockUser, password };
@@ -156,6 +159,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           business_name: metadata.business_name || '',
           phone: metadata.phone || '',
           city: metadata.city || '',
+          governorate: metadata.governorate || '',
+          vehicle_type: metadata.vehicle_type || '',
           registration_number: metadata.registration_number || '',
         },
         emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
