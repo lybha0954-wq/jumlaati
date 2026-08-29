@@ -1,6 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Users, ShoppingBag, Store, Percent, Truck } from 'lucide-react';
+import { CURRENCY } from '@/lib/commissionStore';
+import { financialService } from '@/lib/services/financialService';
+import { storeService } from '@/lib/services/storeService';
+import { supplierService } from '@/lib/services/supplierService';
+import { orderService } from '@/lib/services/orderService';
+
 export default function AdminKPIRow() {
   const [totalCommission, setTotalCommission] = useState(0);
   const [totalSales, setTotalSales] = useState(0);
@@ -8,6 +14,7 @@ export default function AdminKPIRow() {
   const [storeCount, setStoreCount] = useState(0);
   const [supplierCount, setSupplierCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState(0);
+
   useEffect(() => {
     financialService?.getTotals()?.then(({ totalCommission: tc, totalSales: ts, totalOrders: to }) => {
       setTotalCommission(tc);
