@@ -19,33 +19,31 @@ const notifications = [
 ];
 
 const routeTitles: Record<string, string> = {
-  '/admin-hub':                'لوحة التحكم',
-  '/admin-users':              'إدارة الحسابات',
-  '/admin-transactions':       'المعاملات والرقابة',
-  '/admin-settings':           'الإعدادات والدعم',
   '/admin-dashboard':          'لوحة المدير',
+  '/admin-users':              'إدارة الحسابات',
+  '/admin-commissions':        'العمولات',
+  '/admin-analytics':          'التحليلات',
+  '/admin-support':            'الدعم الفني',
+  '/admin-settings':           'الإعدادات',
+  '/orders-routing':           'توجيه الطلبات',
   '/supplier-dashboard':       'لوحة المورد',
-  '/supplier-catalog':         'الكتالوج والمخزون',
-  '/supplier-incoming-orders': 'الطلبات الواردة',
-  '/supplier-finance':         'المالية والحساب',
-  '/supplier-orders':          'طلبات المورد',
-  '/retailer-home':            'الرئيسية',
-  '/retailer-catalog':         'تصفح المنتجات',
+  '/supplier-inventory':       'إدارة المخزون',
+  '/supplier-orders':          'الطلبات الواردة',
+  '/supplier-analytics':       'التحليلات',
+  '/supplier-settings':        'الإعدادات',
+  '/supplier-support':         'الدعم الفني',
+  '/retailer-dashboard':       'الرئيسية',
+  '/retailer-cart':            'سلة التسوق',
   '/retailer-orders':          'طلباتي',
   '/retailer-profile':         'حسابي',
-  '/retailer-shop':            'المتجر',
-  '/retailer-cart':            'السلة',
-  '/retailer-checkout':        'إتمام الطلب',
-  '/retailer-account':         'الحساب',
-  '/retailer-ledger':          'كشف الحساب',
-  '/product-browse':           'تصفح المنتجات',
-  '/orders':                   'الطلبات',
-  '/notifications':            'الإشعارات',
-  '/inventory-management':     'إدارة المخزون',
-  '/financials':               'المالية',
-  '/stores-customers':         'المحلات والعملاء',
-  '/delivery-zones':           'مناطق التوصيل',
-  '/support-settings':         'الدعم والإعدادات',
+  '/retailer-settings':        'الإعدادات',
+  '/retailer-support':         'الدعم الفني',
+  '/delivery-dashboard':       'لوحة التوصيل',
+  '/delivery-tasks':           'المهام الحالية',
+  '/delivery-history':         'سجل التوصيل',
+  '/delivery-earnings':        'أرباحي',
+  '/delivery-profile':         'الملف الشخصي',
+  '/delivery-settings':        'الإعدادات',
 };
 
 export default function Topbar({ onMobileMenuToggle }: TopbarProps) {
@@ -77,9 +75,12 @@ export default function Topbar({ onMobileMenuToggle }: TopbarProps) {
     .slice(0, 2)
     .join('');
 
-  const roleLabel = role === 'admin' ? 'مدير النظام' : role === 'supplier' ? 'مورد' : 'صاحب محل';
+  // ⚠️ تم تحديث roleLabel ليدعم دور التوصيل
+  const roleLabel = role === 'admin' ? 'مدير النظام' : role === 'supplier' ? 'مجهز / جملة' : role === 'delivery' ? 'سائق توصيل' : 'صاحب محل';
   const roleBadgeColor = role === 'admin' ?'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-    : role === 'supplier' ?'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+    : role === 'supplier' ?'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+    : role === 'delivery' ?'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
+    :'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
 
   // Resolve screen title from pathname
   const screenTitle = Object.entries(routeTitles).find(([key]) => pathname?.startsWith(key))?.[1] ?? 'جُمْلَتِي';
