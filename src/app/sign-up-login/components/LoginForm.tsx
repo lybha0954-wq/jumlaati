@@ -14,13 +14,14 @@ const roleRedirects: Record<UserRole, string> = {
   retailer: '/retailer-home',
   supplier: '/supplier-dashboard',
   admin: '/admin-hub',
+  delivery: '/delivery-dashboard', // مسار جديد للتوصيل
 };
 
 export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormProps) {
   const { signIn } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // يستقبل البريد أو الهاتف
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,19 +30,19 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!email.trim() || !password.trim()) {
-      setError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
+    if (!identifier.trim() || !password.trim()) {
+      setError('يرجى إدخال البريد الإلكتروني / رقم الهاتف وكلمة المرور');
       return;
     }
     setLoading(true);
     try {
-      const result = await signIn(email.trim(), password);
+      const result = await signIn(identifier.trim(), password);
       const userRole: UserRole = result?.user?.user_metadata?.role || selectedRole;
       router.push(roleRedirects[userRole] || '/retailer-home');
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
-        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        setError('البريد الإلكتروني / رقم الهاتف أو كلمة المرور غير صحيحة');
       } else if (msg.includes('Email not confirmed')) {
         setError('يرجى تأكيد بريدك الإلكتروني أولاً');
       } else {
@@ -54,17 +55,17 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
-      {/* Email */}
+      {/* Identifier */}
       <div>
         <label className="block font-arabic text-sm font-medium text-foreground mb-1.5">
-          البريد الإلكتروني
+          البريد الإلكتروني أو رقم الهاتف
         </label>
         <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="example@email.com"
-          autoComplete="email"
+          type="text"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="example@email.com أو 07xxxxxxxxx"
+          autoComplete="username"
           className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-arabic text-sm"
           disabled={loading}
         />
