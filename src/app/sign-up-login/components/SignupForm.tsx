@@ -14,7 +14,15 @@ const roleRedirects: Record<UserRole, string> = {
   retailer: '/retailer-home',
   supplier: '/supplier-dashboard',
   admin: '/admin-hub',
+  delivery: '/delivery-dashboard', // مسار جديد للتوصيل
 };
+
+// قائمة المحافظات العراقية
+const governorates = [
+  'بغداد', 'البصرة', 'نينوى', 'أربيل', 'النجف', 'كربلاء', 'الأنبار', 'ديالى',
+  'ذي قار', 'السليمانية', 'صلاح الدين', 'بابل', 'واسط', 'ميسان', 'المثنى',
+  'القادسية', 'كركوك'
+];
 
 export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
   const { signUp } = useAuth();
@@ -23,8 +31,8 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
-  const [city, setCity] = useState('');
-  const [email, setEmail] = useState('');
+  const [governorate, setGovernorate] = useState(''); // بدلاً من city
+  const [email, setEmail] = useState(''); // اختياري
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,8 +43,9 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
     e.preventDefault();
     setError('');
 
-    if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setError('يرجى تعبئة جميع الحقول المطلوبة');
+    // التحقق: الاسم مطلوب، ورقم الهاتف مطلوب (أو البريد إذا لم يوجد هاتف)
+    if (!fullName.trim() || (!phone.trim() && !email.trim())) {
+      setError('يرجى تعبئة الاسم الكامل ورقم الهاتف أو البريد الإلكتروني');
       return;
     }
     if (password.length < 6) {
@@ -50,18 +59,18 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
 
     setLoading(true);
     try {
-      await signUp(email.trim(), password, {
+      await signUp(email.trim() || phone.trim(), password, { // استخدام البريد أو الهاتف كمعرف
         full_name: fullName.trim(),
         role,
         business_name: businessName.trim(),
         phone: phone.trim(),
-        city: city.trim(),
+        governorate,
       });
       router.push(roleRedirects[role] || '/retailer-home');
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('already registered') || msg.includes('User already registered')) {
-        setError('هذا البريد الإلكتروني مسجّل مسبقاً، يرجى تسجيل الدخول');
+        setError('هذا البريد/الهاتف مسجّل مسبقاً، يرجى تسجيل الدخول');
       } else if (msg.includes('Password should be')) {
         setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       } else {
@@ -104,40 +113,43 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
         />
       </div>
 
-      {/* Phone & City */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block font-arabic text-sm font-medium text-foreground mb-1.5">
-            رقم الهاتف
-          </label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="07xxxxxxxxx"
-            className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-arabic text-sm"
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label className="block font-arabic text-sm font-medium text-foreground mb-1.5">
-            المدينة
-          </label>
-          <input
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="بغداد"
-            className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-arabic text-sm"
-            disabled={loading}
-          />
-        </div>
-      </div>
-
-      {/* Email */}
+      {/* Phone */}
       <div>
         <label className="block font-arabic text-sm font-medium text-foreground mb-1.5">
-          البريد الإلكتروني <span className="text-red-500">*</span>
+          رقم الهاتف <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="07xxxxxxxxx"
+          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-arabic text-sm"
+          disabled={loading}
+        />
+      </div>
+
+      {/* Governorate Dropdown */}
+      <div>
+        <label className="block font-arabic text-sm font-medium text-foreground mb-1.5">
+          المحافظة <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={governorate}
+          onChange={(e) => setGovernorate(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-arabic text-sm"
+          disabled={loading}
+        >
+          <option value="">اختر المحافظة</option>
+          {governorates.map((gov) => (
+            <option key={gov} value={gov}>{gov}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Email (Optional) */}
+      <div>
+        <label className="block font-arabic text-sm font-medium text-foreground mb-1.5">
+          البريد الإلكتروني (اختياري)
         </label>
         <input
           type="email"
