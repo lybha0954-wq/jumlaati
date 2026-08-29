@@ -1,9 +1,7 @@
 'use client';
 import React from 'react';
-import { ShoppingBag, Truck, Shield } from 'lucide-react';
+import { ShoppingBag, Truck, PackageCheck } from 'lucide-react';
 import type { UserRole } from './AuthContent';
-import Icon from '@/components/ui/AppIcon';
-
 
 interface RoleSelectorProps {
   role: UserRole;
@@ -12,18 +10,19 @@ interface RoleSelectorProps {
 }
 
 const roles: { id: UserRole; label: string; icon: React.ElementType; description: string }[] = [
-  { id: 'retailer', label: 'صاحب المحل', icon: ShoppingBag, description: 'اطلب بضاعتك' },
-  { id: 'supplier', label: 'تاجر الجملة', icon: Truck, description: 'أدر طلباتك' },
-  { id: 'admin', label: 'مدير النظام', icon: Shield, description: 'إدارة المنصة' },
+  { id: 'retailer', label: 'صاحب المحل / السوبرماركت', icon: ShoppingBag, description: 'اطلب بضاعتك' },
+  { id: 'supplier', label: 'المجهز (الجملة)', icon: Truck, description: 'أدر طلباتك' },
+  { id: 'delivery', label: 'سائق التوصيل', icon: PackageCheck, description: 'نقل البضاعة' },
 ];
 
 export default function RoleSelector({ role, onRoleChange, showAdmin }: RoleSelectorProps) {
-  const visibleRoles = roles.filter((r) => r.id !== 'admin' || showAdmin);
+  // إخفاء المدير دائماً في هذه الواجهة (حسب الطلب)
+  const visibleRoles = roles.filter((r) => r.id !== 'admin');
 
   return (
     <div className="mb-6" dir="rtl">
       <p className="font-arabic text-sm font-medium text-muted-foreground mb-3">اختر نوع حسابك</p>
-      <div className={`grid gap-2 ${visibleRoles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      <div className={`grid gap-2 grid-cols-3`}>
         {visibleRoles.map(({ id, label, icon: Icon, description }) => {
           const isActive = role === id;
           return (
