@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Eye, EyeOff, UserPlus, Loader2, Truck, Store, PackageCheck } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import type { UserRole } from './AuthContent';
@@ -10,11 +10,12 @@ interface SignupFormProps {
   onSwitchToLogin: () => void;
 }
 
+// التوجيه الجديد حسب الواجهات المضافة
 const roleRedirects: Record<UserRole, string> = {
-  retailer: '/retailer-home',
-  supplier: '/supplier-dashboard',
-  admin: '/admin-hub',
-  delivery: '/delivery-dashboard',
+  retailer: '/retailer-dashboard', // بدلاً من /retailer-home
+  supplier: '/supplier-dashboard', // نفس الاسم
+  admin: '/admin-dashboard',       // بدلاً من /admin-hub
+  delivery: '/delivery-dashboard', // نفس الاسم
 };
 
 // قائمة المحافظات العراقية
@@ -32,8 +33,8 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
   const router = useRouter();
 
   const [fullName, setFullName] = useState('');
-  const [businessName, setBusinessName] = useState(''); // سيتم استخدامه لاسم الجملة أو المتجر
-  const [vehicleType, setVehicleType] = useState(''); // خاص بالدور delivery
+  const [businessName, setBusinessName] = useState(''); 
+  const [vehicleType, setVehicleType] = useState(''); 
   const [phone, setPhone] = useState('');
   const [governorate, setGovernorate] = useState('');
   const [email, setEmail] = useState('');
@@ -43,7 +44,6 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // الحقول تختلف حسب الدور
   const isSupplier = role === 'supplier';
   const isDelivery = role === 'delivery';
   const isRetailer = role === 'retailer';
@@ -69,11 +69,11 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
         full_name: fullName.trim(),
         role,
         business_name: businessName.trim(),
-        vehicle_type: vehicleType, // إضافة نوع السيارة
+        vehicle_type: vehicleType, 
         phone: phone.trim(),
         governorate,
       });
-      router.push(roleRedirects[role] || '/retailer-home');
+      router.push(roleRedirects[role] || '/retailer-dashboard');
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('already registered') || msg.includes('User already registered')) {
@@ -266,4 +266,4 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
       </p>
     </form>
   );
-}
+        }
