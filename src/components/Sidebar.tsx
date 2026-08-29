@@ -3,11 +3,8 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppLogo from '@/components/ui/AppLogo';
-import { LayoutDashboard, Package, ShoppingCart, Users, TrendingUp, Settings, ChevronRight, ChevronLeft, LogOut, Bell, Truck, HelpCircle, Store, ShoppingBag, ShieldCheck, Wallet, UserCircle, BarChart2, ClipboardList, Search,  } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, TrendingUp, Settings, ChevronRight, ChevronLeft, LogOut, Bell, Truck, HelpCircle, Store, ShoppingBag, ShieldCheck, Wallet, UserCircle, BarChart2, ClipboardList, Search, Home, History, DollarSign, Map } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import Icon from '@/components/ui/AppIcon';
-
-
 
 interface NavItem {
   id: string;
@@ -20,63 +17,57 @@ interface NavItem {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   هيكل التنقل حسب الدور
-   ───────────────────────────────────────────────────────────────
-   صاحب المحل (retailer):
-     التسوق → السلة → طلباتي → الديون → حسابي → الدعم
-
-   المورد (supplier):
-     الرئيسية → المخزون → الطلبات الواردة → المالية →
-     المحلات والعملاء → مناطق التوصيل → الإشعارات → الإعدادات
-
-   المدير (admin):
-     لوحة التحكم → المستخدمون → الطلبات → التقارير المالية →
-     الإشعارات → الدعم الفني → الإعدادات
+   هيكل التنقل الجديد حسب الواجهات المضافة في الصور
 ═══════════════════════════════════════════════════════════════ */
 const navItems: NavItem[] = [
 
-  /* ── صاحب المحل ─────────────────────────────────────────── */
-  { id: 'r-shop',     label: 'تسوق من الموردين',    icon: Store,         href: '/retailer-shop',     group: 'التسوق',    roles: ['retailer'] },
-  { id: 'r-browse',   label: 'تصفح المنتجات',       icon: Search,        href: '/product-browse',    group: 'التسوق',    roles: ['retailer'] },
-  { id: 'r-cart',     label: 'سلة التسوق',          icon: ShoppingBag,   href: '/retailer-cart',     group: 'التسوق',    roles: ['retailer'] },
-  { id: 'r-checkout', label: 'إتمام الطلب',         icon: ShoppingCart,  href: '/retailer-checkout', group: 'التسوق',    roles: ['retailer'] },
-  { id: 'r-orders',   label: 'طلباتي',              icon: ClipboardList, href: '/orders',            group: 'التسوق',    roles: ['retailer'] },
-  { id: 'r-ledger',   label: 'كشف الحساب والديون',  icon: Wallet,        href: '/retailer-ledger',   group: 'الحساب',    roles: ['retailer'] },
-  { id: 'r-account',  label: 'حسابي',               icon: UserCircle,    href: '/retailer-account',  group: 'الحساب',    roles: ['retailer'] },
-  { id: 'r-support',  label: 'الدعم والإعدادات',    icon: HelpCircle,    href: '/support-settings',  group: 'الحساب',    roles: ['retailer'] },
+  /* ── صاحب المحل / سوبر ماركت (Retailer) ─────────────────── */
+  { id: 'r-dashboard', label: 'الرئيسية',          icon: LayoutDashboard, href: '/retailer-dashboard',   group: 'التسوق',    roles: ['retailer'] },
+  { id: 'r-cart',      label: 'سلة التسوق',        icon: ShoppingBag,     href: '/retailer-cart',       group: 'التسوق',    roles: ['retailer'] },
+  { id: 'r-orders',    label: 'طلباتي',            icon: ClipboardList,   href: '/retailer-orders',     group: 'التسوق',    roles: ['retailer'] },
+  { id: 'r-profile',   label: 'الملف الشخصي',      icon: UserCircle,      href: '/retailer-profile',   group: 'الحساب',    roles: ['retailer'] },
+  { id: 'r-settings',  label: 'الإعدادات',         icon: Settings,        href: '/retailer-settings',  group: 'الحساب',    roles: ['retailer'] },
+  { id: 'r-support',   label: 'الدعم الفني',       icon: HelpCircle,      href: '/retailer-support',   group: 'الحساب',    roles: ['retailer'] },
 
-  /* ── المورد ──────────────────────────────────────────────── */
-  { id: 's-dashboard', label: 'الرئيسية',          icon: LayoutDashboard, href: '/supplier-dashboard',   group: 'رئيسي',     roles: ['supplier'] },
-  { id: 's-inventory', label: 'إدارة المخزون',     icon: Package,         href: '/inventory-management', group: 'رئيسي',    roles: ['supplier'], badge: 3 },
-  { id: 's-orders',    label: 'الطلبات الواردة',   icon: ShoppingCart,    href: '/supplier-orders',      group: 'رئيسي',    roles: ['supplier'], badge: 12 },
-  { id: 's-finance',   label: 'الحسابات المالية',  icon: TrendingUp,      href: '/financials',           group: 'المالية',   roles: ['supplier'] },
-  { id: 's-customers', label: 'المحلات والعملاء',  icon: Users,           href: '/stores-customers',     group: 'العمليات',  roles: ['supplier'] },
-  { id: 's-delivery',  label: 'مناطق التوصيل',     icon: Truck,           href: '/delivery-zones',       group: 'العمليات',  roles: ['supplier'] },
-  { id: 's-notif',     label: 'الإشعارات',         icon: Bell,            href: '/notifications',        group: 'أخرى',      roles: ['supplier'], badge: 5 },
-  { id: 's-settings',  label: 'الدعم والإعدادات',  icon: Settings,        href: '/support-settings',     group: 'أخرى',      roles: ['supplier'] },
+  /* ── المجهز / الجملة (Supplier) ─────────────────────────── */
+  { id: 's-dashboard', label: 'لوحة التحكم',       icon: LayoutDashboard, href: '/supplier-dashboard',  group: 'رئيسي',     roles: ['supplier'] },
+  { id: 's-orders',    label: 'الطلبات',           icon: ShoppingCart,    href: '/supplier-orders',     group: 'رئيسي',     roles: ['supplier'], badge: 12 },
+  { id: 's-inventory', label: 'المخزون',           icon: Package,         href: '/supplier-inventory',  group: 'رئيسي',     roles: ['supplier'], badge: 3 },
+  { id: 's-analytics', label: 'التحليلات',         icon: BarChart2,       href: '/supplier-analytics',  group: 'المالية',   roles: ['supplier'] },
+  { id: 's-settings',  label: 'الإعدادات',         icon: Settings,        href: '/supplier-settings',   group: 'المالية',   roles: ['supplier'] },
+  { id: 's-support',   label: 'الدعم الفني',       icon: HelpCircle,      href: '/supplier-support',    group: 'المالية',   roles: ['supplier'] },
 
-  /* ── المدير ──────────────────────────────────────────────── */
-  { id: 'a-dashboard', label: 'لوحة التحكم',       icon: ShieldCheck,   href: '/admin-dashboard',    group: 'الإدارة',   roles: ['admin'], badge: 9 },
-  { id: 'a-users',     label: 'المستخدمون والمحلات', icon: Users,        href: '/stores-customers',   group: 'الإدارة',   roles: ['admin'] },
-  { id: 'a-orders',    label: 'جميع الطلبات',      icon: ShoppingCart,  href: '/orders',             group: 'الإدارة',   roles: ['admin'] },
-  { id: 'a-reports',   label: 'التقارير المالية',  icon: BarChart2,     href: '/financials',         group: 'التقارير',  roles: ['admin'] },
-  { id: 'a-inventory', label: 'المخزون والمنتجات', icon: Package,       href: '/inventory-management', group: 'التقارير', roles: ['admin'] },
-  { id: 'a-notif',     label: 'الإشعارات',         icon: Bell,          href: '/notifications',      group: 'النظام',    roles: ['admin'], badge: 5 },
-  { id: 'a-support',   label: 'الدعم الفني',       icon: HelpCircle,    href: '/support-settings',   group: 'النظام',    roles: ['admin'] },
-  { id: 'a-settings',  label: 'الإعدادات',         icon: Settings,      href: '/support-settings',   group: 'النظام',    roles: ['admin'] },
+  /* ── سائق التوصيل (Delivery) ─────────────────────────────── */
+  { id: 'd-dashboard', label: 'الرئيسية',          icon: Home,            href: '/delivery-dashboard',  group: 'مهامي',     roles: ['delivery'] },
+  { id: 'd-tasks',     label: 'المهام الحالية',    icon: ClipboardList,   href: '/delivery-tasks',      group: 'مهامي',     roles: ['delivery'], badge: 5 },
+  { id: 'd-history',   label: 'سجل التوصيل',       icon: History,         href: '/delivery-history',    group: 'مهامي',     roles: ['delivery'] },
+  { id: 'd-earnings',  label: 'أرباحي',            icon: DollarSign,      href: '/delivery-earnings',   group: 'الحساب',    roles: ['delivery'] },
+  { id: 'd-profile',   label: 'الملف الشخصي',      icon: UserCircle,      href: '/delivery-profile',    group: 'الحساب',    roles: ['delivery'] },
+  { id: 'd-settings',  label: 'الإعدادات',         icon: Settings,        href: '/delivery-settings',   group: 'الحساب',    roles: ['delivery'] },
+
+  /* ── المدير (Admin) ──────────────────────────────────────── */
+  { id: 'a-dashboard', label: 'لوحة التحكم',       icon: ShieldCheck,    href: '/admin-dashboard',     group: 'الإدارة',   roles: ['admin'], badge: 9 },
+  { id: 'a-users',     label: 'المستخدمون',        icon: Users,           href: '/admin-users',         group: 'الإدارة',   roles: ['admin'] },
+  { id: 'a-orders',    label: 'توجيه الطلبات',     icon: Map,             href: '/orders-routing',      group: 'الإدارة',   roles: ['admin'] },
+  { id: 'a-commissions', label: 'العمولات',        icon: Wallet,          href: '/admin-commissions',   group: 'التقارير',  roles: ['admin'] },
+  { id: 'a-analytics', label: 'التحليلات',         icon: TrendingUp,      href: '/admin-analytics',     group: 'التقارير',  roles: ['admin'] },
+  { id: 'a-support',   label: 'الدعم الفني',       icon: HelpCircle,      href: '/admin-support',       group: 'النظام',    roles: ['admin'] },
+  { id: 'a-settings',  label: 'الإعدادات',         icon: Settings,        href: '/admin-settings',      group: 'النظام',    roles: ['admin'] },
 ];
 
 /* ترتيب المجموعات حسب الدور */
 const groupsByRole: Record<string, string[]> = {
   retailer: ['التسوق', 'الحساب'],
-  supplier: ['رئيسي', 'المالية', 'العمليات', 'أخرى'],
+  supplier: ['رئيسي', 'المالية'],
+  delivery: ['مهامي', 'الحساب'],
   admin:    ['الإدارة', 'التقارير', 'النظام'],
 };
 
 const roleLabels: Record<string, string> = {
   admin:    'مدير النظام',
-  supplier: 'مورد موثق',
-  retailer: 'تاجر تجزئة',
+  supplier: 'مجهز / جملة',
+  retailer: 'صاحب محل',
+  delivery: 'سائق توصيل',
 };
 
 interface SidebarProps {
@@ -92,7 +83,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, activeRoute, onMo
 
   const isActive = (href: string) => {
     if (!activeRoute) return false;
-    if (href === '/supplier-dashboard') return activeRoute === '/supplier-dashboard' || activeRoute === '/';
+    if (href === '/supplier-dashboard' || href === '/retailer-dashboard' || href === '/delivery-dashboard' || href === '/admin-dashboard') return activeRoute === href;
     return activeRoute?.startsWith(href);
   };
 
