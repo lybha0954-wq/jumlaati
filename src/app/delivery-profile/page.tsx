@@ -1,5 +1,5 @@
-import DeliveryHistoryContent from './components/DeliveryHistoryContent';
+import DeliveryProfileContent from './components/DeliveryProfileContent';
 
 export default function Page() {
-  return <DeliveryHistoryContent />;
+  return <DeliveryProfileContent />;
 }
