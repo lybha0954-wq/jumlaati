@@ -1,87 +1,49 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
 import RoleSelector from './RoleSelector';
 import AppLogo from '@/components/ui/AppLogo';
-import { ShoppingBag, Truck, Shield, Moon, Sun } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ShoppingBag, Truck, PackageCheck, Shield, Lock } from 'lucide-react';
 
-export type UserRole = 'retailer' | 'supplier' | 'admin';
+export type UserRole = 'retailer' | 'supplier' | 'delivery' | 'admin';
 export type AuthMode = 'login' | 'signup';
 
-const ADMIN_LOGGED_OUT_KEY = 'jumlaati_admin_was_logged_out';
-
+// تسميات الأدوار (بعد التعديل)
 const roleLabels: Record<UserRole, string> = {
-  retailer: 'صاحب المحل / الفرع',
-  supplier: 'تاجر الجملة / المورد',
-  admin: 'مدير النظام',
+  retailer: 'صاحب المحل / السوبرماركت',
+  supplier: 'المجهز (الجملة)',
+  delivery: 'سائق التوصيل',
+  admin: 'مدير النظام (مخفي)',
 };
 
 const roleIcons: Record<UserRole, React.ElementType> = {
   retailer: ShoppingBag,
   supplier: Truck,
+  delivery: PackageCheck,
   admin: Shield,
 };
 
 const roleDescriptions: Record<UserRole, string> = {
   retailer: 'اطلب بضاعتك من الموردين بسهولة',
   supplier: 'أدر طلباتك ومخزونك بكفاءة',
+  delivery: 'نقل البضائع من المورد إلى المحل',
   admin: 'راقب وأدر منصة جُمْلَتِي',
 };
 
 const roleFeatures: Record<UserRole, string[]> = {
   supplier: ['استقبل الطلبات وأدرها بلحظة', 'راقب مخزونك وتنبيهات النفاد', 'تتبع إيراداتك اليومية والشهرية'],
   retailer: ['قارن أسعار الموردين بضغطة', 'اطلب بضاعتك بدون مكالمات', 'ادفع كاش أو آجل حسب اتفاقك'],
+  delivery: ['استقبل طلبات التوصيل فوراً', 'حدد حالة التوصيل لحظة بلحظة', 'تابع أرباحك اليومية'],
   admin: ['وافق على الموردين والمحلات', 'راقب العمولات والمبيعات', 'أدر تذاكر الدعم الفني'],
 };
 
 export default function AuthContent() {
+  // المدير مخفي تماماً من الواجهة
   const [role, setRole] = useState<UserRole>('supplier');
   const [mode, setMode] = useState<AuthMode>('login');
-  const [showAdmin, setShowAdmin] = useState(false);
-  const { isDark, toggleTheme } = useTheme();
 
   const RoleIcon = roleIcons[role];
-
-  // Determine if admin option should be shown:
-  // Show admin if: no active session AND (first install OR admin previously signed out)
-  useEffect(() => {
-    const checkAdminVisibility = () => {
-      // Check if there's an active mock session
-      try {
-        const mockSession = localStorage.getItem('jumlaati_mock_session');
-        const session = mockSession ? JSON.parse(mockSession) : null;
-        const isLoggedIn = !!session?.user;
-
-        if (isLoggedIn) {
-          // Someone is logged in — hide admin
-          setShowAdmin(false);
-          return;
-        }
-
-        // No active session — check if admin was previously logged out or first install
-        const adminLoggedOut = localStorage.getItem(ADMIN_LOGGED_OUT_KEY);
-        const mockUsers = localStorage.getItem('jumlaati_mock_users');
-        const hasUsers = mockUsers && Object.keys(JSON.parse(mockUsers)).length > 0;
-
-        if (!hasUsers) {
-          // First install — show admin
-          setShowAdmin(true);
-        } else if (adminLoggedOut === 'true') {
-          // Admin explicitly signed out — show admin again
-          setShowAdmin(true);
-        } else {
-          // Users exist but admin never signed out — hide admin
-          setShowAdmin(false);
-        }
-      } catch {
-        setShowAdmin(true); // Default: show on error
-      }
-    };
-
-    checkAdminVisibility();
-  }, []);
 
   return (
     <div className="min-h-screen bg-background flex" dir="rtl">
@@ -139,24 +101,16 @@ export default function AuthContent() {
 
       {/* Right: Auth form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-12 xl:px-16 overflow-y-auto">
-        {/* Mobile header */}
+        {/* Mobile header (بدون زر الثيم) */}
         <div className="flex items-center justify-between mb-8 lg:hidden">
           <div className="flex items-center gap-2">
             <AppLogo size={36} />
             <span className="font-arabic font-bold text-primary text-xl">جُمْلَتِي</span>
           </div>
-          {/* Dark mode toggle on mobile */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-            aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
         </div>
 
         <div className="w-full max-w-md mx-auto">
-          {/* Header */}
+          {/* Header (بدون زر الثيم) */}
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
@@ -164,29 +118,29 @@ export default function AuthContent() {
                   {mode === 'login' ? 'أهلاً بعودتك 👋' : 'إنشاء حساب جديد'}
                 </h1>
                 <p className="font-arabic text-muted-foreground text-sm mt-1">
-                  {mode === 'login' ?'سجّل دخولك للوصول إلى حسابك' :'انضم إلى جُمْلَتِي وابدأ التجارة اليوم'}
+                  {mode === 'login' ? 'سجّل دخولك للوصول إلى حسابك' : 'انضم إلى جُمْلَتِي وابدأ التجارة اليوم'}
                 </p>
               </div>
-              {/* Dark mode toggle on desktop */}
-              <button
-                onClick={toggleTheme}
-                className="hidden lg:flex p-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-                aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
-              >
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
             </div>
           </div>
 
-          {/* Role selector — shown for both login and signup */}
-          <RoleSelector role={role} onRoleChange={setRole} showAdmin={showAdmin} />
+          {/* رسالة توضيحية قبل الاختيار (لأن الحقول مقفلة حتى اختيار الدور) */}
+          <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-4 py-3 mb-4">
+            <Lock size={16} className="text-primary flex-shrink-0" />
+            <p className="font-arabic text-xs text-muted-foreground leading-relaxed">
+              اختر دورك أولاً ليتم فتح النموذج المناسب لك. (دور المدير متاح للمصمم عبر بوابة خاصة)
+            </p>
+          </div>
+
+          {/* Role selector (إخفاء المدير نهائياً: showAdmin لا يُمرر أو يمرر false) */}
+          <RoleSelector role={role} onRoleChange={setRole} showAdmin={false} />
 
           {/* Mode tabs */}
           <div className="flex bg-muted rounded-xl p-1 mb-6">
             <button
               onClick={() => setMode('login')}
               className={`flex-1 py-2 rounded-lg text-sm font-arabic font-semibold transition-all ${
-                mode === 'login' ?'bg-card text-foreground shadow-sm' :'text-muted-foreground hover:text-foreground'
+                mode === 'login' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               تسجيل الدخول
@@ -194,7 +148,7 @@ export default function AuthContent() {
             <button
               onClick={() => setMode('signup')}
               className={`flex-1 py-2 rounded-lg text-sm font-arabic font-semibold transition-all ${
-                mode === 'signup' ?'bg-card text-foreground shadow-sm' :'text-muted-foreground hover:text-foreground'
+                mode === 'signup' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               إنشاء حساب
