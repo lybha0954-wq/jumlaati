@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, ShieldCheck, Users, UserCircle, Home, Grid3X3, ClipboardList, Wallet, Settings, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ShieldCheck, Users, UserCircle, Home, Grid3X3, ClipboardList, Wallet, Settings, CreditCard, Truck, History, DollarSign } from 'lucide-react';
 
 interface BottomNavItem {
   id: string;
@@ -13,29 +13,37 @@ interface BottomNavItem {
 }
 
 const retailerNav: BottomNavItem[] = [
-  { id: 'r-home',    label: 'الرئيسية', icon: Home,        href: '/retailer-home' },
-  { id: 'r-catalog', label: 'الأقسام',  icon: Grid3X3,     href: '/retailer-catalog' },
-  { id: 'r-orders',  label: 'السلة',    icon: ShoppingCart, href: '/retailer-orders' },
-  { id: 'r-profile', label: 'حسابي',   icon: UserCircle,  href: '/retailer-profile' },
+  { id: 'r-dashboard', label: 'الرئيسية', icon: Home,         href: '/retailer-dashboard' },
+  { id: 'r-cart',      label: 'السلة',     icon: ShoppingCart, href: '/retailer-cart' },
+  { id: 'r-orders',    label: 'طلباتي',    icon: ClipboardList, href: '/retailer-orders' },
+  { id: 'r-profile',   label: 'حسابي',     icon: UserCircle,    href: '/retailer-profile' },
 ];
 
 const supplierNav: BottomNavItem[] = [
   { id: 's-dashboard', label: 'الرئيسية', icon: LayoutDashboard, href: '/supplier-dashboard' },
-  { id: 's-catalog',   label: 'الكتالوج', icon: Package,          href: '/supplier-catalog' },
-  { id: 's-orders',    label: 'الطلبات',  icon: ClipboardList,    href: '/supplier-incoming-orders', badge: 2 },
-  { id: 's-finance',   label: 'المالية',  icon: Wallet,           href: '/supplier-finance' },
+  { id: 's-inventory', label: 'المخزون',  icon: Package,         href: '/supplier-inventory' },
+  { id: 's-orders',    label: 'الطلبات',  icon: ClipboardList,   href: '/supplier-orders', badge: 2 },
+  { id: 's-analytics', label: 'التحليلات', icon: Wallet,          href: '/supplier-analytics' },
+];
+
+const deliveryNav: BottomNavItem[] = [
+  { id: 'd-dashboard', label: 'الرئيسية', icon: Home,          href: '/delivery-dashboard' },
+  { id: 'd-tasks',     label: 'المهام',    icon: ClipboardList, href: '/delivery-tasks', badge: 5 },
+  { id: 'd-history',   label: 'السجل',     icon: History,       href: '/delivery-history' },
+  { id: 'd-earnings',  label: 'أرباحي',    icon: DollarSign,    href: '/delivery-earnings' },
 ];
 
 const adminNav: BottomNavItem[] = [
-  { id: 'a-hub',          label: 'التحكم',    icon: ShieldCheck, href: '/admin-hub' },
-  { id: 'a-users',        label: 'الحسابات',  icon: Users,       href: '/admin-users' },
-  { id: 'a-transactions', label: 'المعاملات', icon: CreditCard,  href: '/admin-transactions' },
-  { id: 'a-settings',     label: 'الإعدادات', icon: Settings,    href: '/admin-settings' },
+  { id: 'a-dashboard', label: 'التحكم',    icon: ShieldCheck, href: '/admin-dashboard' },
+  { id: 'a-users',     label: 'الحسابات',  icon: Users,       href: '/admin-users' },
+  { id: 'a-orders',    label: 'الطلبات',   icon: CreditCard,  href: '/orders-routing' },
+  { id: 'a-settings',  label: 'الإعدادات', icon: Settings,    href: '/admin-settings' },
 ];
 
 const navByRole: Record<string, BottomNavItem[]> = {
   retailer: retailerNav,
   supplier: supplierNav,
+  delivery: deliveryNav,
   admin:    adminNav,
 };
 
@@ -45,6 +53,7 @@ export default function BottomNavBar() {
   // Detect role from pathname
   const role = pathname?.startsWith('/admin') ? 'admin'
     : pathname?.startsWith('/supplier') ? 'supplier'
+    : pathname?.startsWith('/delivery') ? 'delivery'
     : 'retailer';
 
   const items = navByRole[role] || retailerNav;
