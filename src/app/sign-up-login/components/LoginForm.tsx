@@ -10,11 +10,12 @@ interface LoginFormProps {
   selectedRole: UserRole;
 }
 
+// التوجيه الجديد حسب الواجهات المضافة
 const roleRedirects: Record<UserRole, string> = {
-  retailer: '/retailer-home',
-  supplier: '/supplier-dashboard',
-  admin: '/admin-hub',
-  delivery: '/delivery-dashboard', // مسار جديد للتوصيل
+  retailer: '/retailer-dashboard', // بدلاً من /retailer-home
+  supplier: '/supplier-dashboard', // نفس الاسم
+  admin: '/admin-dashboard',       // بدلاً من /admin-hub
+  delivery: '/delivery-dashboard', // نفس الاسم
 };
 
 export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormProps) {
@@ -38,7 +39,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
     try {
       const result = await signIn(identifier.trim(), password);
       const userRole: UserRole = result?.user?.user_metadata?.role || selectedRole;
-      router.push(roleRedirects[userRole] || '/retailer-home');
+      router.push(roleRedirects[userRole] || '/retailer-dashboard');
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
