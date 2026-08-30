@@ -1,22 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  TrendingUp,
-  Truck,
-  Store,
-  Boxes,
-  Clock,
-  CheckCircle2,
-  Wallet,
-  Link2,
-  ArrowLeftRight,
-  Megaphone,
-  Inbox,
-  Sparkles,
-  ShieldCheck,
-} from 'lucide-react';
-import Icon from '@/components/ui/AppIcon';
+import { TrendingUp, Truck, Store, Boxes, CheckCircle2, Wallet, Link2, ArrowLeftRight, Megaphone, Inbox, Sparkles, ShieldCheck,  } from 'lucide-react';
+
 
 
 // ============================================================
@@ -373,7 +359,6 @@ export default function AdminCommissionsContent() {
 
         {/* قسم العمولات النشطة */}
         <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-           سجل العمولات النشطة والمحصلة 
           <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-lg font-bold text-slate-900">سجل العمولات النشطة</h2>
@@ -440,4 +425,151 @@ export default function AdminCommissionsContent() {
                 </div>
               );
             })}
-            {activeCommissions.
+            {activeCommissions.length === 0 && (
+              <div className="p-12 text-center text-sm text-slate-400 flex flex-col items-center justify-center gap-2">
+                <Inbox className="w-8 h-8 text-slate-300" />
+                لا توجد عمولات نشطة حالياً.
+              </div>
+            )}
+          </div>
+        </section>
+
+      </div>
+    </main>
+  );
+}
+
+// ============================================================
+// مكوّنات مساعدة
+// ============================================================
+
+interface SummaryCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  tone: string;
+}
+
+function SummaryCard({ icon: IconComp, label, value, tone }: SummaryCardProps) {
+  return (
+    <div className={`rounded-2xl border p-5 flex items-center gap-4 ${tone}`}>
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-white/60">
+        <IconComp className="w-5 h-5" />
+      </div>
+      <div>
+        <div className="text-xs font-medium opacity-80">{label}</div>
+        <div className="text-xl font-black mt-0.5">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+interface MatchItem {
+  id: string;
+  primary: string;
+  secondary: string;
+}
+
+interface MatchSectionProps {
+  icon: React.ElementType;
+  iconColor: string;
+  title: string;
+  subtitle: string;
+  leftLabel: string;
+  rightLabel: string;
+  leftItems: MatchItem[];
+  rightItems: MatchItem[];
+  selectedLeft: string;
+  selectedRight: string;
+  onSelectLeft: (id: string) => void;
+  onSelectRight: (id: string) => void;
+  onExecute: () => void;
+  commissionNote: string;
+}
+
+function MatchSection({
+  icon: IconComp,
+  iconColor,
+  title,
+  subtitle,
+  leftLabel,
+  rightLabel,
+  leftItems,
+  rightItems,
+  selectedLeft,
+  selectedRight,
+  onSelectLeft,
+  onSelectRight,
+  onExecute,
+  commissionNote,
+}: MatchSectionProps) {
+  const canExecute = selectedLeft !== '' && selectedRight !== '';
+
+  return (
+    <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="p-6 md:p-8 border-b border-slate-100 flex items-center gap-3.5">
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${iconColor}`}>
+          <IconComp className="w-5 h-5" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+
+      <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-start">
+        <MatchColumn label={leftLabel} items={leftItems} selected={selectedLeft} onSelect={onSelectLeft} />
+
+        <div className="flex flex-col items-center justify-center gap-3 py-4">
+          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+            <Link2 className="w-5 h-5" />
+          </div>
+          <button
+            onClick={onExecute}
+            disabled={!canExecute}
+            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-blue-600/20 flex items-center gap-2"
+          >
+            <ArrowLeftRight className="w-4 h-4" />
+            تنفيذ الربط
+          </button>
+          <p className="text-xs text-slate-400 text-center max-w-[140px] leading-relaxed">{commissionNote}</p>
+        </div>
+
+        <MatchColumn label={rightLabel} items={rightItems} selected={selectedRight} onSelect={onSelectRight} />
+      </div>
+    </section>
+  );
+}
+
+interface MatchColumnProps {
+  label: string;
+  items: MatchItem[];
+  selected: string;
+  onSelect: (id: string) => void;
+}
+
+function MatchColumn({ label, items, selected, onSelect }: MatchColumnProps) {
+  return (
+    <div className="space-y-3">
+      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
+      {items.length === 0 ? (
+        <div className="text-xs text-slate-400 bg-slate-50 rounded-xl p-4 text-center">لا توجد طلبات حالياً</div>
+      ) : (
+        items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onSelect(item.id)}
+            className={`w-full text-right p-3.5 rounded-xl border transition-all text-sm ${
+              selected === item.id
+                ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
+                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            <div className="font-bold text-slate-900">{item.primary}</div>
+            {item.secondary && <div className="text-xs text-slate-500 mt-0.5">{item.secondary}</div>}
+          </button>
+        ))
+      )}
+    </div>
+  );
+}
