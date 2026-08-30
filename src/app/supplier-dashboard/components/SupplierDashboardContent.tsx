@@ -442,3 +442,33 @@ await fetch('/api/revalidate', {
     secret: process.env.NEXT_PUBLIC_REVALIDATION_SECRET 
   })
 });
+// في app/store/[slug]/page.tsx نضيف هذا التحسين
+const getStoreWithCache = cache(async (slug: string) => {
+  const supabase = createClient();
+  
+  // 1. حاول الجلب من الكاش أولاً
+  const { data: cached } = await supabase
+    .rpc('get_cached', { key_param: `store_${slug}` });
+  
+  if (cached) return cached;
+
+  // 2. إذا لم يوجد، اجلب من قاعدة البيانات
+  const { data } = await supabase
+    .from('profiles')
+    .select('*, products(*)')
+    .eq('store_slug', slug)
+    .single();
+
+  // 3. خزّن النتيجة للاستخدام القادم
+  if (data) {
+    await supabase
+      .from('cache')
+      .upsert({ 
+        key: `store_${slug}`, 
+        value: data,
+        expires_at: new Date(Date.now() + 3600000).toISOString() // ساعة
+      });
+  }
+  
+  return data;
+});
