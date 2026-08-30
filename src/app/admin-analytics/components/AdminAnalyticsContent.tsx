@@ -3,10 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import QuickStatsCards from './QuickStatsCards';
+import QuickStatsCards from './QuickstatsCards';
 import TransactionsTable from './TransactionsTable';
 import TransactionFilters from './TransactionFilters';
-import StatusPieChart from './StatusPieChart';
+import StatusPieChart from './Statuspiechart';
 
 interface AnalyticsData {
   stats: {
@@ -28,6 +28,11 @@ export default function AdminAnalyticsContent({ initialData }: AdminAnalyticsCon
   const [data, setData] = useState(initialData);
   const [filteredTransactions, setFilteredTransactions] = useState(initialData.transactions);
   const [filters, setFilters] = useState({ status: 'all', dateRange: 'all' });
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleTimeString('ar-IQ'));
+  }, []);
 
   // تحديث فوري عند إضافة معاملة جديدة
   useRealtimeSubscription({
@@ -111,7 +116,7 @@ export default function AdminAnalyticsContent({ initialData }: AdminAnalyticsCon
           📊 سجل المعاملات المالية
         </h1>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          آخر تحديث: {new Date().toLocaleTimeString('ar-IQ')}
+          آخر تحديث: {lastUpdated}
         </span>
       </div>
 
