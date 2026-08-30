@@ -64,8 +64,6 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
   },
 
-  // 3. تحسين حزمة التطبيق (تقليل حجم الكود المُرسل للمتصفح)
-  swcMinify: true,
 
   // 4. منع تحميل المكتبات غير المستخدمة (Tree Shaking)
   experimental: {
