@@ -170,3 +170,59 @@ serve(async (req) => {
     });
   }
 });
+// supabase/functions/confirm-payment/index.ts
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import Stripe from 'https://esm.sh/stripe@14.21.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+});
+
+serve(async (req) => {
+  const body = await req.text();
+  const signature = req.headers.get('stripe-signature')!;
+  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch {
+    return new Response('Webhook signature verification failed.', { status: 400 });
+  }
+
+  // معالجة حدث نجاح الدفع فقط
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    const orderId = paymentIntent.metadata.orderId;
+    
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // استخدم Service Role للتحديث دون قيود
+    );
+
+    // 1. تحديث حالة الطلب إلى "تم الدفع"
+    await supabase.from('orders').update({ 
+      status: 'مدفوع - جارٍ التجهيز',
+      paid_at: new Date().toISOString()
+    }).eq('id', orderId);
+
+    // 2. تحديث حالة المعاملة إلى "مكتملة"
+    await supabase.from('transactions')
+      .update({ status: 'completed' })
+      .eq('payment_intent_id', paymentIntent.id);
+
+    // 3. إعادة توليد صفحة الطلب فوراً (ISR On-Demand)
+    const baseUrl = Deno.env.get('NEXT_PUBLIC_BASE_URL')!;
+    await fetch(`${baseUrl}/api/revalidate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        path: `/retailer/orders/${orderId}`,
+        secret: Deno.env.get('REVALIDATION_SECRET')
+      })
+    });
+  }
+
+  return new Response('Webhook received', { status: 200 });
+});
