@@ -229,3 +229,20 @@ export default function CheckoutButton({ orderId }: { orderId: string }) {
     </button>
   );
 }
+// داخل CheckoutButton.tsx، بعد إتمام الدفع
+const { error: stripeError } = await stripe!.confirmPayment({
+  // ...
+  confirmParams: { 
+    return_url: `${window.location.origin}/retailer/orders/${orderId}` 
+  },
+});
+
+if (stripeError) {
+  // إذا فشل الدفع، تأكد من استرجاع المخزون (حماية إضافية)
+  await fetch('/api/restore-inventory', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId })
+  });
+  alert('فشل الدفع، تم استرجاع المخزون. حاول مرة أخرى');
+}
