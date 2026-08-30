@@ -50,7 +50,7 @@ export default function DeliveryHistoryContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans" dir="rtl">
-      
+
       {/* شريط التنقل العلوي */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -139,23 +139,23 @@ export default function DeliveryHistoryContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm">
-                {historyRecords.map((record, index) => (
+                {historyRecords?.map((record, index) => (
                   <tr key={index} className="hover:bg-gray-50/50 transition">
-                    <td className="py-4 px-6 font-semibold text-purple-600">{record.id}</td>
-                    <td className="py-4 px-6 text-gray-900">{record.customer}</td>
-                    <td className="py-4 px-6 text-gray-600">{record.driver}</td>
+                    <td className="py-4 px-6 font-semibold text-purple-600">{record?.id}</td>
+                    <td className="py-4 px-6 text-gray-900">{record?.customer}</td>
+                    <td className="py-4 px-6 text-gray-600">{record?.driver}</td>
                     <td className="py-4 px-6 text-gray-500 flex items-center gap-1.5 pt-5">
                       <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{record.date}</span>
+                      <span>{record?.date}</span>
                     </td>
                     <td className="py-4 px-6">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        record.status === 'مكتملة' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        record?.status === 'مكتملة' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                       }`}>
-                        {record.status}
+                        {record?.status}
                       </span>
                     </td>
-                    <td className="py-4 px-6 font-bold text-gray-900">{record.amount}</td>
+                    <td className="py-4 px-6 font-bold text-gray-900">{record?.amount}</td>
                     <td className="py-4 px-6 text-center">
                       <button className="text-gray-400 hover:text-purple-600 p-1.5 rounded-lg transition">
                         <Eye className="w-4 h-4" />

@@ -47,7 +47,7 @@ export function AdminDashboardContent() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium text-slate-400">إجمالي الإيرادات</p>
-              <h3 className="text-2xl font-bold text-white mt-2">${stats.totalRevenue.toLocaleString()}</h3>
+              <h3 className="text-2xl font-bold text-white mt-2">${stats?.totalRevenue?.toLocaleString()}</h3>
             </div>
             <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
               <TrendingUp className="w-5 h-5" />
@@ -63,7 +63,7 @@ export function AdminDashboardContent() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium text-slate-400">المستخدمون النشطون</p>
-              <h3 className="text-2xl font-bold text-white mt-2">+{stats.activeUsers.toLocaleString()}</h3>
+              <h3 className="text-2xl font-bold text-white mt-2">+{stats?.activeUsers?.toLocaleString()}</h3>
             </div>
             <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
               <Users className="w-5 h-5" />
@@ -79,7 +79,7 @@ export function AdminDashboardContent() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium text-slate-400">الطلبات المعلقة</p>
-              <h3 className="text-2xl font-bold text-white mt-2">{stats.pendingOrders}</h3>
+              <h3 className="text-2xl font-bold text-white mt-2">{stats?.pendingOrders}</h3>
             </div>
             <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/20">
               <ShoppingCart className="w-5 h-5" />
@@ -94,7 +94,7 @@ export function AdminDashboardContent() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium text-slate-400">الموردون النشطون</p>
-              <h3 className="text-2xl font-bold text-white mt-2">{stats.activeSuppliers}</h3>
+              <h3 className="text-2xl font-bold text-white mt-2">{stats?.activeSuppliers}</h3>
             </div>
             <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
               <Store className="w-5 h-5" />

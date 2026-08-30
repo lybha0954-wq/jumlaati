@@ -56,7 +56,7 @@ export default function DeliveryTasksContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans" dir="rtl">
-      
+
       {/* شريط التنقل العلوي */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -126,36 +126,35 @@ export default function DeliveryTasksContent() {
           <h2 className="text-lg font-bold text-gray-900 mb-4">قائمة المهام الحالية</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tasks.map((task, index) => (
+            {tasks?.map((task, index) => (
               <div key={index} className="border border-gray-100 bg-gray-50/50 rounded-xl p-5 hover:shadow-md transition space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-emerald-600 text-sm">{task.id}</span>
+                  <span className="font-bold text-emerald-600 text-sm">{task?.id}</span>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    task.status === 'قيد التنفيذ' ? 'bg-blue-50 text-blue-700' :
-                    task.status === 'معلقة' ? 'bg-amber-50 text-amber-700' :
-                    'bg-emerald-50 text-emerald-700'
+                    task?.status === 'قيد التنفيذ' ? 'bg-blue-50 text-blue-700' :
+                    task?.status === 'معلقة'? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
                   }`}>
-                    {task.status}
+                    {task?.status}
                   </span>
                 </div>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-gray-700">
                     <User className="w-4 h-4 text-gray-400" />
-                    <span className="font-semibold text-gray-900">{task.customer}</span>
+                    <span className="font-semibold text-gray-900">{task?.customer}</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-600">
                     <Phone className="w-4 h-4 text-gray-400" />
-                    <span>{task.phone}</span>
+                    <span>{task?.phone}</span>
                   </div>
                   <div className="flex items-start gap-2 text-gray-600">
                     <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                    <span>{task.address}</span>
+                    <span>{task?.address}</span>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-                  <span>الوقت المجدول: {task.time}</span>
+                  <span>الوقت المجدول: {task?.time}</span>
                   <button className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-bold">
                     <span>التفاصيل</span>
                     <ArrowRight className="w-3.5 h-3.5" />
