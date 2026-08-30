@@ -185,3 +185,41 @@ export const orderService = {
     } catch (e: any) { if (isSchemaError(e)) throw e; return null; }
   },
 };
+// داخل orderService
+async cancelOrder(orderId: string, reason?: string): Promise<{ success: boolean; message: string }> {
+  const supabase = createClient();
+
+  // 1. استدعاء دالة استرجاع المخزون
+  const { data: restoreResult, error: restoreError } = await supabase
+    .rpc('restore_inventory', { order_id_param: orderId });
+
+  if (restoreError || !restoreResult?.success) {
+    console.error('Restore error:', restoreError || restoreResult);
+    return { 
+      success: false, 
+      message: 'فشل استرجاع المخزون، يرجى التدخل اليدوي' 
+    };
+  }
+
+  // 2. تحديث حالة الطلب مع سبب الإلغاء
+  await supabase
+    .from('orders')
+    .update({ 
+      status: 'ملغي',
+      cancellation_reason: reason || 'تم الإلغاء من قبل الإدارة',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', orderId);
+
+  // 3. إعادة توليد صفحة الطلب
+  await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/revalidate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path: `/retailer/orders/${orderId}`,
+      secret: process.env.REVALIDATION_SECRET
+    })
+  });
+
+  return { success: true, message: 'تم إلغاء الطلب واسترجاع المخزون' };
+}
