@@ -51,39 +51,8 @@ export default function RootLayout({
         />
 
         <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fjumlaati1280back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.20" />
-        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" /></body>
+        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" />
+      </body>
     </html>
-  );
-}
-// app/store/layout.tsx
-import AppLayout from '@/components/ui/AppLayout';
-
-export default function StoreLayout({ children }: { children: React.ReactNode }) {
-  return <AppLayout>{children}</AppLayout>;
-}
-// app/retailer/orders/layout.tsx
-import Sidebar from '@/components/ui/Sidebar';
-import Topbar from '@/components/ui/Topbar';
-
-export default function RetailerOrdersLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
-      </div>
-    </div>
-  );
-}
-// app/delivery/tasks/layout.tsx
-import { BottomNavBar } from '@/components/ui/BottomNavBar';
-
-export default function DeliveryTasksLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="pb-20 bg-gray-100 min-h-screen">
-      {children}
-      <BottomNavBar />
-    </div>
   );
 }

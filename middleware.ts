@@ -4,9 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
-      headers: request.headers,
-    },
-  })
+      headers: request.headers}})
 
   // إنشاء عميل Supabase للخادم
   const supabase = createServerClient(
@@ -20,18 +18,14 @@ export async function middleware(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
           response = NextResponse.next({
-            request,
-          })
+            request})
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value))
-        },
-      },
-    }
+        }}}
   )
 
   // التحقق من الجلسة
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { user }} = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
 
@@ -50,8 +44,7 @@ export async function middleware(request: NextRequest) {
       admin: '/admin-dashboard',
       supplier: '/supplier-dashboard',
       retailer: '/retailer-dashboard',
-      delivery: '/delivery-dashboard',
-    }
+      delivery: '/delivery-dashboard'}
     const url = request.nextUrl.clone()
     url.pathname = redirectMap[role] || '/retailer-dashboard'
     return NextResponse.redirect(url)
@@ -84,9 +77,7 @@ export const config = {
      * - favicon.ico
      * - أي ملفات ثابتة مثل الصور أو الخطوط
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-}
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)']}
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -100,7 +91,7 @@ export function middleware(request: NextRequest) {
 
   // 2. إضافة رؤوس أمان (Security Headers) لجميع الصفحات
   const response = NextResponse.next();
-  response.headers.set('X-Frame-Options', 'DENY');
+
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   
@@ -115,5 +106,4 @@ export function middleware(request: NextRequest) {
 
 // تحديد المسارات التي يُطبق عليها الـ Middleware فقط (حتى لا يعمل على كل شيء)
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-};
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']};

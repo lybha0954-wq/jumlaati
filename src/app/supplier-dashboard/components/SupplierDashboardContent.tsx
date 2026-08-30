@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Store, ShoppingBag, Package, DollarSign, PlusCircle, CheckCircle2, Truck, TrendingUp, AlertCircle, MapPin, Phone, ArrowRight } from 'lucide-react';
+import { Store, ShoppingBag, Package, DollarSign, PlusCircle, Truck, TrendingUp, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface ActiveOrder {
   id: number;
@@ -412,43 +412,96 @@ export default function RetailerDashboardContent() {
                     className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
                   >
                     <div className="space-y-2">
-                      <div classNam
-                        // داخل supplier-inventory عند تحديث المنتج
-await fetch('/api/revalidate', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ 
-    path: `/products/${productSlug}`, 
-    secret: process.env.NEXT_PUBLIC_REVALIDATION_SECRET 
-  })
-});
-// في app/store/[slug]/page.tsx نضيف هذا التحسين
-const getStoreWithCache = cache(async (slug: string) => {
-  const supabase = createClient();
-  
-  // 1. حاول الجلب من الكاش أولاً
-  const { data: cached } = await supabase
-    .rpc('get_cached', { key_param: `store_${slug}` });
-  
-  if (cached) return cached;
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${supplier.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {supplier.status === 'approved' ? 'موافق عليه' : 'قيد المراجعة'}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-sm">{supplier.name}</h3>
+                      <p className="text-xs text-gray-500">{supplier.category}</p>
+                      <p className="text-xs text-gray-400">{supplier.distance}</p>
+                    </div>
+                    <div className="space-y-1 text-xs text-gray-500">
+                      <p>{supplier.phone}</p>
+                      <p>{supplier.email}</p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedSupplier(supplier)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded-lg font-medium transition-all"
+                    >
+                      عرض المنتجات
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-  // 2. إذا لم يوجد، اجلب من قاعدة البيانات
-  const { data } = await supabase
-    .from('profiles')
-    .select('*, products(*)')
-    .eq('store_slug', slug)
-    .single();
-
-  // 3. خزّن النتيجة للاستخدام القادم
-  if (data) {
-    await supabase
-      .from('cache')
-      .upsert({ 
-        key: `store_${slug}`, 
-        value: data,
-        expires_at: new Date(Date.now() + 3600000).toISOString() // ساعة
-      });
-  }
-  
-  return data;
-});
+        {/* التبويب الثالث: بوابة خدمات الجملة */}
+        {activeTab === 'wholesale-requests' && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            {wholesaleSubmitted ? (
+              <div className="text-center py-10 space-y-4">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                  <TrendingUp className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">تم إرسال طلبك بنجاح!</h3>
+                <p className="text-sm text-gray-500">سيتم التواصل معك خلال 24 ساعة.</p>
+                <button onClick={resetWholesaleForm} className="mt-4 bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 transition-all">
+                  إرسال طلب جديد
+                </button>
+              </div>
+            ) : !wholesaleType ? (
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold text-gray-900">اختر نوع الخدمة</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { type: 'supplier', label: 'تسجيل كمورد', icon: <Package className="w-6 h-6" /> },
+                    { type: 'driver', label: 'تسجيل كسائق', icon: <Truck className="w-6 h-6" /> },
+                    { type: 'buyer', label: 'طلب شراء بالجملة', icon: <ShoppingBag className="w-6 h-6" /> },
+                  ].map((item) => (
+                    <button
+                      key={item.type}
+                      onClick={() => setWholesaleType(item.type)}
+                      className="flex flex-col items-center gap-3 p-6 border-2 border-gray-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50 transition-all"
+                    >
+                      <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                        {item.icon}
+                      </div>
+                      <span className="font-bold text-gray-800 text-sm">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleWholesaleSubmit} className="space-y-4 max-w-lg mx-auto">
+                <h2 className="text-lg font-bold text-gray-900">تفاصيل الطلب</h2>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">الاسم</label>
+                  <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">رقم الهاتف</label>
+                  <input type="tel" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">ملاحظات إضافية</label>
+                  <textarea value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" rows={3} />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setWholesaleType(null)} className="flex-1 border border-gray-200 text-gray-600 font-medium py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all">
+                    رجوع
+                  </button>
+                  <button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm">
+                    إرسال الطلب
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

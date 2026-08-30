@@ -111,8 +111,4 @@ export function useMultipleRealtimeSubscriptions(configs: SubscriptionConfig[]) 
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configKey]);
-// داخل supplier-inventory/page.tsx عند تحديث المخزون
-await supabase.from('products').update({ stock: newStock }).eq('id', productId)
-
-// ثم قم بإعادة توليد هذه الصفحة المحددة فوراً عبر Next.js API
-await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/revalidate?path=/products/${productId}`)
+}

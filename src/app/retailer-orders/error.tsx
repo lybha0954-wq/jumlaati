@@ -1,4 +1,5 @@
-'use client'; // يجب أن يكون Client Component
+'use client';
+; // يجب أن يكون Client Component
 
 export default function OrderError({ error, reset }: { error: Error; reset: () => void }) {
   return (
