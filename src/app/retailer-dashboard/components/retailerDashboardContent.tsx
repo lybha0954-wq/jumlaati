@@ -445,3 +445,8 @@ export default function UnifiedRetailerDashboard() {
                     </button>
                     <h2 className="text-xl font-bold text-gray-900">{selectedSupplier.name}</h2>
                     <p className="text-xs text-gray-500 mt-1">{selectedSupplier.category} • {selectedSupplier.distanc
+// داخل app/retailer/orders/[id]/page.tsx
+import { OrderStatusClient } from './OrderStatusClient';
+
+// ... بعد جلب بيانات الطلب
+<OrderStatusClient orderId={order.id} initialStatus={order.status} />
