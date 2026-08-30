@@ -1,9 +1,10 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient, isSupabaseConfigured } from '../lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
-// ⚠️ التعديل الأول: إضافة دور التوصيل delivery إلى النوع
+// تعريف الأدوار الأربعة بشكل صريح
 export type UserRole = 'admin' | 'supplier' | 'retailer' | 'delivery';
 
 interface AuthContextValue {
@@ -12,10 +13,8 @@ interface AuthContextValue {
   loading: boolean;
   role: UserRole | null;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
+  signIn: (identifier: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
-  getCurrentUser: () => Promise<any>;
-  isEmailVerified: () => boolean;
   getUserProfile: () => Promise<any>;
 }
 
@@ -29,7 +28,7 @@ export const useAuth = () => {
   return context;
 };
 
-// ─── Mock auth store (used when Supabase is not configured) ───────────────────
+// ─── Mock auth store (يستخدم فقط إذا لم يتم ربط Supabase) ────
 const MOCK_USERS_KEY = 'jumlaati_mock_users';
 const MOCK_SESSION_KEY = 'jumlaati_mock_session';
 
@@ -48,16 +47,17 @@ function saveMockSession(session: any) {
   if (typeof window !== 'undefined') localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(session));
 }
 
-// ─── AuthProvider ─────────────────────────────────────────────────────────────
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<UserRole | null>(null);
+  const router = useRouter();
 
   const supabase = isSupabaseConfigured ? createClient() : null;
 
-  const fetchRole = async (userId: string) => {
+  // جلب الدور من قاعدة البيانات أو من البيانات الوصفية
+  const fetchRole = useCallback(async (userId: string) => {
     if (!supabase) return;
     try {
       const { data, error } = await supabase
@@ -69,19 +69,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setRole(data.role as UserRole);
         return;
       }
-      // Fallback: read role from user metadata
+      // Fallback: قراءة الدور من بيانات المستخدم
       const { data: { user: u } } = await supabase.auth.getUser();
       if (u?.user_metadata?.role) {
         setRole(u.user_metadata.role as UserRole);
       }
     } catch {
-      // silently ignore
+      // تجاهل الأخطاء الصامتة
     }
-  };
+  }, [supabase]);
 
+  // تهيئة الجلسة
   useEffect(() => {
     if (!supabase) {
-      // Mock: restore session from localStorage
+      // وضع المحاكاة (Mock)
       const mockSession = getMockSession();
       if (mockSession) {
         setUser(mockSession.user);
@@ -92,6 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // الوضع الحقيقي
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -115,10 +117,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase, fetchRole]);
 
-  // ── Sign Up ──────────────────────────────────────────────────────────────────
-  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
+  // تسجيل حساب جديد (مع دعم الدور الجديد delivery)
+  const signUp = useCallback(async (email: string, password: string, metadata: Record<string, any> = {}) => {
     if (!supabase) {
       // Mock sign-up
       const users = getMockUsers();
@@ -129,17 +131,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email_confirmed_at: new Date().toISOString(),
         user_metadata: {
           full_name: metadata.full_name || metadata.fullName || '',
-          role: metadata.role || 'retailer', // يدعم delivery الآن
+          role: metadata.role || 'retailer',
           business_name: metadata.business_name || '',
           phone: metadata.phone || '',
-          city: metadata.city || '',
           governorate: metadata.governorate || '',
           vehicle_type: metadata.vehicle_type || '', // حقل جديد
         },
       };
       users[email] = { ...mockUser, password };
       saveMockUsers(users);
-      // Auto-create session so subsequent signIn works immediately
       const mockSession = { user: mockUser, access_token: 'mock-token' };
       saveMockSession(mockSession);
       setUser(mockUser);
@@ -155,27 +155,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: {
           full_name: metadata.fullName || metadata.full_name || '',
           role: metadata.role || 'retailer',
-          avatar_url: metadata.avatarUrl || '',
           business_name: metadata.business_name || '',
           phone: metadata.phone || '',
-          city: metadata.city || '',
           governorate: metadata.governorate || '',
           vehicle_type: metadata.vehicle_type || '',
-          registration_number: metadata.registration_number || '',
         },
         emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
       },
     });
     if (error) throw error;
     return data;
-  };
+  }, [supabase]);
 
-  // ── Sign In ──────────────────────────────────────────────────────────────────
-  const signIn = async (email: string, password: string) => {
+  // تسجيل الدخول (البريد أو الهاتف)
+  const signIn = useCallback(async (identifier: string, password: string) => {
     if (!supabase) {
       // Mock sign-in
       const users = getMockUsers();
-      const found = users[email];
+      const found = users[identifier];
       if (!found || found.password !== password) throw new Error('Invalid login credentials');
       const mockSession = { user: found, access_token: 'mock-token' };
       saveMockSession(mockSession);
@@ -185,59 +182,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { user: found, session: mockSession };
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // دعم تسجيل الدخول بالهاتف أو البريد
+    const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password });
     if (error) throw error;
     if (data.user) {
-      // Set role from metadata immediately for fast redirect
       const metaRole = data.user.user_metadata?.role as UserRole | undefined;
       if (metaRole) setRole(metaRole);
-      // Also fetch from user_profiles (may override)
       await fetchRole(data.user.id);
     }
     return data;
-  };
+  }, [supabase, fetchRole]);
 
-  // ── Sign Out ─────────────────────────────────────────────────────────────────
-  const signOut = async () => {
+  // تسجيل الخروج
+  const signOut = useCallback(async () => {
     if (!supabase) {
-      // If current user is admin, mark that admin has signed out
-      const currentRole = user?.user_metadata?.role;
-      if (currentRole === 'admin') {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('jumlaati_admin_was_logged_out', 'true');
-        }
-      }
       saveMockSession(null);
       setUser(null);
       setSession(null);
       setRole(null);
       return;
     }
-    // For real Supabase: check role before signing out
-    const currentRole = user?.user_metadata?.role;
-    if (currentRole === 'admin' && typeof window !== 'undefined') {
-      localStorage.setItem('jumlaati_admin_was_logged_out', 'true');
-    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setRole(null);
-  };
+  }, [supabase]);
 
-  // ── Get Current User ─────────────────────────────────────────────────────────
-  const getCurrentUser = async () => {
-    if (!supabase) return user;
-    const { data: { user: u }, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return u;
-  };
-
-  // ── Email Verified ───────────────────────────────────────────────────────────
-  const isEmailVerified = () => {
-    return user?.email_confirmed_at !== null;
-  };
-
-  // ── Get User Profile ─────────────────────────────────────────────────────────
-  const getUserProfile = async () => {
+  // جلب الملف الشخصي
+  const getUserProfile = useCallback(async () => {
     if (!user) return null;
     if (!supabase) return user?.user_metadata || null;
     const { data, error } = await supabase
@@ -247,9 +218,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .single();
     if (error) throw error;
     return data;
-  };
+  }, [supabase, user]);
 
-  const value: AuthContextValue = {
+  // استخدام useMemo لتحسين الأداء ومنع إعادة التصيير غير الضرورية
+  const value = useMemo(() => ({
     user,
     session,
     loading,
@@ -257,10 +229,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signUp,
     signIn,
     signOut,
-    getCurrentUser,
-    isEmailVerified,
     getUserProfile,
-  };
+  }), [user, session, loading, role, signUp, signIn, signOut, getUserProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
