@@ -360,86 +360,95 @@ export default function RetailerDashboardContent() {
           </div>
         )}
 
-        {/* التبويب الثاني: استعراض الموردين */}
-        {activeTab === 'suppliers' && !selectedSupplier && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {suppliers.map((supplier) => (
-              <div 
-                key={supplier.id} 
-                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
-              >
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">
-                      {supplier.category}
-                    </span>
-                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>معتمد</span>
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-base text-gray-900">{supplier.name}</h3>
-                  
-                  <div className="space-y-1 text-xs text-gray-500 pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{supplier.distance}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{supplier.phone}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-gray-100">
+        {/* التبويب الثاني: استعراض الموردين أو منتجات المورد المحدد */}
+        {activeTab === 'suppliers' && (
+          <div>
+            {selectedSupplier ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <button 
-                    onClick={() => setSelectedSupplier(supplier)}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                    onClick={() => setSelectedSupplier(null)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700"
                   >
-                    <Package className="w-4 h-4" />
-                    <span>استعراض المنتجات ({supplier.products.length})</span>
+                    <ArrowRight className="w-4 h-4" />
+                    <span>العودة لقائمة الموردين</span>
                   </button>
+                  <span className="text-xs font-semibold text-gray-500">{selectedSupplier.name}</span>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">منتجات المورد المتاحة للطلب</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {selectedSupplier.products.map((prod) => (
+                      <div key={prod.id} className="border border-gray-100 p-4 rounded-xl space-y-2 bg-gray-50/50">
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">{prod.category}</span>
+                        <h4 className="font-bold text-gray-900 text-sm">{prod.name}</h4>
+                        <p className="text-emerald-600 font-bold text-sm">{prod.price}</p>
+                        <p className="text-xs text-gray-500">حالة المخزون: {prod.stock}</p>
+                        <button 
+                          onClick={() => {
+                            setNewRequest({
+                              supplier: selectedSupplier.name,
+                              items: prod.name,
+                              total: prod.price.replace(/[^0-9]/g, '') || '100'
+                            });
+                            setActiveTab('dashboard');
+                            setSelectedSupplier(null);
+                          }}
+                          className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded-lg font-medium transition-all"
+                        >
+                          إضافة لطلب توريد سريع
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* عرض تفاصيل منتجات المورد المختار */}
-        {selectedSupplier && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <button 
-                onClick={() => setSelectedSupplier(null)}
-                className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700"
-              >
-                <ArrowRight className="w-4 h-4" />
-                <span>العودة لقائمة الموردين</span>
-              </button>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">{selectedSupplier.name}</h2>
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedSupplier.products.map((product) => (
-                  <div key={product.id} className="border border-gray-100 rounded-xl p-4 hover:border-emerald-200 transition-all">
-                    <h3 className="font-semibold text-sm text-gray-900 mb-2">{product.name}</h3>
-                    <p className="text-xs text-gray-500 mb-1">{product.category}</p>
-                    <p className="text-sm font-bold text-emerald-600">{product.price}</p>
-                    <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                      product.stock === 'متوفر بكثرة' ? 'bg-emerald-50 text-emerald-700' :
-                      product.stock === 'متوفر' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
-                    }`}>{product.stock}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+                {suppliers.map((supplier) => (
+                  <div 
+                    key={supplier.id} 
+                    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
+                  >
+                    <div className="space-y-2">
+                      <div classNam
+                        // داخل supplier-inventory عند تحديث المنتج
+await fetch('/api/revalidate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    path: `/products/${productSlug}`, 
+    secret: process.env.NEXT_PUBLIC_REVALIDATION_SECRET 
+  })
+});
+// في app/store/[slug]/page.tsx نضيف هذا التحسين
+const getStoreWithCache = cache(async (slug: string) => {
+  const supabase = createClient();
+  
+  // 1. حاول الجلب من الكاش أولاً
+  const { data: cached } = await supabase
+    .rpc('get_cached', { key_param: `store_${slug}` });
+  
+  if (cached) return cached;
 
-      </div>
-    </main>
-  );
-}
+  // 2. إذا لم يوجد، اجلب من قاعدة البيانات
+  const { data } = await supabase
+    .from('profiles')
+    .select('*, products(*)')
+    .eq('store_slug', slug)
+    .single();
+
+  // 3. خزّن النتيجة للاستخدام القادم
+  if (data) {
+    await supabase
+      .from('cache')
+      .upsert({ 
+        key: `store_${slug}`, 
+        value: data,
+        expires_at: new Date(Date.now() + 3600000).toISOString() // ساعة
+      });
+  }
+  
+  return data;
+});

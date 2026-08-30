@@ -20,7 +20,7 @@ interface InventoryStock {
   status: 'متوفر' | 'منخفض';
 }
 
-interface Product {
+interface ProductItem {
   id: number;
   name: string;
   price: string;
@@ -36,10 +36,10 @@ interface Supplier {
   phone: string;
   email: string;
   status: 'pending' | 'approved';
-  products: Product[];
+  products: ProductItem[];
 }
 
-export default function RetailerDashboardContent() {
+export default function UnifiedRetailerDashboard() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'suppliers' | 'request-supplier' | 'smart-generator'>('dashboard');
 
   const [orders, setOrders] = useState<ActiveOrder[]>([
@@ -54,7 +54,6 @@ export default function RetailerDashboardContent() {
     { id: 3, itemName: 'أكواب بلاستيك 300مل', category: 'أكواب', currentStock: 340, status: 'متوفر' },
   ]);
 
-  // قائمة الموردين والمنتجات المدمجة
   const [suppliers, setSuppliers] = useState<Supplier[]>([
     {
       id: 1,
@@ -96,7 +95,6 @@ export default function RetailerDashboardContent() {
   ]);
 
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-
   const [newRequest, setNewRequest] = useState({ supplier: '', items: '', total: '' });
   
   const [requestForm, setRequestForm] = useState({
@@ -107,7 +105,6 @@ export default function RetailerDashboardContent() {
   });
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-  // حالات فكرة الكود الثاني (مولد الأكواد الذكي / ربط الخدمات الديناميكية)
   const [generatorType, setGeneratorType] = useState<'qr' | 'barcode' | 'sku'>('qr');
   const [itemInput, setItemInput] = useState('');
   const [generatedCodeResult, setGeneratedCodeResult] = useState<string | null>(null);
@@ -152,7 +149,7 @@ export default function RetailerDashboardContent() {
       setRequestSubmitted(false);
       setRequestForm({ supplierName: '', category: '', location: '', notes: '' });
       setActiveTab('suppliers');
-    }, 2500);
+    }, 2000);
   };
 
   const simulateApproval = (id: number) => {
@@ -185,24 +182,24 @@ export default function RetailerDashboardContent() {
     <main dir="rtl" className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* رأس الصفحة مع شريط التنقل الداخلي */}
+        {/* رأس الصفحة وشريط التنقل */}
         <header className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم المطعم / المتجر</h1>
-            <p className="text-sm text-gray-500 mt-1">إدارة الطلبات، مخزون المتجر، استعراض الموردين القريبين، وخدمات التوليد الذكية للمخزون.</p>
+            <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم المطعم / المتجر الذكية</h1>
+            <p className="text-sm text-gray-500 mt-1">إدارة الطلبات، الموردين القريبين، المخزون، وتوليد الأكواد التعريفية.</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
               <button 
                 onClick={() => { setActiveTab('dashboard'); setSelectedSupplier(null); }}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'dashboard' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'dashboard' && !selectedSupplier ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 الرئيسية
               </button>
               <button 
                 onClick={() => { setActiveTab('suppliers'); setSelectedSupplier(null); }}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'suppliers' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'suppliers' || selectedSupplier ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 الموردين
               </button>
@@ -227,11 +224,11 @@ export default function RetailerDashboardContent() {
           </div>
         </header>
 
-        {/* التبويب الأول: لوحة التحكم الرئيسية والطلبات والمخزون */}
-        {activeTab === 'dashboard' && (
+        {/* التبويب الأول: لوحة التحكم الرئيسية */}
+        {activeTab === 'dashboard' && !selectedSupplier && (
           <div className="space-y-6">
             
-            {/* بطاقات الإحصائيات السريعة */}
+            {/* إحصائيات سريعة */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
@@ -276,10 +273,10 @@ export default function RetailerDashboardContent() {
               </div>
             </div>
 
-            {/* محتوى لوحة التحكم */}
+            {/* النموذج والجداول */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* نموذج طلب توريد من مورد */}
+              {/* طلب توريد */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <PlusCircle className="w-5 h-5 text-emerald-600" />
@@ -331,10 +328,8 @@ export default function RetailerDashboardContent() {
                 </form>
               </div>
 
-              {/* الجداول الجانبية */}
+              {/* جداول الطلبات والمخزون */}
               <div className="lg:col-span-2 space-y-6">
-                
-                {/* جدول الطلبات الجارية */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Truck className="w-5 h-5 text-emerald-600" />
@@ -374,7 +369,6 @@ export default function RetailerDashboardContent() {
                   </div>
                 </div>
 
-                {/* جدول لمحة مخزون المطعم الحالي */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Package className="w-5 h-5 text-emerald-600" />
@@ -410,198 +404,30 @@ export default function RetailerDashboardContent() {
                     </table>
                   </div>
                 </div>
-
               </div>
 
             </div>
           </div>
         )}
 
-        {/* التبويب الثاني: استعراض الموردين وقائمتهم المعتمدة ومنتجاتهم */}
-        {activeTab === 'suppliers' && !selectedSupplier && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {suppliers.map((supplier) => (
-              <div 
-                key={supplier.id} 
-                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
-              >
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">
-                      {supplier.category}
-                    </span>
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${supplier.status === 'approved' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>
-                      {supplier.status === 'approved' ? 'معتمد' : 'قيد المراجعة'}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-gray-900">{supplier.name}</h3>
-                  <p className="text-xs text-gray-500">{supplier.distance}</p>
-                  <p className="text-xs text-gray-500">{supplier.phone}</p>
-                  <p className="text-xs text-gray-500">{supplier.email}</p>
-                </div>
-                <div className="flex gap-2 pt-2">
-                  {supplier.status === 'approved' ? (
-                    <button
-                      onClick={() => setSelectedSupplier(supplier)}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl transition-all text-xs"
+        {/* التبويب الثاني: الموردين أو عرض منتجات المورد المحدد */}
+        {(activeTab === 'suppliers' || selectedSupplier) && (
+          <div>
+            {selectedSupplier ? (
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                  <div>
+                    <button 
+                      onClick={() => setSelectedSupplier(null)}
+                      className="text-xs text-emerald-600 font-semibold mb-2 flex items-center gap-1 hover:underline"
                     >
-                      عرض المنتجات
+                      <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                      <span>العودة لقائمة الموردين</span>
                     </button>
-                  ) : (
-                    <button
-                      onClick={() => simulateApproval(supplier.id)}
-                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 rounded-xl transition-all text-xs"
-                    >
-                      محاكاة الاعتماد
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                    <h2 className="text-xl font-bold text-gray-900">{selectedSupplier.name}</h2>
+                    <p className="text-xs text-gray-500 mt-1">{selectedSupplier.category} • {selectedSupplier.distanc
+// داخل app/retailer/orders/[id]/page.tsx
+import { OrderStatusClient } from './OrderStatusClient';
 
-        {/* عرض منتجات المورد المحدد */}
-        {activeTab === 'suppliers' && selectedSupplier && (
-          <div className="space-y-4">
-            <button
-              onClick={() => setSelectedSupplier(null)}
-              className="text-sm text-emerald-600 hover:underline flex items-center gap-1"
-            >
-              ← العودة إلى قائمة الموردين
-            </button>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">{selectedSupplier.name}</h2>
-              <p className="text-sm text-gray-500 mb-4">{selectedSupplier.category} — {selectedSupplier.distance}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedSupplier.products.map((product) => (
-                  <div key={product.id} className="border border-gray-100 rounded-xl p-4 space-y-1 hover:border-emerald-200 transition-all">
-                    <p className="font-semibold text-gray-900 text-sm">{product.name}</p>
-                    <p className="text-xs text-gray-500">{product.category}</p>
-                    <p className="text-emerald-600 font-bold text-sm">{product.price}</p>
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${product.stock === 'متوفر بكثرة' || product.stock === 'متوفر' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                      {product.stock}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* التبويب الثالث: طلب إضافة مورد جديد */}
-        {activeTab === 'request-supplier' && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <PlusCircle className="w-5 h-5 text-emerald-600" />
-              <span>طلب إضافة مورد جديد</span>
-            </h2>
-            {requestSubmitted ? (
-              <div className="text-center py-8 space-y-2">
-                <p className="text-emerald-600 font-bold text-lg">✅ تم إرسال الطلب بنجاح!</p>
-                <p className="text-sm text-gray-500">سيتم مراجعة طلبك وإضافة المورد قريباً.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmitRequest} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">اسم المورد / الشركة *</label>
-                  <input
-                    type="text"
-                    placeholder="مثال: شركة المواد الغذائية المتحدة"
-                    value={requestForm.supplierName}
-                    onChange={(e) => setRequestForm({ ...requestForm, supplierName: e.target.value })}
-                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">التصنيف</label>
-                  <input
-                    type="text"
-                    placeholder="مثال: مواد تغليف، منظفات..."
-                    value={requestForm.category}
-                    onChange={(e) => setRequestForm({ ...requestForm, category: e.target.value })}
-                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">الموقع / المنطقة</label>
-                  <input
-                    type="text"
-                    placeholder="مثال: الرياض - حي العليا"
-                    value={requestForm.location}
-                    onChange={(e) => setRequestForm({ ...requestForm, location: e.target.value })}
-                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">ملاحظات إضافية</label>
-                  <textarea
-                    placeholder="أي معلومات إضافية..."
-                    value={requestForm.notes}
-                    onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
-                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                    rows={3}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all shadow-sm shadow-emerald-200 text-sm"
-                >
-                  إرسال الطلب
-                </button>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* التبويب الرابع: مولد الأكواد الذكي */}
-        {activeTab === 'smart-generator' && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto space-y-6">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-500" />
-              <span>مولد الأكواد الذكي للمخزون</span>
-            </h2>
-            <div className="flex gap-2">
-              {(['qr', 'barcode', 'sku'] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setGeneratorType(type)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${generatorType === type ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                  {type.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            <form onSubmit={handleGenerateCode} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">اسم المنتج / الصنف</label>
-                <input
-                  type="text"
-                  placeholder="مثال: أكياس ورقية 500 قطعة"
-                  value={itemInput}
-                  onChange={(e) => setItemInput(e.target.value)}
-                  className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm"
-              >
-                توليد الكود
-              </button>
-            </form>
-            {generatedCodeResult && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">الكود المولّد ({generatorType.toUpperCase()})</p>
-                <p className="text-lg font-bold text-emerald-700 tracking-widest">{generatedCodeResult}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-      </div>
-    </main>
-  );
-}
+// ... بعد جلب بيانات الطلب
+<OrderStatusClient orderId={order.id} initialStatus={order.status} />

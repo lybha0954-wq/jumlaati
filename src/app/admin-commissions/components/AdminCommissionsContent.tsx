@@ -323,3 +323,41 @@ export default function AdminCommissionsContent() {
     </div>
   );
                         }
+import { createClient } from '@/lib/supabase/server';
+
+export default async function AdminCommissionsPage() {
+  const supabase = createClient();
+  
+  // جلب إحصائيات العمولات
+  const { data: stats } = await supabase
+    .from('transactions')
+    .select('platform_commission, supplier_net, delivery_fee, status')
+    .eq('status', 'completed');
+
+  const totalPlatform = stats?.reduce((sum, t) => sum + t.platform_commission, 0) || 0;
+  const totalSuppliers = stats?.reduce((sum, t) => sum + t.supplier_net, 0) || 0;
+  const totalDelivery = stats?.reduce((sum, t) => sum + t.delivery_fee, 0) || 0;
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-8">💰 إدارة العمولات المالية</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+          <h3 className="text-gray-600">عمولة المنصة (5%)</h3>
+          <p className="text-3xl font-bold text-blue-700">{totalPlatform.toFixed(2)} ريال</p>
+        </div>
+        <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+          <h3 className="text-gray-600">مستحقات الموردين</h3>
+          <p className="text-3xl font-bold text-green-700">{totalSuppliers.toFixed(2)} ريال</p>
+        </div>
+        <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
+          <h3 className="text-gray-600">مستحقات مندوبي التوصيل</h3>
+          <p className="text-3xl font-bold text-purple-700">{totalDelivery.toFixed(2)} ريال</p>
+        </div>
+      </div>
+
+      {/* يمكن إضافة جدول تفصيلي للعمولات هنا */}
+    </div>
+  );
+}

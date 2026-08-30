@@ -87,3 +87,33 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // 1. تجاهل مسارات الملفات الثابتة (الصور، الخطوط، إلخ)
+  if (path.startsWith('/_next') || path.startsWith('/api') || path.startsWith('/favicon.ico')) {
+    return NextResponse.next();
+  }
+
+  // 2. إضافة رؤوس أمان (Security Headers) لجميع الصفحات
+  const response = NextResponse.next();
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // 3. سياسة أمان المحتوى (CSP) - تحمي من هجمات XSS
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' *.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: *.supabase.co;"
+  );
+
+  return response;
+}
+
+// تحديد المسارات التي يُطبق عليها الـ Middleware فقط (حتى لا يعمل على كل شيء)
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};
