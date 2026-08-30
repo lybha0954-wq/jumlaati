@@ -160,3 +160,133 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'حدث خطأ داخلي في الخادم' }, { status: 500 });
   }
 }
+// app/api/profile/upload-image/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
+
+// إعدادات المعالجة حسب النوع
+const IMAGE_CONFIGS = {
+  avatar: { width: 400, height: 400, fit: 'cover' as const }, // مربع
+  logo: { width: 800, height: 400, fit: 'cover' as const }, // مستطيل (بانر)
+};
+
+export async function POST(request: NextRequest) {
+  try {
+    // 1. التحقق من المصادقة
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'غير مصرح به' }, { status: 401 });
+    }
+
+    // 2. استقبال الملف ونوع الصورة من الـ FormData
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+    const type = formData.get('type') as 'avatar' | 'logo' | null;
+
+    if (!file || !type || !['avatar', 'logo'].includes(type)) {
+      return NextResponse.json({ error: 'الملف أو نوع الصورة غير صحيح' }, { status: 400 });
+    }
+
+    // 3. التحقق من أن المستخدم يملك ملفاً شخصياً
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'الملف الشخصي غير موجود' }, { status: 404 });
+    }
+
+    // 4. التأكد من أن نوع 'logo' مخصص فقط للموردين (Suppliers)
+    if (type === 'logo' && profile.role !== 'supplier') {
+      return NextResponse.json({ error: 'فقط الموردون يمكنهم رفع شعارات' }, { status: 403 });
+    }
+
+    // 5. معالجة الصورة (ضغط وتحويل إلى WebP مع اقتصاص)
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const config = IMAGE_CONFIGS[type];
+
+    const processedImageBuffer = await sharp(buffer)
+      .resize(config.width, config.height, {
+        fit: config.fit,
+        position: 'center', // يقتص من المنتصف
+        withoutEnlargement: false, // يُسمح بتكبير الصور الصغيرة لملء الإطار
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // 6. إنشاء مسار فريد للملف
+    const fileName = `${uuidv4()}.webp`;
+    const filePath = `${user.id}/${type}/${fileName}`; // تنظيم: userId/avatar/xxx.webp
+
+    // 7. رفع الصورة إلى Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('store-assets')
+      .upload(filePath, processedImageBuffer, {
+        contentType: 'image/webp',
+        cacheControl: 'public, max-age=31536000',
+        upsert: true, // استبدال الصورة القديمة (مفيد لتحديث الصورة الرمزية)
+      });
+
+    if (uploadError) {
+      console.error('Upload Error:', uploadError);
+      return NextResponse.json({ error: 'فشل رفع الصورة' }, { status: 500 });
+    }
+
+    // 8. الحصول على الرابط العام
+    const { data: { publicUrl } } = supabase.storage
+      .from('store-assets')
+      .getPublicUrl(filePath);
+
+    // 9. تحديث جدول profiles بناءً على النوع
+    const updateData = type === 'avatar' 
+      ? { avatar_url: publicUrl } 
+      : { store_logo: publicUrl };
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('DB Update Error:', updateError);
+      // حذف الملف إذا فشل تحديث قاعدة البيانات
+      await supabase.storage.from('store-assets').remove([filePath]);
+      return NextResponse.json({ error: 'فشل تحديث الملف الشخصي' }, { status: 500 });
+    }
+
+    // 10. إعادة توليد صفحة المتجر (إذا كان شعاراً) أو صفحة الملف الشخصي
+    if (type === 'logo') {
+      const { data: storeData } = await supabase
+        .from('profiles')
+        .select('store_slug')
+        .eq('id', user.id)
+        .single();
+
+      if (storeData?.store_slug) {
+        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/revalidate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: `/store/${storeData.store_slug}`,
+            secret: process.env.REVALIDATION_SECRET
+          })
+        });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      publicUrl,
+      type,
+    });
+
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'حدث خطأ داخلي في الخادم' }, { status: 500 });
+  }
+}
