@@ -2,6 +2,8 @@
 import React from 'react';
 import { ShoppingBag, Truck, PackageCheck } from 'lucide-react';
 import type { UserRole } from './AuthContent';
+import Icon from '@/components/ui/AppIcon';
+
 
 interface RoleSelectorProps {
   role: UserRole;

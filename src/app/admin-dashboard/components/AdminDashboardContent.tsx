@@ -1,18 +1,7 @@
 'use client';
 
 import React from 'react';
-import { 
-  Users, 
-  Store, 
-  Building2, 
-  ShoppingBag, 
-  DollarSign, 
-  TrendingUp, 
-  ShieldCheck, 
-  ArrowUpRight, 
-  AlertCircle,
-  Activity
-} from 'lucide-react';
+import { Store, Building2, ShoppingBag, DollarSign, ArrowUpRight, Activity } from 'lucide-react';
 
 export default function AdminDashboardContent() {
   return (

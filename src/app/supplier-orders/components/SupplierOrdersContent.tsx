@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  ShoppingBag, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Truck, 
-  Search, 
-  Filter, 
-  Store,
-  DollarSign
-} from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle2, Truck, Search, Store, DollarSign } from 'lucide-react';
 
 interface OrderItem {
   id: number;
@@ -173,8 +163,7 @@ export default function SupplierOrdersContent() {
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium inline-block ${
                           order.status === 'مكتملة' ? 'bg-emerald-50 text-emerald-700' :
                           order.status === 'جاري التوصيل' ? 'bg-blue-50 text-blue-700' :
-                          order.status === 'قيد المعالجة' ? 'bg-amber-50 text-amber-700' :
-                          'bg-red-50 text-red-700'
+                          order.status === 'قيد المعالجة'? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
                         }`}>
                           {order.status}
                         </span>

@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Headphones, 
-  MessageCircle, 
-  Send, 
-  PhoneCall, 
-  Video, 
-  Mail, 
-  HelpCircle, 
-  ExternalLink, 
-  CheckCircle2,
-  ShieldAlert,
-  Users,
-  Store,
-  Truck
-} from 'lucide-react';
+import { Headphones, MessageCircle, Send, Video, Mail, CheckCircle2, Users, Store, Truck } from 'lucide-react';
 
 export default function AdminSupportContent() {
   const [selectedChannel, setSelectedChannel] = useState<'whatsapp' | 'telegram' | 'email' | 'meeting'>('whatsapp');

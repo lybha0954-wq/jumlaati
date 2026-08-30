@@ -1,19 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Store, 
-  Building2, 
-  DollarSign, 
-  Calendar, 
-  Download, 
-  ArrowUpRight, 
-  ArrowDownRight,
-  Filter
-} from 'lucide-react';
+import { BarChart3, Store, Building2, DollarSign, Download, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function AdminAnalyticsContent() {
   const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year'>('month');

@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Store, 
-  User, 
-  Phone, 
-  MapPin, 
-  Mail, 
-  Building, 
-  Save, 
-  CheckCircle2, 
-  Shield, 
-  Clock 
-} from 'lucide-react';
+import { Store, User, Phone, MapPin, Mail, Building, Save, CheckCircle2, Shield } from 'lucide-react';
 
 export default function RetailerProfileContent() {
   const [profile, setProfile] = useState({

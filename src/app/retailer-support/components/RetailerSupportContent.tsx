@@ -1,16 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Headphones, 
-  MessageCircle, 
-  Send, 
-  Video, 
-  Mail, 
-  Store, 
-  CheckCircle2, 
-  ShoppingBag
-} from 'lucide-react';
+import { MessageCircle, Send, Video, Mail, Store, CheckCircle2 } from 'lucide-react';
 
 export default function RetailerSupportContent() {
   const [activeChannel, setActiveChannel] = useState<'whatsapp' | 'telegram' | 'meeting' | 'email'>('whatsapp');

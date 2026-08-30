@@ -1,25 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Store, 
-  ShoppingBag, 
-  Package, 
-  DollarSign, 
-  PlusCircle, 
-  Clock, 
-  CheckCircle2, 
-  Truck,
-  TrendingUp,
-  AlertCircle,
-  MapPin, 
-  Phone, 
-  ArrowRight,
-  Plus,
-  QrCode,
-  Layers,
-  Sparkles
-} from 'lucide-react';
+import { Store, ShoppingBag, Package, DollarSign, PlusCircle, Truck, TrendingUp, AlertCircle, Sparkles } from 'lucide-react';
 
 interface ActiveOrder {
   id: number;
@@ -357,7 +339,7 @@ export default function RetailerDashboardContent() {
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Truck className="w-5 h-5 text-emerald-600" />
                     <span>حالة طلبات التوريد النشطة</span>
-                  </div>
+                  </h2>
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-right text-sm">
@@ -380,8 +362,7 @@ export default function RetailerDashboardContent() {
                             <td className="py-3 px-4">
                               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 ord.status === 'تم الاستلام' ? 'bg-emerald-50 text-emerald-700' :
-                                ord.status === 'قيد الشحن' ? 'bg-blue-50 text-blue-700' :
-                                'bg-amber-50 text-amber-700'
+                                ord.status === 'قيد الشحن'? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
                               }`}>
                                 {ord.status}
                               </span>
@@ -447,4 +428,180 @@ export default function RetailerDashboardContent() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">
-                      {su
+                      {supplier.category}
+                    </span>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${supplier.status === 'approved' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>
+                      {supplier.status === 'approved' ? 'معتمد' : 'قيد المراجعة'}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900">{supplier.name}</h3>
+                  <p className="text-xs text-gray-500">{supplier.distance}</p>
+                  <p className="text-xs text-gray-500">{supplier.phone}</p>
+                  <p className="text-xs text-gray-500">{supplier.email}</p>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  {supplier.status === 'approved' ? (
+                    <button
+                      onClick={() => setSelectedSupplier(supplier)}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl transition-all text-xs"
+                    >
+                      عرض المنتجات
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => simulateApproval(supplier.id)}
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 rounded-xl transition-all text-xs"
+                    >
+                      محاكاة الاعتماد
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* عرض منتجات المورد المحدد */}
+        {activeTab === 'suppliers' && selectedSupplier && (
+          <div className="space-y-4">
+            <button
+              onClick={() => setSelectedSupplier(null)}
+              className="text-sm text-emerald-600 hover:underline flex items-center gap-1"
+            >
+              ← العودة إلى قائمة الموردين
+            </button>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-1">{selectedSupplier.name}</h2>
+              <p className="text-sm text-gray-500 mb-4">{selectedSupplier.category} — {selectedSupplier.distance}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedSupplier.products.map((product) => (
+                  <div key={product.id} className="border border-gray-100 rounded-xl p-4 space-y-1 hover:border-emerald-200 transition-all">
+                    <p className="font-semibold text-gray-900 text-sm">{product.name}</p>
+                    <p className="text-xs text-gray-500">{product.category}</p>
+                    <p className="text-emerald-600 font-bold text-sm">{product.price}</p>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${product.stock === 'متوفر بكثرة' || product.stock === 'متوفر' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                      {product.stock}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* التبويب الثالث: طلب إضافة مورد جديد */}
+        {activeTab === 'request-supplier' && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <PlusCircle className="w-5 h-5 text-emerald-600" />
+              <span>طلب إضافة مورد جديد</span>
+            </h2>
+            {requestSubmitted ? (
+              <div className="text-center py-8 space-y-2">
+                <p className="text-emerald-600 font-bold text-lg">✅ تم إرسال الطلب بنجاح!</p>
+                <p className="text-sm text-gray-500">سيتم مراجعة طلبك وإضافة المورد قريباً.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitRequest} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">اسم المورد / الشركة *</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: شركة المواد الغذائية المتحدة"
+                    value={requestForm.supplierName}
+                    onChange={(e) => setRequestForm({ ...requestForm, supplierName: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">التصنيف</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: مواد تغليف، منظفات..."
+                    value={requestForm.category}
+                    onChange={(e) => setRequestForm({ ...requestForm, category: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">الموقع / المنطقة</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: الرياض - حي العليا"
+                    value={requestForm.location}
+                    onChange={(e) => setRequestForm({ ...requestForm, location: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">ملاحظات إضافية</label>
+                  <textarea
+                    placeholder="أي معلومات إضافية..."
+                    value={requestForm.notes}
+                    onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                    rows={3}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all shadow-sm shadow-emerald-200 text-sm"
+                >
+                  إرسال الطلب
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* التبويب الرابع: مولد الأكواد الذكي */}
+        {activeTab === 'smart-generator' && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto space-y-6">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-500" />
+              <span>مولد الأكواد الذكي للمخزون</span>
+            </h2>
+            <div className="flex gap-2">
+              {(['qr', 'barcode', 'sku'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setGeneratorType(type)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${generatorType === type ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  {type.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <form onSubmit={handleGenerateCode} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">اسم المنتج / الصنف</label>
+                <input
+                  type="text"
+                  placeholder="مثال: أكياس ورقية 500 قطعة"
+                  value={itemInput}
+                  onChange={(e) => setItemInput(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm"
+              >
+                توليد الكود
+              </button>
+            </form>
+            {generatedCodeResult && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-500 mb-1">الكود المولّد ({generatorType.toUpperCase()})</p>
+                <p className="text-lg font-bold text-emerald-700 tracking-widest">{generatedCodeResult}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </main>
+  );
+}

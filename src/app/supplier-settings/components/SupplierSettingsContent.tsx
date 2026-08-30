@@ -1,19 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Building2, 
-  User, 
-  Phone, 
-  MapPin, 
-  Lock, 
-  Bell, 
-  Save, 
-  CheckCircle2, 
-  ShieldCheck,
-  Store,
-  Truck
-} from 'lucide-react';
+import { Building2, Lock, Save, CheckCircle2, Truck } from 'lucide-react';
 
 export default function SupplierSettingsContent() {
   const [settings, setSettings] = useState({

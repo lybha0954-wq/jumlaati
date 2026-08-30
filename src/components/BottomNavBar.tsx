@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, ShieldCheck, Users, UserCircle, Home, Grid3X3, ClipboardList, Wallet, Settings, CreditCard, Truck, History, DollarSign } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ShieldCheck, Users, UserCircle, Home, ClipboardList, Wallet, Settings, CreditCard, History, DollarSign } from 'lucide-react';
 
 interface BottomNavItem {
   id: string;

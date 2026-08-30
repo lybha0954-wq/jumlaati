@@ -1,20 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Gauge, 
-  Activity, 
-  Users, 
-  Store, 
-  Building2, 
-  Truck, 
-  ShoppingBag, 
-  DollarSign, 
-  ArrowUpRight, 
-  RefreshCw,
-  ShieldCheck,
-  Zap
-} from 'lucide-react';
+import { Activity, Store, Building2, Truck, ShoppingBag, DollarSign, ArrowUpRight, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
 
 export default function AdminCountersContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -74,7 +61,7 @@ export default function AdminCountersContent() {
                 <Building2 className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold text-gray-900">{counters.activeSuppliers}</div>
+            <div className="text-3xl font-extrabold text-gray-900">{counters?.activeSuppliers}</div>
             <div className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
               <ArrowUpRight className="w-4 h-4" />
               <span>+3 موردين جدد اليوم</span>
@@ -89,7 +76,7 @@ export default function AdminCountersContent() {
                 <Store className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold text-gray-900">{counters.activeRetailers}</div>
+            <div className="text-3xl font-extrabold text-gray-900">{counters?.activeRetailers}</div>
             <div className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
               <ArrowUpRight className="w-4 h-4" />
               <span>+12 فرع هذا الأسبوع</span>
@@ -104,7 +91,7 @@ export default function AdminCountersContent() {
                 <Truck className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold text-gray-900">{counters.activeDrivers}</div>
+            <div className="text-3xl font-extrabold text-gray-900">{counters?.activeDrivers}</div>
             <div className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
               <ArrowUpRight className="w-4 h-4" />
               <span>معدل استجابة سريع</span>
@@ -119,7 +106,7 @@ export default function AdminCountersContent() {
                 <ShoppingBag className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold text-gray-900">{counters.todayOrders}</div>
+            <div className="text-3xl font-extrabold text-gray-900">{counters?.todayOrders}</div>
             <div className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
               <ArrowUpRight className="w-4 h-4" />
               <span>+18% عن أمس</span>
@@ -139,7 +126,7 @@ export default function AdminCountersContent() {
                 <DollarSign className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 pt-2">{counters.todayVolume}</div>
+            <div className="text-2xl font-bold text-gray-900 pt-2">{counters?.todayVolume}</div>
             <p className="text-xs text-gray-400 leading-relaxed">إجمالي قيمة أوامر الشراء والعمولات المحسوبة للمنصة خلال الـ 24 ساعة الماضية.</p>
             <div className="pt-4 border-t border-gray-100 flex justify-between items-center text-xs">
               <span className="text-gray-500">حالة التسويات:</span>
@@ -155,7 +142,7 @@ export default function AdminCountersContent() {
                 <Activity className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 pt-2">{counters.pendingApprovals} طلبات</div>
+            <div className="text-2xl font-bold text-gray-900 pt-2">{counters?.pendingApprovals} طلبات</div>
             <p className="text-xs text-gray-400 leading-relaxed">تشمل طلبات إضافة مورّدين جدد، تسجيل فروع جديدة، وطلبات ربط سائقي التوصيل.</p>
             <div className="pt-4 border-t border-gray-100 flex justify-between items-center text-xs">
               <span className="text-gray-500">الإجراء المطلوب:</span>
@@ -176,7 +163,7 @@ export default function AdminCountersContent() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-semibold">
                   <span className="text-gray-600">معدل استهلاك الخوادم:</span>
-                  <span className="text-blue-600">{counters.systemLoad}</span>
+                  <span className="text-blue-600">{counters?.systemLoad}</span>
                 </div>
                 <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
                   <div className="bg-blue-600 h-full rounded-full" style={{ width: '14.2%' }}></div>
@@ -185,7 +172,7 @@ export default function AdminCountersContent() {
 
               <div className="flex justify-between items-center text-xs pt-2">
                 <span className="text-gray-500">نسبة الجاهزية (Uptime):</span>
-                <span className="font-bold text-emerald-600">{counters.uptime}</span>
+                <span className="font-bold text-emerald-600">{counters?.uptime}</span>
               </div>
             </div>
 

@@ -1,26 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Store, 
-  ShoppingBag, 
-  Package, 
-  DollarSign, 
-  PlusCircle, 
-  Clock, 
-  CheckCircle2, 
-  Truck,
-  TrendingUp,
-  AlertCircle,
-  MapPin, 
-  Phone, 
-  ArrowRight,
-  Plus,
-  Users,
-  FileText,
-  Send,
-  Building2
-} from 'lucide-react';
+import { Store, ShoppingBag, Package, DollarSign, PlusCircle, CheckCircle2, Truck, TrendingUp, AlertCircle, MapPin, Phone, ArrowRight } from 'lucide-react';
 
 interface ActiveOrder {
   id: number;
@@ -306,7 +287,7 @@ export default function RetailerDashboardContent() {
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Truck className="w-5 h-5 text-emerald-600" />
                     <span>حالة طلبات التوريد النشطة</span>
-                  </h4>
+                  </h2>
                   <div className="overflow-x-auto">
                     <table className="w-full text-right text-sm">
                       <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
@@ -328,8 +309,7 @@ export default function RetailerDashboardContent() {
                             <td className="py-3 px-4">
                               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 ord.status === 'تم الاستلام' ? 'bg-emerald-50 text-emerald-700' :
-                                ord.status === 'قيد الشحن' ? 'bg-blue-50 text-blue-700' :
-                                'bg-amber-50 text-amber-700'
+                                ord.status === 'قيد الشحن'? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
                               }`}>
                                 {ord.status}
                               </span>
@@ -440,4 +420,26 @@ export default function RetailerDashboardContent() {
               </button>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gra
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">{selectedSupplier.name}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedSupplier.products.map((product) => (
+                  <div key={product.id} className="border border-gray-100 rounded-xl p-4 hover:border-emerald-200 transition-all">
+                    <h3 className="font-semibold text-sm text-gray-900 mb-2">{product.name}</h3>
+                    <p className="text-xs text-gray-500 mb-1">{product.category}</p>
+                    <p className="text-sm font-bold text-emerald-600">{product.price}</p>
+                    <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                      product.stock === 'متوفر بكثرة' ? 'bg-emerald-50 text-emerald-700' :
+                      product.stock === 'متوفر' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                    }`}>{product.stock}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </main>
+  );
+}

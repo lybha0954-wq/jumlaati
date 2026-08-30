@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Users, 
-  UserPlus, 
-  Search, 
-  Shield, 
-  Store, 
-  Building2, 
-  MoreVertical, 
-  CheckCircle2, 
-  XCircle,
-  Edit,
-  Trash2,
-  Mail,
-  Phone
-} from 'lucide-react';
+import { UserPlus, Search, CheckCircle2, XCircle, Edit, Trash2, Phone } from 'lucide-react';
 
 interface UserItem {
   id: number;

@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Box, 
-  PackagePlus, 
-  Search, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Trash2, 
-  Edit, 
-  Layers,
-  DollarSign
-} from 'lucide-react';
+import { Box, PackagePlus, Search, AlertTriangle, CheckCircle2, Trash2, Layers, DollarSign } from 'lucide-react';
 
 interface InventoryItem {
   id: number;

@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Headphones, 
-  MessageCircle, 
-  Send, 
-  Video, 
-  Mail, 
-  HelpCircle, 
-  CheckCircle2, 
-  Building2, 
-  ExternalLink,
-  PhoneCall
-} from 'lucide-react';
+import { MessageCircle, Send, Video, Mail, CheckCircle2, Building2 } from 'lucide-react';
 
 export default function SupplierSupportContent() {
   const [activeChannel, setActiveChannel] = useState<'whatsapp' | 'telegram' | 'meeting' | 'email'>('whatsapp');

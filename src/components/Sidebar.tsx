@@ -3,8 +3,10 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppLogo from '@/components/ui/AppLogo';
-import { LayoutDashboard, Package, ShoppingCart, Users, TrendingUp, Settings, ChevronRight, ChevronLeft, LogOut, Bell, Truck, HelpCircle, Store, ShoppingBag, ShieldCheck, Wallet, UserCircle, BarChart2, ClipboardList, Search, Home, History, DollarSign, Map } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, TrendingUp, Settings, ChevronRight, ChevronLeft, LogOut, HelpCircle, ShoppingBag, ShieldCheck, Wallet, UserCircle, BarChart2, ClipboardList, Home, History, DollarSign, Map } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import Icon from '@/components/ui/AppIcon';
+
 
 interface NavItem {
   id: string;

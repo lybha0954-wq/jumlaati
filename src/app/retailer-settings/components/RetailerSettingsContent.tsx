@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Store, 
-  User, 
-  Phone, 
-  MapPin, 
-  Lock, 
-  Bell, 
-  Save, 
-  CheckCircle2, 
-  Building2,
-  ShoppingBag
-} from 'lucide-react';
+import { Store, Lock, Bell, Save, CheckCircle2 } from 'lucide-react';
 
 export default function RetailerSettingsContent() {
   const [settings, setSettings] = useState({

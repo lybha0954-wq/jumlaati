@@ -12,9 +12,11 @@ import {
   ArrowDownRight,
   PieChart
 } from 'lucide-react';
+import Icon from '@/components/ui/AppIcon';
+
 
 export default function SupplierAnalyticsContent() {
-, timeRange, setTimeRange] = useState('الشهر الحالي');
+  const [timeRange, setTimeRange] = useState('الشهر الحالي');
 
   const stats = [
     { title: 'إجمالي المبيعات', value: '48,250 ر.س', change: '+12.4%', isPositive: true, icon: DollarSign, color: 'text-emerald-600 bg-emerald-50' },
@@ -44,7 +46,7 @@ export default function SupplierAnalyticsContent() {
             <Calendar className="w-4 h-4 text-gray-400" />
             <select 
               value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
+              onChange={(e) => setTimeRange(e?.target?.value)}
               className="text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
             >
               <option value="اليوم">اليوم</option>
@@ -57,21 +59,21 @@ export default function SupplierAnalyticsContent() {
 
         {/* بطاقات الإحصائيات والأرقام */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, idx) => {
-            const Icon = stat.icon;
+          {stats?.map((stat, idx) => {
+            const Icon = stat?.icon;
             return (
               <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500 font-medium">{stat.title}</span>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.color}`}>
+                  <span className="text-xs text-gray-500 font-medium">{stat?.title}</span>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat?.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                  <span className={`flex items-center text-xs font-semibold ${stat.isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 ml-0.5" />}
-                    {stat.change}
+                  <h3 className="text-2xl font-bold text-gray-900">{stat?.value}</h3>
+                  <span className={`flex items-center text-xs font-semibold ${stat?.isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {stat?.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 ml-0.5" />}
+                    {stat?.change}
                   </span>
                 </div>
               </div>
@@ -95,7 +97,7 @@ export default function SupplierAnalyticsContent() {
 
               {/* رسم بياني صوري توضيحي بالاعمدة */}
               <div className="h-64 flex items-end justify-between gap-2 pt-8 px-2 border-b border-gray-100 pb-2">
-                {[45, 60, 35, 80, 95, 70, 85, 100, 75, 90, 110, 125].map((val, i) => (
+                {[45, 60, 35, 80, 95, 70, 85, 100, 75, 90, 110, 125]?.map((val, i) => (
                   <div key={i} className="w-full flex flex-col items-center gap-2 h-full justify-end group">
                     <div 
                       style={{ height: `${val}%` }} 
@@ -125,14 +127,14 @@ export default function SupplierAnalyticsContent() {
             </h2>
 
             <div className="space-y-4 pt-2">
-              {topProducts.map((prod, index) => (
+              {topProducts?.map((prod, index) => (
                 <div key={index} className="p-3.5 bg-gray-50 rounded-xl border border-gray-100 space-y-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-gray-800">{prod.name}</span>
-                    <span className="text-xs font-bold text-blue-600">{prod.revenue}</span>
+                    <span className="text-xs font-bold text-gray-800">{prod?.name}</span>
+                    <span className="text-xs font-bold text-blue-600">{prod?.revenue}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px] text-gray-500">
-                    <span>المبيعات: {prod.sales}</span>
+                    <span>المبيعات: {prod?.sales}</span>
                     <span className="text-emerald-600 font-medium">نشط</span>
                   </div>
                 </div>

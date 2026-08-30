@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  ShoppingBag, 
-  Clock, 
-  CheckCircle2, 
-  Truck, 
-  XCircle, 
-  Search, 
-  Filter, 
-  Plus, 
-  Eye, 
-  FileText 
-} from 'lucide-react';
+import { Clock, CheckCircle2, Truck, XCircle, Search, Filter, Plus, Eye } from 'lucide-react';
 
 interface Order {
   id: string;
