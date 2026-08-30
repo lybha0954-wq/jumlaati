@@ -218,7 +218,7 @@ export default function SupplierSettingsContent() {
     </main>
   );
 }
-import ProfileImageUploader from '@/components/ui/ProfileImageUploader';
+import ProfileImageUploader from '../../../components/ui/ProfileImageuploader';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function SupplierSettingsPage() {

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Store, ShoppingBag, Package, DollarSign, PlusCircle, Truck, TrendingUp, AlertCircle, Sparkles, ArrowRight } from 'lucide-react';
 
+
+
 interface ActiveOrder {
   id: number;
   orderNumber: string;
@@ -433,20 +435,174 @@ export default function UnifiedRetailerDashboard() {
                   </div>
                 </div>
 
-// ... بعد جلب بيانات الطلب
-<OrderStatusClient orderId={order.id} initialStatus={order.status} />
-// داخل ProductPage
-{product.status === 'متوفر' && product.stock > 0 ? (
-  <button className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition">
-    أضف إلى السلة
-  </button>
-) : (
-  <button className="bg-gray-400 text-white py-3 px-6 rounded-lg cursor-not-allowed" disabled>
-    {product.stock === 0 ? 'نفد المخزون' : 'غير متوفر حالياً'}
-  </button>
-)}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">منتجات المورد</h2>
+                  {selectedSupplier.products.length === 0 ? (
+                    <p className="text-sm text-gray-500">لا توجد منتجات متاحة حالياً.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-right text-sm">
+                        <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                          <tr>
+                            <th className="py-3 px-4 rounded-r-xl">اسم المنتج</th>
+                            <th className="py-3 px-4">التصنيف</th>
+                            <th className="py-3 px-4">السعر</th>
+                            <th className="py-3 px-4 rounded-l-xl">المخزون</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {selectedSupplier.products.map((prod) => (
+                            <tr key={prod.id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="py-3 px-4 font-medium text-gray-900">{prod.name}</td>
+                              <td className="py-3 px-4 text-gray-500">{prod.category}</td>
+                              <td className="py-3 px-4 font-bold text-emerald-600">{prod.price}</td>
+                              <td className="py-3 px-4 text-gray-700">{prod.stock}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {suppliers.map((sup) => (
+                  <div key={sup.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">{sup.name}</h3>
+                      <p className="text-xs text-gray-500 mt-1">{sup.category} • {sup.distance}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {sup.status === 'pending' && (
+                        <button
+                          onClick={() => simulateApproval(sup.id)}
+                          className="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-200 transition"
+                        >
+                          اعتماد المورد
+                        </button>
+                      )}
+                      {sup.status === 'approved' && (
+                        <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium">معتمد</span>
+                      )}
+                      <button
+                        onClick={() => setSelectedSupplier(sup)}
+                        className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-emerald-700 transition"
+                      >
+                        عرض المنتجات
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-{/* إظهار المخزون المتبقي للمساعدة في اتخاذ القرار */}
-{product.stock < 10 && product.stock > 0 && (
-  <p className="text-sm text-orange-500">⚠️ تبقى {product.stock} قطعة فقط</p>
-)}
+        {/* التبويب الثالث: طلب مورد جديد */}
+        {activeTab === 'request-supplier' && !selectedSupplier && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-xl mx-auto">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">طلب إضافة مورد جديد</h2>
+            {requestSubmitted ? (
+              <p className="text-emerald-600 font-semibold text-center py-6">✅ تم إرسال الطلب بنجاح!</p>
+            ) : (
+              <form onSubmit={handleSubmitRequest} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">اسم المورد</label>
+                  <input
+                    type="text"
+                    value={requestForm.supplierName}
+                    onChange={(e) => setRequestForm({ ...requestForm, supplierName: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">الفئة</label>
+                  <input
+                    type="text"
+                    value={requestForm.category}
+                    onChange={(e) => setRequestForm({ ...requestForm, category: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">الموقع</label>
+                  <input
+                    type="text"
+                    value={requestForm.location}
+                    onChange={(e) => setRequestForm({ ...requestForm, location: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">ملاحظات</label>
+                  <textarea
+                    value={requestForm.notes}
+                    onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    rows={3}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm"
+                >
+                  إرسال الطلب
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* التبويب الرابع: مولد الأكواد الذكي */}
+        {activeTab === 'smart-generator' && !selectedSupplier && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-xl mx-auto">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-600" />
+              <span>مولد الأكواد الذكي</span>
+            </h2>
+            <form onSubmit={handleGenerateCode} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">نوع الكود</label>
+                <select
+                  value={generatorType}
+                  onChange={(e) => setGeneratorType(e.target.value as 'qr' | 'barcode' | 'sku')}
+                  className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="qr">QR Code</option>
+                  <option value="barcode">Barcode</option>
+                  <option value="sku">SKU</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">اسم المنتج أو الصنف</label>
+                <input
+                  type="text"
+                  value={itemInput}
+                  onChange={(e) => setItemInput(e.target.value)}
+                  placeholder="مثال: أكياس ورقية بني"
+                  className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm"
+              >
+                توليد الكود
+              </button>
+            </form>
+            {generatedCodeResult && (
+              <div className="mt-4 p-4 bg-emerald-50 rounded-xl text-center">
+                <p className="text-xs text-gray-500 mb-1">الكود المُولَّد:</p>
+                <p className="text-lg font-bold text-emerald-700 tracking-widest">{generatedCodeResult}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </main>
+  );
+}
