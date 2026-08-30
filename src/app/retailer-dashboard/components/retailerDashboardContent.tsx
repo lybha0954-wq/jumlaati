@@ -450,3 +450,18 @@ import { OrderStatusClient } from './OrderStatusClient';
 
 // ... بعد جلب بيانات الطلب
 <OrderStatusClient orderId={order.id} initialStatus={order.status} />
+// داخل ProductPage
+{product.status === 'متوفر' && product.stock > 0 ? (
+  <button className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition">
+    أضف إلى السلة
+  </button>
+) : (
+  <button className="bg-gray-400 text-white py-3 px-6 rounded-lg cursor-not-allowed" disabled>
+    {product.stock === 0 ? 'نفد المخزون' : 'غير متوفر حالياً'}
+  </button>
+)}
+
+{/* إظهار المخزون المتبقي للمساعدة في اتخاذ القرار */}
+{product.stock < 10 && product.stock > 0 && (
+  <p className="text-sm text-orange-500">⚠️ تبقى {product.stock} قطعة فقط</p>
+)}
