@@ -499,3 +499,13 @@ import Image from 'next/image';
   </div>
   {/* باقي التفاصيل */}
 </div>
+// استبدل مكان عرض الشعار القديم بهذا
+{store.logo && (
+  <Image
+    src={store.logo}
+    alt={`شعار ${store.store_name}`}
+    width={120}
+    height={60}
+    className="rounded-lg object-cover"
+  />
+)}
