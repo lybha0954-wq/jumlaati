@@ -472,3 +472,30 @@ const getStoreWithCache = cache(async (slug: string) => {
   
   return data;
 });
+// داخل مكون ProductPage في app/products/[slug]/page.tsx
+import Image from 'next/image';
+
+// ... بعد جلب بيانات المنتج
+
+<div className="grid md:grid-cols-2 gap-8">
+  {/* القسم الأيمن: عرض الصور */}
+  <div className="bg-gray-50 rounded-lg p-4">
+    {product.images && product.images.length > 0 ? (
+      <div className="relative w-full h-96">
+        <Image
+          src={product.images[0]} // نعرض الصورة الأولى كرئيسية
+          alt={product.name}
+          fill
+          className="object-contain rounded-lg"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority // تحميل سريع لأهم العناصر
+        />
+      </div>
+    ) : (
+      <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+        لا توجد صورة
+      </div>
+    )}
+  </div>
+  {/* باقي التفاصيل */}
+</div>
