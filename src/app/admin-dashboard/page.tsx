@@ -1,5 +1,11 @@
-import AdminDashboardContent from './components/AdminDashboardContent';
+import React from 'react';
+import { AdminDashboardContent } from './components/AdminDashboardContent';
 
-export default function Page() {
+export const metadata = {
+  title: 'لوحة تحكم المدير — جُمْلَتِي',
+  description: 'نظرة عامة ومؤشرات أداء منصة توريد البقالة بالجملة',
+};
+
+export default function AdminDashboardPage() {
   return <AdminDashboardContent />;
 }
