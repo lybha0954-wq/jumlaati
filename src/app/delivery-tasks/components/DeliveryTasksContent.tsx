@@ -170,3 +170,80 @@ export default function DeliveryTasksContent() {
     </div>
   );
 }
+// app/delivery/tasks/[id]/page.tsx
+import { createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+
+const getDeliveryTask = cache(async (taskId: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('delivery_tasks')
+    .select(`
+      *,
+      order:orders (
+        id, total_price, shipping_address,
+        retailer:profiles (full_name, phone, address)
+      )
+    `)
+    .eq('id', taskId)
+    .single();
+  
+  if (error) return null;
+  return data;
+});
+
+export const revalidate = 30; // تحديث كل 30 ثانية لتتبع الموقع والحالة
+
+export default async function DeliveryTaskPage({ params }: { params: { id: string } }) {
+  const { id } = await params;
+  const task = await getDeliveryTask(id);
+  if (!task) notFound();
+
+  const order = task.order;
+
+  return (
+    <div className="container mx-auto p-6 max-w-2xl">
+      <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+        {/* رأس المهمة */}
+        <div className="bg-blue-600 text-white p-4">
+          <h2 className="text-xl font-bold">مهمة توصيل #{task.id.slice(0, 8)}</h2>
+          <p className="text-blue-100">حالة المهمة: {task.status}</p>
+        </div>
+
+        {/* معلومات العميل */}
+        <div className="p-6 space-y-4">
+          <div className="border-b pb-4">
+            <h3 className="font-semibold text-gray-700">بيانات المستلم</h3>
+            <p className="text-lg">{order?.retailer?.full_name || 'غير محدد'}</p>
+            <p className="text-gray-600">📞 {order?.retailer?.phone}</p>
+          </div>
+
+          <div className="border-b pb-4">
+            <h3 className="font-semibold text-gray-700">عنوان التوصيل</h3>
+            <p className="text-gray-800">{order?.shipping_address || order?.retailer?.address || 'لا يوجد عنوان'}</p>
+          </div>
+
+          <div className="flex justify-between items-center pt-2">
+            <span className="font-semibold">قيمة الطلب:</span>
+            <span className="text-2xl font-bold text-green-600">{order?.total_price} ريال</span>
+          </div>
+
+          <div className="flex justify-between items-center text-sm text-gray-500">
+            <span>المبلغ المستحق للتوصيل: {task.delivery_fee || 0} ريال</span>
+          </div>
+
+          {/* أزرار الإجراء (ستُفعّل لاحقاً بـ Client Component) */}
+          <div className="flex gap-4 mt-6 pt-4 border-t">
+            <button className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+              ✅ بدء التوصيل
+            </button>
+            <button className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition">
+              ❌ رفض المهمة
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
