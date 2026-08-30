@@ -74,3 +74,14 @@ export default function RetailerOrdersLayout({ children }: { children: React.Rea
     </div>
   );
 }
+// app/delivery/tasks/layout.tsx
+import { BottomNavBar } from '@/components/ui/BottomNavBar';
+
+export default function DeliveryTasksLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="pb-20 bg-gray-100 min-h-screen">
+      {children}
+      <BottomNavBar />
+    </div>
+  );
+}
