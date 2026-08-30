@@ -306,7 +306,7 @@ export default function RetailerDashboardContent() {
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Truck className="w-5 h-5 text-emerald-600" />
                     <span>حالة طلبات التوريد النشطة</span>
-                  </h4>
+                  </h2>
                   <div className="overflow-x-auto">
                     <table className="w-full text-right text-sm">
                       <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
@@ -380,64 +380,56 @@ export default function RetailerDashboardContent() {
           </div>
         )}
 
-        {/* التبويب الثاني: استعراض الموردين */}
-        {activeTab === 'suppliers' && !selectedSupplier && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {suppliers.map((supplier) => (
-              <div 
-                key={supplier.id} 
-                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
-              >
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">
-                      {supplier.category}
-                    </span>
-                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>معتمد</span>
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-base text-gray-900">{supplier.name}</h3>
-                  
-                  <div className="space-y-1 text-xs text-gray-500 pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{supplier.distance}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{supplier.phone}</span>
-                    </div>
-                  </div>
+        {/* التبويب الثاني: استعراض الموردين أو منتجات المورد المحدد */}
+        {activeTab === 'suppliers' && (
+          <div>
+            {selectedSupplier ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                  <button 
+                    onClick={() => setSelectedSupplier(null)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    <span>العودة لقائمة الموردين</span>
+                  </button>
+                  <span className="text-xs font-semibold text-gray-500">{selectedSupplier.name}</span>
                 </div>
 
-                <div className="pt-3 border-t border-gray-100">
-                  <button 
-                    onClick={() => setSelectedSupplier(supplier)}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                  >
-                    <Package className="w-4 h-4" />
-                    <span>استعراض المنتجات ({supplier.products.length})</span>
-                  </button>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">منتجات المورد المتاحة للطلب</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {selectedSupplier.products.map((prod) => (
+                      <div key={prod.id} className="border border-gray-100 p-4 rounded-xl space-y-2 bg-gray-50/50">
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">{prod.category}</span>
+                        <h4 className="font-bold text-gray-900 text-sm">{prod.name}</h4>
+                        <p className="text-emerald-600 font-bold text-sm">{prod.price}</p>
+                        <p className="text-xs text-gray-500">حالة المخزون: {prod.stock}</p>
+                        <button 
+                          onClick={() => {
+                            setNewRequest({
+                              supplier: selectedSupplier.name,
+                              items: prod.name,
+                              total: prod.price.replace(/[^0-9]/g, '') || '100'
+                            });
+                            setActiveTab('dashboard');
+                            setSelectedSupplier(null);
+                          }}
+                          className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded-lg font-medium transition-all"
+                        >
+                          إضافة لطلب توريد سريع
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* عرض تفاصيل منتجات المورد المختار */}
-        {selectedSupplier && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <button 
-                onClick={() => setSelectedSupplier(null)}
-                className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700"
-              >
-                <ArrowRight className="w-4 h-4" />
-                <span>العودة لقائمة الموردين</span>
-              </button>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gra
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {suppliers.map((supplier) => (
+                  <div 
+                    key={supplier.id} 
+                    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
+                  >
+                    <div className="space-y-2">
+                      <div classNam
