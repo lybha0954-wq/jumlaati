@@ -149,3 +149,78 @@ export default function RetailerOrdersContent() {
     </main>
   );
 }
+// app/retailer/orders/[id]/page.tsx
+import { createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+
+const getOrder = cache(async (orderId: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      retailer:profiles!orders_retailer_id_fkey (full_name, phone),
+      items:order_items (*, product:products (name, final_price))
+    `)
+    .eq('id', orderId)
+    .single();
+  
+  if (error) return null;
+  return data;
+});
+
+// لا نستخدم generateStaticParams للطلبات لأنها كثيرة ومتغيرة، نعتمد على الـ ISR فقط
+export const revalidate = 60; // تحديث كل دقيقة لتحديث حالة الطلب
+
+export default async function RetailerOrderPage({ params }: { params: { id: string } }) {
+  const { id } = await params;
+  const order = await getOrder(id);
+  if (!order) notFound();
+
+  // حالة الطلب (ملون)
+  const statusColors: Record<string, string> = {
+    'جديد': 'bg-blue-100 text-blue-800',
+    'قيد التجهيز': 'bg-yellow-100 text-yellow-800',
+    'قيد التوصيل': 'bg-purple-100 text-purple-800',
+    'تم التوصيل': 'bg-green-100 text-green-800',
+  };
+
+  return (
+    <div className="container mx-auto p-6 max-w-2xl">
+      <h1 className="text-2xl font-bold mb-4">طلب رقم #{order.id.slice(0, 8)}</h1>
+      
+      <div className="bg-white shadow rounded-lg p-6 space-y-4">
+        {/* حالة الطلب */}
+        <div className="flex justify-between items-center border-b pb-4">
+          <span className="font-semibold">الحالة:</span>
+          <span className={`px-4 py-1 rounded-full text-sm ${statusColors[order.status] || 'bg-gray-100'}`}>
+            {order.status}
+          </span>
+        </div>
+
+        {/* تفاصيل المنتجات */}
+        <div>
+          <h3 className="font-semibold mb-2">المنتجات</h3>
+          {order.items?.map((item: any) => (
+            <div key={item.id} className="flex justify-between text-sm border-b py-2">
+              <span>{item.product?.name || 'منتج'}</span>
+              <span>{item.quantity} × {item.price} ريال</span>
+            </div>
+          ))}
+        </div>
+
+        {/* الإجمالي */}
+        <div className="text-xl font-bold text-green-700 pt-4 border-t">
+          الإجمالي: {order.total_price} ريال
+        </div>
+
+        {/* معلومات التوصيل */}
+        <div className="text-sm text-gray-500 pt-2">
+          <p>العنوان: {order.shipping_address || 'غير محدد'}</p>
+          <p>رقم الجوال: {order.retailer?.phone}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
