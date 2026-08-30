@@ -14,6 +14,8 @@ import {
   Megaphone,
   Inbox,
 } from 'lucide-react';
+import Icon from '@/components/ui/AppIcon';
+
 
 // ============================================================
 // أنواع البيانات
@@ -491,4 +493,10 @@ function MatchColumn({
             </button>
           );
         })}
-        {items.length
+        {items.length === 0 && (
+          <div className="p-4 text-center text-xs text-gray-400">لا توجد طلبات حالياً.</div>
+        )}
+      </div>
+    </div>
+  );
+}
