@@ -65,3 +65,62 @@ export const storeService = {
     } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
   },
 };
+// أضف داخل storeService
+async uploadProfileImage(file: File, type: 'avatar' | 'logo'): Promise<string | null> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('type', type);
+
+  const response = await fetch('/api/profile/upload-image', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'فشل رفع الصورة');
+  }
+
+  const data = await response.json();
+  return data.publicUrl;
+},
+
+async deleteProfileImage(type: 'avatar' | 'logo'): Promise<boolean> {
+  // أولاً نجلب الرابط الحالي لنعرف مساره
+  const supabase = createClient();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(type === 'avatar' ? 'avatar_url' : 'store_logo')
+    .single();
+
+  const imageUrl = type === 'avatar' ? profile?.avatar_url : profile?.store_logo;
+  if (!imageUrl) return true; // لا يوجد صورة لحذفها
+
+  // استخراج المسار من الرابط
+  const path = imageUrl.split('/store-assets/')[1];
+  if (!path) return false;
+
+  // حذف من التخزين
+  const { error: storageError } = await supabase.storage
+    .from('store-assets')
+    .remove([path]);
+
+  if (storageError) {
+    console.error('Delete Storage Error:', storageError);
+    return false;
+  }
+
+  // تحديث الحقل في قاعدة البيانات إلى null
+  const updateData = type === 'avatar' ? { avatar_url: null } : { store_logo: null };
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update(updateData)
+    .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+  if (updateError) {
+    console.error('Delete DB Error:', updateError);
+    return false;
+  }
+
+  return true;
+}
