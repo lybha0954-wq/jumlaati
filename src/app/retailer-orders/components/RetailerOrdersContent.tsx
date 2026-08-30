@@ -257,3 +257,8 @@ export function OrderStatusClient({ orderId, initialStatus }: { orderId: string;
     </span>
   );
 }
+// داخل app/retailer/orders/[id]/page.tsx
+import { OrderStatusClient } from './OrderStatusClient';
+
+// ... بعد جلب بيانات الطلب
+<OrderStatusClient orderId={order.id} initialStatus={order.status} />
