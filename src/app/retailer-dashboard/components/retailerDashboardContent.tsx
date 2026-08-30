@@ -38,7 +38,7 @@ interface InventoryStock {
   status: 'متوفر' | 'منخفض';
 }
 
-interface Product {
+interface ProductItem {
   id: number;
   name: string;
   price: string;
@@ -54,10 +54,10 @@ interface Supplier {
   phone: string;
   email: string;
   status: 'pending' | 'approved';
-  products: Product[];
+  products: ProductItem[];
 }
 
-export default function RetailerDashboardContent() {
+export default function UnifiedRetailerDashboard() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'suppliers' | 'request-supplier' | 'smart-generator'>('dashboard');
 
   const [orders, setOrders] = useState<ActiveOrder[]>([
@@ -72,7 +72,6 @@ export default function RetailerDashboardContent() {
     { id: 3, itemName: 'أكواب بلاستيك 300مل', category: 'أكواب', currentStock: 340, status: 'متوفر' },
   ]);
 
-  // قائمة الموردين والمنتجات المدمجة
   const [suppliers, setSuppliers] = useState<Supplier[]>([
     {
       id: 1,
@@ -114,7 +113,6 @@ export default function RetailerDashboardContent() {
   ]);
 
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-
   const [newRequest, setNewRequest] = useState({ supplier: '', items: '', total: '' });
   
   const [requestForm, setRequestForm] = useState({
@@ -125,7 +123,6 @@ export default function RetailerDashboardContent() {
   });
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-  // حالات فكرة الكود الثاني (مولد الأكواد الذكي / ربط الخدمات الديناميكية)
   const [generatorType, setGeneratorType] = useState<'qr' | 'barcode' | 'sku'>('qr');
   const [itemInput, setItemInput] = useState('');
   const [generatedCodeResult, setGeneratedCodeResult] = useState<string | null>(null);
@@ -170,7 +167,7 @@ export default function RetailerDashboardContent() {
       setRequestSubmitted(false);
       setRequestForm({ supplierName: '', category: '', location: '', notes: '' });
       setActiveTab('suppliers');
-    }, 2500);
+    }, 2000);
   };
 
   const simulateApproval = (id: number) => {
@@ -203,24 +200,24 @@ export default function RetailerDashboardContent() {
     <main dir="rtl" className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* رأس الصفحة مع شريط التنقل الداخلي */}
+        {/* رأس الصفحة وشريط التنقل */}
         <header className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم المطعم / المتجر</h1>
-            <p className="text-sm text-gray-500 mt-1">إدارة الطلبات، مخزون المتجر، استعراض الموردين القريبين، وخدمات التوليد الذكية للمخزون.</p>
+            <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم المطعم / المتجر الذكية</h1>
+            <p className="text-sm text-gray-500 mt-1">إدارة الطلبات، الموردين القريبين، المخزون، وتوليد الأكواد التعريفية.</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
               <button 
                 onClick={() => { setActiveTab('dashboard'); setSelectedSupplier(null); }}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'dashboard' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'dashboard' && !selectedSupplier ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 الرئيسية
               </button>
               <button 
                 onClick={() => { setActiveTab('suppliers'); setSelectedSupplier(null); }}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'suppliers' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'suppliers' || selectedSupplier ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 الموردين
               </button>
@@ -245,11 +242,11 @@ export default function RetailerDashboardContent() {
           </div>
         </header>
 
-        {/* التبويب الأول: لوحة التحكم الرئيسية والطلبات والمخزون */}
-        {activeTab === 'dashboard' && (
+        {/* التبويب الأول: لوحة التحكم الرئيسية */}
+        {activeTab === 'dashboard' && !selectedSupplier && (
           <div className="space-y-6">
             
-            {/* بطاقات الإحصائيات السريعة */}
+            {/* إحصائيات سريعة */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
@@ -294,10 +291,10 @@ export default function RetailerDashboardContent() {
               </div>
             </div>
 
-            {/* محتوى لوحة التحكم */}
+            {/* النموذج والجداول */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* نموذج طلب توريد من مورد */}
+              {/* طلب توريد */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <PlusCircle className="w-5 h-5 text-emerald-600" />
@@ -349,15 +346,13 @@ export default function RetailerDashboardContent() {
                 </form>
               </div>
 
-              {/* الجداول الجانبية */}
+              {/* جداول الطلبات والمخزون */}
               <div className="lg:col-span-2 space-y-6">
-                
-                {/* جدول الطلبات الجارية */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Truck className="w-5 h-5 text-emerald-600" />
                     <span>حالة طلبات التوريد النشطة</span>
-                  </div>
+                  </h2>
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-right text-sm">
@@ -393,7 +388,6 @@ export default function RetailerDashboardContent() {
                   </div>
                 </div>
 
-                {/* جدول لمحة مخزون المطعم الحالي */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Package className="w-5 h-5 text-emerald-600" />
@@ -429,22 +423,25 @@ export default function RetailerDashboardContent() {
                     </table>
                   </div>
                 </div>
-
               </div>
 
             </div>
           </div>
         )}
 
-        {/* التبويب الثاني: استعراض الموردين وقائمتهم المعتمدة ومنتجاتهم */}
-        {activeTab === 'suppliers' && !selectedSupplier && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {suppliers.map((supplier) => (
-              <div 
-                key={supplier.id} 
-                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4 hover:border-emerald-200 transition-all"
-              >
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">
-                      {su
+        {/* التبويب الثاني: الموردين أو عرض منتجات المورد المحدد */}
+        {(activeTab === 'suppliers' || selectedSupplier) && (
+          <div>
+            {selectedSupplier ? (
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                  <div>
+                    <button 
+                      onClick={() => setSelectedSupplier(null)}
+                      className="text-xs text-emerald-600 font-semibold mb-2 flex items-center gap-1 hover:underline"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                      <span>العودة لقائمة الموردين</span>
+                    </button>
+                    <h2 className="text-xl font-bold text-gray-900">{selectedSupplier.name}</h2>
+                    <p className="text-xs text-gray-500 mt-1">{selectedSupplier.category} • {selectedSupplier.distanc
