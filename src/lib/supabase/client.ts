@@ -14,9 +14,13 @@ const canUseCookies = (() => {
     if (typeof document === 'undefined') return false;
     if (cache !== null) return cache;
     const k = '__sb_test__';
-    document.cookie = `${k}=1; Path=/; SameSite=None; Secure; Partitioned`;
-    cache = document.cookie.includes(k);
-    document.cookie = `${k}=; Path=/; Max-Age=0; SameSite=None; Secure`;
+    try {
+      document.cookie = `${k}=1; Path=/; SameSite=None; Secure; Partitioned`;
+      cache = document.cookie.includes(k);
+      document.cookie = `${k}=; Path=/; Max-Age=0; SameSite=None; Secure`;
+    } catch {
+      cache = false;
+    }
     return cache;
   };
 })();
@@ -46,11 +50,13 @@ const fromStorage = () => {
 };
 
 const setCookie = (name: string, value: string, options?: any) => {
-  let s = `${name}=${encodeURIComponent(value)}; Path=${options?.path || '/'}; SameSite=None; Secure; Partitioned`;
-  if (options?.maxAge) s += `; Max-Age=${options.maxAge}`;
-  if (options?.domain) s += `; Domain=${options.domain}`;
-  if (options?.expires) s += `; Expires=${new Date(options.expires).toUTCString()}`;
-  document.cookie = s;
+  try {
+    let s = `${name}=${encodeURIComponent(value)}; Path=${options?.path || '/'}; SameSite=None; Secure; Partitioned`;
+    if (options?.maxAge) s += `; Max-Age=${options.maxAge}`;
+    if (options?.domain) s += `; Domain=${options.domain}`;
+    if (options?.expires) s += `; Expires=${new Date(options.expires).toUTCString()}`;
+    document.cookie = s;
+  } catch {}
 };
 
 const deleteCookie = (name: string) => {
