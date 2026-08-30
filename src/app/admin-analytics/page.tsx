@@ -1,48 +1,60 @@
+// src/app/admin-analytics/page.tsx
+import { createClient } from '@/lib/supabase/server';
 import AdminAnalyticsContent from './components/AdminAnalyticsContent';
 
-export default function Page() {
-  return <AdminAnalyticsContent />;
+// جلب البيانات من الخادم (آمن وسريع)
+async function getAnalyticsData() {
+  const supabase = createClient();
+
+  // 1. إحصائيات سريعة (البطاقات)
+  const { data: stats } = await supabase
+    .from('transactions')
+    .select('total_amount, platform_commission, status, created_at');
+
+  // 2. جلب المعاملات الأخيرة (للجدول)
+  const { data: transactions } = await supabase
+    .from('transactions')
+    .select(`
+      id,
+      total_amount,
+      platform_commission,
+      supplier_net,
+      delivery_fee,
+      status,
+      created_at,
+      retailer:profiles!transactions_retailer_id_fkey(full_name),
+      supplier:profiles!transactions_supplier_id_fkey(full_name)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  // حساب الإحصائيات
+  const totalRevenue = stats?.reduce((sum, t) => sum + t.total_amount, 0) || 0;
+  const totalCommission = stats?.reduce((sum, t) => sum + t.platform_commission, 0) || 0;
+  const totalOrders = stats?.length || 0;
+  const completedOrders = stats?.filter(t => t.status === 'completed').length || 0;
+
+  // توزيع الحالات للرسم الدائري
+  const statusDistribution = stats?.reduce((acc, t) => {
+    acc[t.status] = (acc[t.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  return {
+    stats: {
+      totalRevenue,
+      totalCommission,
+      totalOrders,
+      completedOrders,
+      completionRate: totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0,
+    },
+    transactions: transactions || [],
+    statusDistribution,
+  };
 }
-// app/admin-analytics/page.tsx
-import { analyticsService } from '@/lib/services/analyticsService';
-import SalesChart from './components/SalesChart';
-import TopProductsChart from './components/TopProductsChart';
-import DeliveryPerformanceChart from './components/DeliveryPerformanceChart';
-import QuickStatsCards from './components/QuickStatsCards';
 
 export default async function AdminAnalyticsPage() {
-  // جلب جميع البيانات بالتوازي (لأقصى سرعة)
-  const [salesData, topProducts, deliveryPerformance, quickStats] = await Promise.all([
-    analyticsService.getSalesOverview(30),
-    analyticsService.getTopProducts(10),
-    analyticsService.getDeliveryPerformance(),
-    analyticsService.getQuickStats(),
-  ]);
+  const data = await getAnalyticsData();
 
-  return (
-    <div className="p-6 space-y-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold">📊 لوحة التحليلات</h1>
-
-      {/* البطاقات العلوية */}
-      <QuickStatsCards stats={quickStats} />
-
-      {/* الرسم البياني للمبيعات */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border">
-        <h2 className="text-xl font-semibold mb-4">📈 المبيعات اليومية (آخر 30 يوماً)</h2>
-        <SalesChart data={salesData} />
-      </div>
-
-      {/* صف مزدوج: المنتجات الأكثر مبيعاً + أداء المندوبين */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">🏆 أكثر المنتجات مبيعاً</h2>
-          <TopProductsChart data={topProducts} />
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">🛵 أداء مندوبي التوصيل</h2>
-          <DeliveryPerformanceChart data={deliveryPerformance} />
-        </div>
-      </div>
-    </div>
-  );
+  return <AdminAnalyticsContent initialData={data} />;
 }
