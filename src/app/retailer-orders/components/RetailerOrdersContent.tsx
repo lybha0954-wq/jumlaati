@@ -246,19 +246,3 @@ export function OrderStatusClient({ orderId, initialStatus }: { orderId: string;
     },
   });
 
-  return (
-    <span className={`px-4 py-1 rounded-full text-sm ${
-      status === 'جديد' ? 'bg-blue-100 text-blue-800' :
-      status === 'قيد التوصيل' ? 'bg-purple-100 text-purple-800' :
-      status === 'تم التوصيل' ? 'bg-green-100 text-green-800' :
-      'bg-gray-100 text-gray-800'
-    }`}>
-      {status}
-    </span>
-  );
-}
-// داخل app/retailer/orders/[id]/page.tsx
-import { OrderStatusClient } from './OrderStatusClient';
-
-// ... بعد جلب بيانات الطلب
-<OrderStatusClient orderId={order.id} initialStatus={order.status} />
