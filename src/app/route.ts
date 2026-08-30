@@ -290,3 +290,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'حدث خطأ داخلي في الخادم' }, { status: 500 });
   }
 }
+// app/api/coupons/validate/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { code, orderTotal } = await request.json();
+
+    if (!code || !orderTotal) {
+      return NextResponse.json({ valid: false, error: 'الكود وقيمة الطلب مطلوبان' }, { status: 400 });
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .rpc('validate_and_apply_coupon', { coupon_code: code, order_total: orderTotal });
+
+    if (error) {
+      console.error('Coupon validation error:', error);
+      return NextResponse.json({ valid: false, error: 'حدث خطأ في التحقق من الكوبون' }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ valid: false, error: 'خطأ داخلي في الخادم' }, { status: 500 });
+  }
+}
