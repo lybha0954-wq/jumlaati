@@ -59,3 +59,18 @@ import AppLayout from '@/components/ui/AppLayout';
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
+// app/retailer/orders/layout.tsx
+import Sidebar from '@/components/ui/Sidebar';
+import Topbar from '@/components/ui/Topbar';
+
+export default function RetailerOrdersLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Topbar />
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
