@@ -43,3 +43,34 @@ const nextConfig = {
   },
 };
 export default nextConfig;
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // 1. تمكين ضغط الملفات (Gzip/Brotli) لتقليل حجم الصفحات
+  compress: true,
+
+  // 2. تحسين الصور (استخدام WebP/AVIF تلقائياً)
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co', // لاستضافة الصور على Supabase Storage
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // إذا كنت تستخدم صور جوجل
+      },
+    ],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+  },
+
+  // 3. تحسين حزمة التطبيق (تقليل حجم الكود المُرسل للمتصفح)
+  swcMinify: true,
+
+  // 4. منع تحميل المكتبات غير المستخدمة (Tree Shaking)
+  experimental: {
+    optimizePackageImports: ['@supabase/supabase-js', 'stripe'],
+  },
+};
+
+export default nextConfig;
