@@ -224,3 +224,36 @@ export default async function RetailerOrderPage({ params }: { params: { id: stri
     </div>
   );
 }
+'use client'; // نضيف هذه في أعلى ملف Client Component جديد أو نستخدم pattern الفصل
+
+// أنشئ ملفاً منفصلاً: app/retailer/orders/[id]/OrderStatusClient.tsx
+import { useEffect, useState } from 'react';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { createClient } from '@/lib/supabase/client';
+
+export function OrderStatusClient({ orderId, initialStatus }: { orderId: string; initialStatus: string }) {
+  const [status, setStatus] = useState(initialStatus);
+
+  // استخدم الـ Hook الموجود لتحديث الحالة فوراً
+  useRealtimeSubscription({
+    table: 'orders',
+    filter: `id=eq.${orderId}`,
+    onUpdate: (payload) => {
+      if (payload.new?.status) {
+        setStatus(payload.new.status);
+        // يمكنك أيضاً تشغيل إشعار صوتي هنا
+      }
+    },
+  });
+
+  return (
+    <span className={`px-4 py-1 rounded-full text-sm ${
+      status === 'جديد' ? 'bg-blue-100 text-blue-800' :
+      status === 'قيد التوصيل' ? 'bg-purple-100 text-purple-800' :
+      status === 'تم التوصيل' ? 'bg-green-100 text-green-800' :
+      'bg-gray-100 text-gray-800'
+    }`}>
+      {status}
+    </span>
+  );
+}
