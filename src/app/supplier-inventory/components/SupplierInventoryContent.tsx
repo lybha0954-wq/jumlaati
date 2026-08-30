@@ -288,3 +288,108 @@ export default function SupplierInventoryContent() {
     </main>
   );
 }
+'use client';
+
+import { useState, useRef } from 'react';
+import { productService } from '@/lib/services/productService';
+import Image from 'next/image';
+
+interface ImageUploaderProps {
+  productId: string;
+  existingImages: string[];
+  onImagesUpdate: (newImages: string[]) => void;
+}
+
+export default function ImageUploader({ productId, existingImages, onImagesUpdate }: ImageUploaderProps) {
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<string[]>(existingImages || []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // التحقق من حجم الملف (لا يزيد عن 5 ميجابايت)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('حجم الصورة يتجاوز 5 ميجابايت');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const newImages = await productService.uploadImage(productId, file);
+      if (newImages) {
+        setImages(newImages);
+        onImagesUpdate(newImages);
+      }
+    } catch (error: any) {
+      alert(error.message || 'حدث خطأ أثناء الرفع');
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDelete = async (imageUrl: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
+
+    setLoading(true);
+    try {
+      const success = await productService.deleteImage(productId, imageUrl);
+      if (success) {
+        const newImages = images.filter(img => img !== imageUrl);
+        setImages(newImages);
+        onImagesUpdate(newImages);
+      }
+    } catch (error: any) {
+      alert(error.message || 'فشل حذف الصورة');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* عرض الصور الموجودة */}
+      <div className="flex flex-wrap gap-4">
+        {images.map((url, index) => (
+          <div key={index} className="relative group">
+            <Image
+              src={url}
+              alt={`صورة المنتج ${index + 1}`}
+              width={120}
+              height={120}
+              className="rounded-lg object-cover border"
+            />
+            <button
+              onClick={() => handleDelete(url)}
+              disabled={loading}
+              className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700 disabled:opacity-50"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        
+        {/* زر إضافة صورة جديدة */}
+        {images.length < 6 && (
+          <label className="w-32 h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition">
+            <span className="text-3xl text-gray-400">+</span>
+            <span className="text-xs text-gray-500">إضافة صورة</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              disabled={loading}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+
+      {loading && <p className="text-sm text-blue-600">جاري رفع الصورة ومعالجتها...</p>}
+      <p className="text-xs text-gray-400">يدعم: JPG, PNG, WebP (الحد الأقصى 5 ميجابايت)</p>
+    </div>
+  );
+}
