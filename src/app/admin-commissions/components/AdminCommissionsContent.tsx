@@ -3,12 +3,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import CommissionSummaryCards from './CommissionSummaryCards';
-import RequestsList from './RequestsList';
-import RequestDetailsModal from './RequestDetailsModal';
+import CommissionSummaryCards from './Commissionsummarycards';
+import RequestsList from './Requestslist';
+import RequestDetailsModal from './Requestdetailsmodal';
 import CommissionSettings from './CommissionSettings';
-import CommissionDistribution from './CommissionDistribution';
-import RequestsFilters from './RequestsFilters';
+
+import RequestsFilters from './Requesfilters';
 
 interface Request {
   id: string;
@@ -47,6 +47,11 @@ export default function AdminCommissionsContent({ initialData }: AdminCommission
   const [filters, setFilters] = useState({ type: 'all', status: 'all', dateRange: 'all' });
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>('');
+
+  useEffect(() => {
+    setCurrentTime(new Date().toLocaleTimeString('ar-IQ'));
+  }, []);
 
   // تحديث فوري عند إضافة طلب جديد
   useRealtimeSubscription({
@@ -131,7 +136,7 @@ export default function AdminCommissionsContent({ initialData }: AdminCommission
           💰 إدارة العمولات والطلبات
         </h1>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          آخر تحديث: {new Date().toLocaleTimeString('ar-IQ')}
+          آخر تحديث: {currentTime}
         </span>
       </div>
 
