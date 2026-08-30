@@ -13,6 +13,8 @@ import {
   ArrowLeftRight,
   Megaphone,
   Inbox,
+  Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 
 // ============================================================
@@ -79,10 +81,10 @@ const LINK_COMMISSION_DEFAULTS: Record<LinkRequestType, number> = {
   get_supplier_partner: 20000,
 };
 
-const roleMeta: Record<RequesterRole, { label: string; icon: React.ElementType; color: string }> = {
-  supplier: { label: 'جملة / مجهز', icon: Boxes, color: 'text-amber-600 bg-amber-50' },
-  retailer: { label: 'محل / سوبرماركت', icon: Store, color: 'text-blue-600 bg-blue-50' },
-  delivery: { label: 'توصيل', icon: Truck, color: 'text-emerald-600 bg-emerald-50' },
+const roleMeta: Record<RequesterRole, { label: string; icon: React.ElementType; color: string; badge: string }> = {
+  supplier: { label: 'جملة / مجهز', icon: Boxes, color: 'text-amber-700 bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-800' },
+  retailer: { label: 'محل / سوبرماركت', icon: Store, color: 'text-blue-700 bg-blue-50 border-blue-200', badge: 'bg-blue-100 text-blue-800' },
+  delivery: { label: 'توصيل', icon: Truck, color: 'text-emerald-700 bg-emerald-50 border-emerald-200', badge: 'bg-emerald-100 text-emerald-800' },
 };
 
 const typeLabel: Record<LinkRequestType, string> = {
@@ -98,7 +100,7 @@ function formatCurrency(n: number) {
 }
 
 // ============================================================
-// بيانات تجريبية أولية (تُستبدل لاحقاً بربط Supabase)
+// بيانات تجريبية أولية
 // ============================================================
 const initialDriverWanted: DriverWantedRequest[] = [
   { id: 'DW-01', supplierName: 'مؤسسة الرافدين للمواد الغذائية', supplierArea: 'الكرخ - بغداد', createdAt: '2026-08-28' },
@@ -244,32 +246,56 @@ export default function AdminCommissionsContent() {
   const totalPending = activeCommissions.reduce((acc, c) => acc + (c.totalCommission - c.collected), 0);
 
   return (
-    <main dir="rtl" className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <main dir="rtl" className="min-h-screen bg-slate-900/5 p-4 md:p-8 font-sans text-slate-800">
+      <div className="max-w-7xl mx-auto space-y-6">
 
-        <header className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">تنفيذ طلبات الربط والعمولات</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              استقبال طلبات الجملة والمحل والتوصيل، ومطابقتها/تنفيذها من هنا. تنفيذ الربط هو اللحظة التي تُفعَّل بها عمولة كل طرف.
+        {/* الهيدر الرئيسي */}
+        <header className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-2 h-full bg-blue-600" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-blue-600 text-xs font-semibold uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4" /> لوحة تحكم الإدارة المركزية
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">إدارة طلبات الربط والعمولات</h1>
+            <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">
+              إدارة مطابقة طلبات الجملة، المحلات، والتوصيل. تنفيذ الربط يوثق العلاقة التجارية ويفعّل خطط استقطاع العمولات تلقائياً.
             </p>
           </div>
-          <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-            <Wallet className="w-5 h-5" />
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+            <Wallet className="w-6 h-6" />
           </div>
         </header>
 
+        {/* بطاقات الملخص الإحصائي */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <SummaryCard icon={Inbox} label="طلبات بانتظار التنفيذ" value={String(pendingCount)} tone="text-amber-600 bg-amber-50" />
-          <SummaryCard icon={TrendingUp} label="عمولات قيد الاستقطاع" value={formatCurrency(totalPending)} tone="text-blue-600 bg-blue-50" />
-          <SummaryCard icon={Wallet} label="إجمالي العمولات المحصّلة" value={formatCurrency(totalCollected)} tone="text-emerald-600 bg-emerald-50" />
+          <SummaryCard 
+            icon={Inbox} 
+            label="طلبات بانتظار المطابقة والتنفيذ" 
+            value={String(pendingCount)} 
+            tone="text-amber-600 bg-amber-50/80 border-amber-100" 
+          />
+          <SummaryCard 
+            icon={TrendingUp} 
+            label="إجمالي العمولات قيد الاستقطاع" 
+            value={formatCurrency(totalPending)} 
+            tone="text-blue-600 bg-blue-50/80 border-blue-100" 
+          />
+          <SummaryCard 
+            icon={Wallet} 
+            label="إجمالي العمولات المحصّلة فعلياً" 
+            value={formatCurrency(totalCollected)} 
+            tone="text-emerald-600 bg-emerald-50/80 border-emerald-100" 
+          />
         </div>
 
+        {/* قسم المطابقة الأولى: التوصيل والمجهز */}
         <MatchSection
           icon={Truck}
-          title="مطابقة: طلب سائق توصيل (من الجملة) ⇄ طلب ارتباط بمجهز (من السائق)"
-          leftLabel="طلبات الجملة (تريد سائقاً)"
-          rightLabel="طلبات السائقين (يريدون مجهزاً)"
+          iconColor="text-emerald-600 bg-emerald-50"
+          title="مطابقة خدمات النقل والتوصيل"
+          subtitle="ربط طلبات الجملة التي تحتاج سائقاً مع طلبات السائقين الراغبين بالارتباط بمجهزين"
+          leftLabel="طلبات مجهزي الجملة (يبحثون عن سائق)"
+          rightLabel="طلبات السائقين (يبحثون عن مجهز)"
           leftItems={driverWanted.map((r) => ({ id: r.id, primary: r.supplierName, secondary: r.supplierArea }))}
           rightItems={partnerWanted.map((r) => ({ id: r.id, primary: r.driverName, secondary: `${r.driverArea} · ${r.vehicle}` }))}
           selectedLeft={selectedDriverReq}
@@ -277,14 +303,17 @@ export default function AdminCommissionsContent() {
           onSelectLeft={setSelectedDriverReq}
           onSelectRight={setSelectedPartnerReq}
           onExecute={executeDriverMatch}
-          commissionNote={`عند التنفيذ: عمولة ${formatCurrency(LINK_COMMISSION_DEFAULTS.get_driver)} على الجملة + ${formatCurrency(LINK_COMMISSION_DEFAULTS.get_supplier_partner)} على السائق`}
+          commissionNote={`عمولة الربط: ${formatCurrency(LINK_COMMISSION_DEFAULTS.get_driver)} (جملة) + ${formatCurrency(LINK_COMMISSION_DEFAULTS.get_supplier_partner)} (سائق)`}
         />
 
+        {/* قسم المطابقة الثانية: المتاجر والموردين */}
         <MatchSection
           icon={Store}
-          title="مطابقة: طلب إضافة عميل (من الجملة) ⇄ طلب مورد قريب (من المحل)"
-          leftLabel="طلبات الجملة (تريد إضافة عميل)"
-          rightLabel="طلبات المحلات (تريد مورداً)"
+          iconColor="text-blue-600 bg-blue-50"
+          title="مطابقة شبكة التوزيع والمتاجر"
+          subtitle="ربط طلبات المجهزين لإضافة عملاء جدد مع طلبات المحلات والسوبرماركت للبحث عن موردين قريبين"
+          leftLabel="طلبات مجهزي الجملة (إضافة عميل جديد)"
+          rightLabel="طلبات المحلات (البحث عن مورد قريب)"
           leftItems={addRetailer.map((r) => ({ id: r.id, primary: r.supplierName, secondary: '' }))}
           rightItems={nearbySupplier.map((r) => ({ id: r.id, primary: r.retailerName, secondary: r.retailerArea }))}
           selectedLeft={selectedAddRetailerReq}
@@ -292,203 +321,121 @@ export default function AdminCommissionsContent() {
           onSelectLeft={setSelectedAddRetailerReq}
           onSelectRight={setSelectedNearbySupplierReq}
           onExecute={executeRetailerMatch}
-          commissionNote={`عند التنفيذ: عمولة ${formatCurrency(LINK_COMMISSION_DEFAULTS.add_retailer)} على الجملة + ${formatCurrency(LINK_COMMISSION_DEFAULTS.get_nearby_supplier)} على المحل`}
+          commissionNote={`عمولة الربط: ${formatCurrency(LINK_COMMISSION_DEFAULTS.add_retailer)} (جملة) + ${formatCurrency(LINK_COMMISSION_DEFAULTS.get_nearby_supplier)} (محل)`}
         />
 
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <Megaphone className="w-4.5 h-4.5 text-amber-600" />
-            <div>
-              <h2 className="text-base font-bold text-gray-900">طلبات رفع عروض</h2>
-              <p className="text-xs text-gray-500 mt-1">لا تحتاج طرفاً مقابلاً — موافقة مباشرة من الإدارة تُفعّل العمولة.</p>
+        {/* قسم طلبات رفع العروض */}
+        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <Megaphone className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">طلبات رفع العروض والتخفيضات</h2>
+                <p className="text-xs text-slate-500 mt-0.5">طلبات مستقلة لا تتطلب طرفاً مقابلاً — موافقة الإدارة تنشط العرض وتفعّل العمولة.</p>
+              </div>
             </div>
+            <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
+              {offers.length} بانتظار الاعتماد
+            </span>
           </div>
-          <div className="divide-y divide-gray-100">
+
+          <div className="divide-y divide-slate-100">
             {offers.map((o) => (
-              <div key={o.id} className="p-4 sm:p-6 flex items-center justify-between gap-4">
-                <div>
-                  <span className="text-xs font-semibold text-amber-600">{o.supplierName}</span>
-                  <h3 className="font-bold text-gray-900 text-sm mt-0.5">{o.offerTitle}</h3>
+              <div key={o.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    <Sparkles className="w-3 h-3" /> {o.supplierName}
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-base">{o.offerTitle}</h3>
+                  <span className="text-xs text-slate-400">تاريخ الطلب: {o.createdAt}</span>
                 </div>
                 <button
                   onClick={() => approveOffer(o.id)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shrink-0"
+                  className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-blue-600/20 flex items-center gap-2 shrink-0"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  موافقة وتنفيذ
+                  <CheckCircle2 className="w-4 h-4" />
+                  موافقة وتنفيذ العرض
                 </button>
               </div>
             ))}
-            {offers.length === 0 && <div className="p-8 text-center text-sm text-gray-400">لا توجد طلبات رفع عروض حالياً.</div>}
-          </div>
-        </section>
-
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-base font-bold text-gray-900">العمولات بعد التنفيذ</h2>
-            <p className="text-xs text-gray-500 mt-1">تُستقطع تدريجياً من كل طرف من خلال عمله وتنفيذه للطلبات على المنصة.</p>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {activeCommissions.map((c) => {
-              const meta = roleMeta[c.role];
-              const RoleIcon = meta.icon;
-              const progress = c.totalCommission === 0 ? 0 : Math.round((c.collected / c.totalCommission) * 100);
-              return (
-                <div key={c.id} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${meta.color}`}>
-                    <RoleIcon className="w-4.5 h-4.5" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap text-xs">
-                      <span className="font-semibold text-gray-400">{meta.label}</span>
-                      <span className="text-gray-300">•</span>
-                      <span className="font-semibold text-blue-600">{typeLabel[c.type]}</span>
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                      {c.partyName}
-                      {c.counterpartName && (
-                        <span className="flex items-center gap-1 text-xs font-normal text-gray-400">
-                          <ArrowLeftRight className="w-3 h-3" /> {c.counterpartName}
-                        </span>
-                      )}
-                    </h3>
-                    <div className="flex items-center gap-2 pt-1">
-                      <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
-                      </div>
-                      <span className="text-[11px] text-gray-400">{progress}% محصّل</span>
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm font-bold text-gray-900">{formatCurrency(c.collected)}</div>
-                    <div className="text-[11px] text-gray-400">من أصل {formatCurrency(c.totalCommission)}</div>
-                  </div>
-                </div>
-              );
-            })}
-            {activeCommissions.length === 0 && (
-              <div className="p-10 text-center text-sm text-gray-400">لا توجد عمولات نشطة بعد — نفّذ أول عملية ربط أعلاه.</div>
+            {offers.length === 0 && (
+              <div className="p-12 text-center text-sm text-slate-400 flex flex-col items-center justify-center gap-2">
+                <Inbox className="w-8 h-8 text-slate-300" />
+                لا توجد طلبات رفع عروض بانتظار الموافقة حالياً.
+              </div>
             )}
           </div>
         </section>
 
-      </div>
-    </main>
-  );
-}
+        {/* قسم العمولات النشطة */}
+        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+           سجل العمولات النشطة والمحصلة 
+          <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">سجل العمولات النشطة</h2>
+              <p className="text-xs text-slate-500 mt-0.5">متابعة تحصيل العمولات تدريجياً عبر الأنشطة اليومية للأطراف المرتبطة.</p>
+            </div>
+            <span className="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full self-start sm:self-auto">
+              إجمالي السجلات: {activeCommissions.length}
+            </span>
+          </div>
 
-// ============================================================
-// مكوّنات فرعية
-// ============================================================
-function SummaryCard({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: string; tone: string }) {
-  return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${tone}`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div>
-        <div className="text-[11px] text-gray-400">{label}</div>
-        <div className="text-sm font-bold text-gray-900 mt-0.5">{value}</div>
-      </div>
-    </div>
-  );
-}
+          <div className="divide-y divide-slate-100">
+            {activeCommissions.map((c) => {
+              const meta = roleMeta[c.role];
+              const RoleIcon = meta.icon;
+              const progress = c.totalCommission === 0 ? 0 : Math.round((c.collected / c.totalCommission) * 100);
+              const isCompleted = c.status === 'completed' || progress === 100;
 
-interface MatchItem {
-  id: string;
-  primary: string;
-  secondary: string;
-}
+              return (
+                <div key={c.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${meta.color}`}>
+                      <RoleIcon className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        <span className={`px-2.5 py-0.5 rounded-full font-bold ${meta.badge}`}>{meta.label}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{typeLabel[c.type]}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-slate-400">تاريخ التنفيذ: {c.executedAt}</span>
+                      </div>
+                      <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2 flex-wrap">
+                        {c.partyName}
+                        {c.counterpartName && (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            <ArrowLeftRight className="w-3.5 h-3.5 text-blue-600" /> مع: {c.counterpartName}
+                          </span>
+                        )}
+                      </h3>
+                      
+                      {/* شريط التقدم */}
+                      <div className="flex items-center gap-3 pt-1">
+                        <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-emerald-500' : 'bg-blue-600'}`} 
+                            style={{ width: `${progress}%` }} 
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-slate-600">{progress}% محصّل</span>
+                        {isCompleted && (
+                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> مكتمل
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-function MatchSection({
-  icon: Icon,
-  title,
-  leftLabel,
-  rightLabel,
-  leftItems,
-  rightItems,
-  selectedLeft,
-  selectedRight,
-  onSelectLeft,
-  onSelectRight,
-  onExecute,
-  commissionNote,
-}: {
-  icon: React.ElementType;
-  title: string;
-  leftLabel: string;
-  rightLabel: string;
-  leftItems: MatchItem[];
-  rightItems: MatchItem[];
-  selectedLeft: string;
-  selectedRight: string;
-  onSelectLeft: (id: string) => void;
-  onSelectRight: (id: string) => void;
-  onExecute: () => void;
-  commissionNote: string;
-}) {
-  const canExecute = Boolean(selectedLeft) && Boolean(selectedRight);
-
-  return (
-    <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-        <Icon className="w-4.5 h-4.5 text-blue-600" />
-        <h2 className="text-base font-bold text-gray-900">{title}</h2>
-      </div>
-
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MatchColumn label={leftLabel} items={leftItems} selectedId={selectedLeft} onSelect={onSelectLeft} />
-        <MatchColumn label={rightLabel} items={rightItems} selectedId={selectedRight} onSelect={onSelectRight} />
-      </div>
-
-      <div className="px-6 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-gray-50">
-        <span className="text-[11px] text-gray-400">{commissionNote}</span>
-        <button
-          disabled={!canExecute}
-          onClick={onExecute}
-          className={`flex items-center gap-2 text-xs font-medium px-5 py-2.5 rounded-xl transition-all shrink-0 ${
-            canExecute ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          <Link2 className="w-3.5 h-3.5" />
-          تنفيذ الربط
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function MatchColumn({
-  label,
-  items,
-  selectedId,
-  onSelect,
-}: {
-  label: string;
-  items: MatchItem[];
-  selectedId: string;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <div className="space-y-2">
-      <span className="text-xs font-semibold text-gray-500">{label}</span>
-      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-        {items.map((item) => {
-          const isSelected = selectedId === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelect(item.id)}
-              className={`w-full text-right p-3 rounded-xl border transition-all ${
-                isSelected ? 'border-blue-500 bg-blue-50/60' : 'border-gray-100 hover:bg-gray-50'
-              }`}
-            >
-              <div className="text-sm font-bold text-gray-900">{item.primary}</div>
-              {item.secondary && <div className="text-[11px] text-gray-400 mt-0.5">{item.secondary}</div>}
-              <div className="flex items-center gap-1 text-[10px] text-gray-300 mt-1">
-                <Clock className="w-3 h-3" /> بانتظار التنفيذ
-              </div>
-            </button>
-          );
-        })}
-        {items.length
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex lg:flex-col items-center lg:items-end justify-between gap-1 shrink-0">
+                    <div className="text-xs text-slate-400">إجمالي العمولة المستهدفة</div>
+                    <div className="text-base font-black text-slate-900">{formatCurrency(c.totalCommission)}</div>
+                    <div className="text-xs text-emerald-600 font-bold mt-0.5">المحصل: {formatCurrency(c.collected)}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {activeCommissions.
