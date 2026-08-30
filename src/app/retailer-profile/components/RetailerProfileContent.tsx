@@ -157,7 +157,7 @@ export default function RetailerProfileContent() {
                     value={profile.commercialRecord}
                     onChange={(e) => setProfile({...profile, commercialRecord: e.target.value})}
                     className="w-full pr-10 pl-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-600"
-                    readLink
+                    readOnly
                   />
                 </div>
               </div>
@@ -169,7 +169,7 @@ export default function RetailerProfileContent() {
                   value={profile.taxNumber}
                   onChange={(e) => setProfile({...profile, taxNumber: e.target.value})}
                   className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-600"
-                  readLink
+                  readOnly
                 />
               </div>
             </div>
