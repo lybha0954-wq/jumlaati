@@ -226,3 +226,91 @@ serve(async (req) => {
 
   return new Response('Webhook received', { status: 200 });
 });
+// supabase/functions/confirm-payment/index.ts (التحديث الكامل)
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import Stripe from 'https://esm.sh/stripe@14.21.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+});
+
+serve(async (req) => {
+  const body = await req.text();
+  const signature = req.headers.get('stripe-signature')!;
+  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch {
+    return new Response('Webhook signature verification failed.', { status: 400 });
+  }
+
+  // معالجة حدث نجاح الدفع فقط
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    const orderId = paymentIntent.metadata.orderId;
+    
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // صلاحية كاملة
+    );
+
+    // --- الخطوة الحاسمة: خصم المخزون ---
+    const { data: deductResult, error: deductError } = await supabase
+      .rpc('deduct_inventory', { order_id_param: orderId });
+
+    // إذا فشل خصم المخزون (نفدت الكمية)
+    if (deductError || !deductResult?.success) {
+      console.error('Inventory deduction failed:', deductError || deductResult?.error);
+
+      // 1. إلغاء الدفع (Refund) في Stripe - لأننا لا نستطيع توفير المنتج
+      try {
+        await stripe.refunds.create({ payment_intent: paymentIntent.id });
+      } catch (refundError) {
+        console.error('Refund failed:', refundError);
+        // نحتاج هنا لتدخل يدوي، نرسل إشعاراً للمشرف
+      }
+
+      // 2. تحديث حالة الطلب إلى "فشل - نفد المخزون"
+      await supabase.from('orders').update({ 
+        status: 'فشل الدفع - نفد المخزون',
+        updated_at: new Date().toISOString()
+      }).eq('id', orderId);
+
+      return new Response(JSON.stringify({ 
+        status: 'failed', 
+        reason: 'Inventory exhausted, refund issued' 
+      }), { status: 200 });
+    }
+
+    // --- إذا نجح خصم المخزون ---
+    // 1. تحديث حالة الطلب
+    await supabase.from('orders').update({ 
+      status: 'مدفوع - جارٍ التجهيز',
+      paid_at: new Date().toISOString(),
+      total_cost_calculated: deductResult.total_cost // تخزين المبلغ المحسوب للتدقيق
+    }).eq('id', orderId);
+
+    // 2. تحديث حالة المعاملة
+    await supabase.from('transactions')
+      .update({ status: 'completed' })
+      .eq('payment_intent_id', paymentIntent.id);
+
+    // 3. إعادة توليد صفحة الطلب فوراً (ISR)
+    const baseUrl = Deno.env.get('NEXT_PUBLIC_BASE_URL')!;
+    await fetch(`${baseUrl}/api/revalidate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        path: `/retailer/orders/${orderId}`,
+        secret: Deno.env.get('REVALIDATION_SECRET')
+      })
+    });
+
+    return new Response(JSON.stringify({ status: 'success' }), { status: 200 });
+  }
+
+  return new Response('Webhook received', { status: 200 });
+});

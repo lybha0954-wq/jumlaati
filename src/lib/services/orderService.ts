@@ -185,3 +185,143 @@ export const orderService = {
     } catch (e: any) { if (isSchemaError(e)) throw e; return null; }
   },
 };
+// داخل orderService
+async cancelOrder(orderId: string, reason?: string): Promise<{ success: boolean; message: string }> {
+  const supabase = createClient();
+
+  // 1. استدعاء دالة استرجاع المخزون
+  const { data: restoreResult, error: restoreError } = await supabase
+    .rpc('restore_inventory', { order_id_param: orderId });
+
+  if (restoreError || !restoreResult?.success) {
+    console.error('Restore error:', restoreError || restoreResult);
+    return { 
+      success: false, 
+      message: 'فشل استرجاع المخزون، يرجى التدخل اليدوي' 
+    };
+  }
+
+  // 2. تحديث حالة الطلب مع سبب الإلغاء
+  await supabase
+    .from('orders')
+    .update({ 
+      status: 'ملغي',
+      cancellation_reason: reason || 'تم الإلغاء من قبل الإدارة',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', orderId);
+
+  // 3. إعادة توليد صفحة الطلب
+  await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/revalidate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path: `/retailer/orders/${orderId}`,
+      secret: process.env.REVALIDATION_SECRET
+    })
+  });
+
+  return { success: true, message: 'تم إلغاء الطلب واسترجاع المخزون' };
+}
+// داخل orderService
+
+// التحقق من الكوبون (يُستدعى من الواجهة)
+async validateCoupon(code: string, orderTotal: number): Promise<{
+  valid: boolean;
+  discount?: number;
+  final_total?: number;
+  coupon_id?: string;
+  error?: string;
+}> {
+  const response = await fetch('/api/coupons/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, orderTotal }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    return { valid: false, error: error.error || 'فشل التحقق' };
+  }
+
+  return response.json();
+},
+
+// إنشاء طلب مع تطبيق الكوبون
+async createOrderWithCoupon(
+  retailerId: string,
+  items: { productId: string; quantity: number }[],
+  shippingAddress: string,
+  couponCode?: string
+): Promise<{ orderId: string; total: number; discount: number; couponId?: string }> {
+  const supabase = createClient();
+
+  // 1. حساب إجمالي الطلب من العناصر
+  const { data: products, error: productError } = await supabase
+    .from('products')
+    .select('id, final_price')
+    .in('id', items.map(i => i.productId));
+
+  if (productError || !products) throw new Error('فشل جلب المنتجات');
+
+  let total = 0;
+  const orderItems = items.map(item => {
+    const product = products.find(p => p.id === item.productId);
+    const price = product?.final_price || 0;
+    total += price * item.quantity;
+    return { product_id: item.productId, quantity: item.quantity, price };
+  });
+
+  let discount = 0;
+  let couponId = null;
+  let finalTotal = total;
+
+  // 2. تطبيق الكوبون إذا وُجد
+  if (couponCode) {
+    const validation = await this.validateCoupon(couponCode, total);
+    if (validation.valid && validation.coupon_id) {
+      discount = validation.discount || 0;
+      finalTotal = validation.final_total || total;
+      couponId = validation.coupon_id;
+    } else {
+      throw new Error(validation.error || 'كوبون غير صالح');
+    }
+  }
+
+  // 3. إنشاء الطلب في قاعدة البيانات
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      retailer_id: retailerId,
+      total_price: finalTotal,
+      original_price: total,
+      discount_amount: discount,
+      coupon_id: couponId,
+      shipping_address: shippingAddress,
+      status: 'جديد',
+    })
+    .select('id')
+    .single();
+
+  if (orderError || !order) throw new Error('فشل إنشاء الطلب');
+
+  // 4. إنشاء عناصر الطلب
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .insert(orderItems.map(item => ({
+      ...item,
+      order_id: order.id,
+    })));
+
+  if (itemsError) throw new Error('فشل إضافة عناصر الطلب');
+
+  // 5. تحديث عداد استخدام الكوبون
+  if (couponId) {
+    await supabase
+      .from('coupons')
+      .update({ used_count: supabase.raw('used_count + 1') })
+      .eq('id', couponId);
+  }
+
+  return { orderId: order.id, total: finalTotal, discount, couponId: couponId || undefined };
+}

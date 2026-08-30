@@ -231,3 +231,23 @@ export default function Topbar({ onMobileMenuToggle }: TopbarProps) {
     </header>
   );
 }
+'use client';
+import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
+
+// داخل المكون
+const { profile } = useAuth(); // افترض أن AuthContext يوفر بيانات الملف الشخصي
+
+{profile?.avatar_url ? (
+  <Image 
+    src={profile.avatar_url} 
+    alt="صورة المستخدم" 
+    width={40} 
+    height={40} 
+    className="rounded-full border-2 border-white"
+  />
+) : (
+  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+    👤
+  </div>
+)}

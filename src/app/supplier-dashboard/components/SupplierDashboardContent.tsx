@@ -438,70 +438,60 @@ export default function RetailerDashboardContent() {
           </div>
         )}
 
-        {/* التبويب الثالث: بوابة خدمات الجملة */}
-        {activeTab === 'wholesale-requests' && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            {wholesaleSubmitted ? (
-              <div className="text-center py-10 space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                  <TrendingUp className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">تم إرسال طلبك بنجاح!</h3>
-                <p className="text-sm text-gray-500">سيتم التواصل معك خلال 24 ساعة.</p>
-                <button onClick={resetWholesaleForm} className="mt-4 bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 transition-all">
-                  إرسال طلب جديد
-                </button>
-              </div>
-            ) : !wholesaleType ? (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-gray-900">اختر نوع الخدمة</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { type: 'supplier', label: 'تسجيل كمورد', icon: <Package className="w-6 h-6" /> },
-                    { type: 'driver', label: 'تسجيل كسائق', icon: <Truck className="w-6 h-6" /> },
-                    { type: 'buyer', label: 'طلب شراء بالجملة', icon: <ShoppingBag className="w-6 h-6" /> },
-                  ].map((item) => (
-                    <button
-                      key={item.type}
-                      onClick={() => setWholesaleType(item.type)}
-                      className="flex flex-col items-center gap-3 p-6 border-2 border-gray-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50 transition-all"
-                    >
-                      <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
-                        {item.icon}
-                      </div>
-                      <span className="font-bold text-gray-800 text-sm">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleWholesaleSubmit} className="space-y-4 max-w-lg mx-auto">
-                <h2 className="text-lg font-bold text-gray-900">تفاصيل الطلب</h2>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">الاسم</label>
-                  <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">رقم الهاتف</label>
-                  <input type="tel" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">ملاحظات إضافية</label>
-                  <textarea value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" rows={3} />
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setWholesaleType(null)} className="flex-1 border border-gray-200 text-gray-600 font-medium py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all">
-                    رجوع
-                  </button>
-                  <button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm">
-                    إرسال الطلب
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
+  // 2. إذا لم يوجد، اجلب من قاعدة البيانات
+  const { data } = await supabase
+    .from('profiles')
+    .select('*, products(*)')
+    .eq('store_slug', slug)
+    .single();
+
+  // 3. خزّن النتيجة للاستخدام القادم
+  if (data) {
+    await supabase
+      .from('cache')
+      .upsert({ 
+        key: `store_${slug}`, 
+        value: data,
+        expires_at: new Date(Date.now() + 3600000).toISOString() // ساعة
+      });
+  }
+  
+  return data;
+});
+// داخل مكون ProductPage في app/products/[slug]/page.tsx
+import Image from 'next/image';
+
+// ... بعد جلب بيانات المنتج
+
+<div className="grid md:grid-cols-2 gap-8">
+  {/* القسم الأيمن: عرض الصور */}
+  <div className="bg-gray-50 rounded-lg p-4">
+    {product.images && product.images.length > 0 ? (
+      <div className="relative w-full h-96">
+        <Image
+          src={product.images[0]} // نعرض الصورة الأولى كرئيسية
+          alt={product.name}
+          fill
+          className="object-contain rounded-lg"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority // تحميل سريع لأهم العناصر
+        />
       </div>
-    </main>
-  );
-}
+    ) : (
+      <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+        لا توجد صورة
+      </div>
+    )}
+  </div>
+  {/* باقي التفاصيل */}
+</div>
+// استبدل مكان عرض الشعار القديم بهذا
+{store.logo && (
+  <Image
+    src={store.logo}
+    alt={`شعار ${store.store_name}`}
+    width={120}
+    height={60}
+    className="rounded-lg object-cover"
+  />
+)}

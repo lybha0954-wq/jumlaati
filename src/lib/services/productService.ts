@@ -203,3 +203,54 @@ export const productService = {
     }
   },
 };
+// أضف هذه الوظائف داخل كائن productService
+
+async uploadImage(productId: string, file: File): Promise<string[] | null> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('productId', productId);
+
+  const response = await fetch('/api/products/upload-image', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'فشل رفع الصورة');
+  }
+
+  const data = await response.json();
+  return data.images;
+},
+
+async deleteImage(productId: string, imageUrl: string): Promise<boolean> {
+  // استخراج مسار الملف من الرابط لحذفه من التخزين
+  const path = imageUrl.split('/product-images/')[1];
+  if (!path) return false;
+
+  const supabase = createClient();
+  const { error: storageError } = await supabase.storage
+    .from('product-images')
+    .remove([path]);
+
+  if (storageError) {
+    console.error('Delete Storage Error:', storageError);
+    return false;
+  }
+
+  // حذف الرابط من مصفوفة images في جدول المنتجات
+  const { error: updateError } = await supabase
+    .from('products')
+    .update({
+      images: supabase.raw(`array_remove(COALESCE(images, '{}'::text[]), '${imageUrl}')`)
+    })
+    .eq('id', productId);
+
+  if (updateError) {
+    console.error('Delete DB Error:', updateError);
+    return false;
+  }
+
+  return true;
+}

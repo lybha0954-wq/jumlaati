@@ -433,122 +433,20 @@ export default function UnifiedRetailerDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">منتجات المورد</h3>
-                  {selectedSupplier.products.length === 0 ? (
-                    <p className="text-sm text-gray-500">لا توجد منتجات متاحة حالياً.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {selectedSupplier.products.map((product) => (
-                        <div key={product.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-sm transition-all">
-                          <h4 className="font-semibold text-gray-900 text-sm">{product.name}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{product.category}</p>
-                          <p className="text-emerald-600 font-bold text-sm mt-2">{product.price}</p>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mt-2 inline-block">{product.stock}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">الموردين المتاحون</h2>
-                  <div className="space-y-4">
-                    {suppliers.map((sup) => (
-                      <div key={sup.id} className="border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
-                          <h3 className="font-bold text-gray-900">{sup.name}</h3>
-                          <p className="text-xs text-gray-500 mt-1">{sup.category} • {sup.distance}</p>
-                          <p className="text-xs text-gray-400">{sup.phone} | {sup.email}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${sup.status === 'approved' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                            {sup.status === 'approved' ? 'معتمد' : 'قيد المراجعة'}
-                          </span>
-                          {sup.status === 'pending' && (
-                            <button onClick={() => simulateApproval(sup.id)} className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-100 transition-all">
-                              اعتماد
-                            </button>
-                          )}
-                          {sup.status === 'approved' && (
-                            <button onClick={() => setSelectedSupplier(sup)} className="text-xs bg-emerald-600 text-white px-3 py-1 rounded-full hover:bg-emerald-700 transition-all">
-                              عرض المنتجات
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+// ... بعد جلب بيانات الطلب
+<OrderStatusClient orderId={order.id} initialStatus={order.status} />
+// داخل ProductPage
+{product.status === 'متوفر' && product.stock > 0 ? (
+  <button className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition">
+    أضف إلى السلة
+  </button>
+) : (
+  <button className="bg-gray-400 text-white py-3 px-6 rounded-lg cursor-not-allowed" disabled>
+    {product.stock === 0 ? 'نفد المخزون' : 'غير متوفر حالياً'}
+  </button>
+)}
 
-        {/* التبويب الثالث: طلب مورد جديد */}
-        {activeTab === 'request-supplier' && !selectedSupplier && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-xl mx-auto">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">طلب إضافة مورد جديد</h2>
-            {requestSubmitted ? (
-              <div className="text-center py-8 text-emerald-600 font-semibold">تم إرسال الطلب بنجاح! سيتم مراجعته قريباً.</div>
-            ) : (
-              <form onSubmit={handleSubmitRequest} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">اسم المورد</label>
-                  <input type="text" value={requestForm.supplierName} onChange={(e) => setRequestForm({...requestForm, supplierName: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">التصنيف</label>
-                  <input type="text" value={requestForm.category} onChange={(e) => setRequestForm({...requestForm, category: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">الموقع</label>
-                  <input type="text" value={requestForm.location} onChange={(e) => setRequestForm({...requestForm, location: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">ملاحظات</label>
-                  <textarea value={requestForm.notes} onChange={(e) => setRequestForm({...requestForm, notes: e.target.value})} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" rows={3} />
-                </div>
-                <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm">إرسال الطلب</button>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* التبويب الرابع: مولد الأكواد الذكي */}
-        {activeTab === 'smart-generator' && !selectedSupplier && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-xl mx-auto">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-500" />
-              <span>مولد الأكواد الذكي</span>
-            </h2>
-            <form onSubmit={handleGenerateCode} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">نوع الكود</label>
-                <select value={generatorType} onChange={(e) => setGeneratorType(e.target.value as 'qr' | 'barcode' | 'sku')} className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  <option value="qr">QR Code</option>
-                  <option value="barcode">Barcode</option>
-                  <option value="sku">SKU</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">اسم المنتج / الصنف</label>
-                <input type="text" value={itemInput} onChange={(e) => setItemInput(e.target.value)} placeholder="مثال: أكياس ورقية بني" className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
-              </div>
-              <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-all text-sm">توليد الكود</button>
-            </form>
-            {generatedCodeResult && (
-              <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
-                <p className="text-xs text-gray-500 mb-1">الكود المُولَّد:</p>
-                <p className="font-mono font-bold text-emerald-700 text-lg">{generatedCodeResult}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-      </div>
-    </main>
-  );
-}
+{/* إظهار المخزون المتبقي للمساعدة في اتخاذ القرار */}
+{product.stock < 10 && product.stock > 0 && (
+  <p className="text-sm text-orange-500">⚠️ تبقى {product.stock} قطعة فقط</p>
+)}

@@ -206,3 +206,49 @@ export default function RetailerSettingsContent() {
     </main>
   );
 }
+import ProfileImageUploader from '@/components/ui/ProfileImageUploader';
+import { createClient } from '@/lib/supabase/server';
+
+export default async function SupplierSettingsPage() {
+  const supabase = createClient();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('avatar_url, store_logo')
+    .single();
+
+  // سنستخدم Client Wrapper لتحديث الحالة
+  return (
+    <div className="p-6 space-y-8">
+      <h1 className="text-2xl font-bold">إعدادات المتجر</h1>
+      
+      {/* شعار المتجر */}
+      <ProfileImageUploaderWrapper 
+        type="logo" 
+        initialImage={profile?.store_logo || null}
+        fieldName="store_logo"
+      />
+      
+      {/* الصورة الشخصية */}
+      <ProfileImageUploaderWrapper 
+        type="avatar" 
+        initialImage={profile?.avatar_url || null}
+        fieldName="avatar_url"
+      />
+    </div>
+  );
+}
+
+// مكون Client لالتقاط التحديثات
+'use client';
+function ProfileImageUploaderWrapper({ type, initialImage, fieldName }: any) {
+  const [image, setImage] = useState(initialImage);
+  
+  // هنا يمكن إضافة تحديث للـ Store أو الـ Context إذا أردت
+  return (
+    <ProfileImageUploader 
+      type={type}
+      currentImage={image}
+      onImageUpdate={(newUrl) => setImage(newUrl)}
+    />
+  );
+}

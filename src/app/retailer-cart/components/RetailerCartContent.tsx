@@ -183,3 +183,153 @@ export default function RetailerCartContent() {
     </main>
   );
 }
+'use client';
+
+import { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { createClient } from '@/lib/supabase/client';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+export default function CheckoutButton({ orderId }: { orderId: string }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    const supabase = createClient();
+
+    // 1. استدعاء Edge Function لإنشاء نية الدفع
+    const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      body: { orderId },
+    });
+
+    if (error) { alert('فشل إنشاء الدفع'); setLoading(false); return; }
+
+    // 2. توجيه المستخدم إلى واجهة Stripe (Checkout أو Elements)
+    const stripe = await stripePromise;
+    const { error: stripeError } = await stripe!.confirmPayment({
+      elements: {
+        clientSecret: data.clientSecret,
+        // هنا يمكنك إضافة حقول البطاقة (CardElement)
+      },
+      confirmParams: { return_url: `${window.location.origin}/retailer/orders/${orderId}` },
+    });
+
+    if (stripeError) { alert(stripeError.message); }
+    setLoading(false);
+  };
+
+  return (
+    <button 
+      onClick={handleCheckout} 
+      disabled={loading}
+      className="w-full bg-green-600 text-white py-4 text-xl rounded-2xl hover:bg-green-700 disabled:bg-gray-400 transition"
+    >
+      {loading ? 'جاري تحويلك للدفع...' : '💳 إتمام الشراء'}
+    </button>
+  );
+}
+// داخل CheckoutButton.tsx، بعد إتمام الدفع
+const { error: stripeError } = await stripe!.confirmPayment({
+  // ...
+  confirmParams: { 
+    return_url: `${window.location.origin}/retailer/orders/${orderId}` 
+  },
+});
+
+if (stripeError) {
+  // إذا فشل الدفع، تأكد من استرجاع المخزون (حماية إضافية)
+  await fetch('/api/restore-inventory', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId })
+  });
+  alert('فشل الدفع، تم استرجاع المخزون. حاول مرة أخرى');
+}
+'use client';
+
+import { useState } from 'react';
+import { orderService } from '@/lib/services/orderService';
+
+interface CouponInputProps {
+  orderTotal: number;
+  onCouponApplied: (discount: number, finalTotal: number, couponId: string) => void;
+  onCouponRemoved: () => void;
+}
+
+export default function CouponInput({ orderTotal, onCouponApplied, onCouponRemoved }: CouponInputProps) {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+
+  const handleApply = async () => {
+    if (!code.trim()) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await orderService.validateCoupon(code.trim(), orderTotal);
+      
+      if (!result.valid) {
+        setError(result.error || 'كوبون غير صالح');
+        return;
+      }
+
+      if (result.discount && result.final_total && result.coupon_id) {
+        setAppliedCoupon({ code: code.trim(), discount: result.discount });
+        onCouponApplied(result.discount, result.final_total, result.coupon_id);
+        setError('');
+      }
+    } catch (err: any) {
+      setError(err.message || 'حدث خطأ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemove = () => {
+    setAppliedCoupon(null);
+    setCode('');
+    onCouponRemoved();
+    setError('');
+  };
+
+  return (
+    <div className="border-t pt-4 space-y-3">
+      {appliedCoupon ? (
+        <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
+          <div>
+            <span className="font-semibold text-green-700">✅ كوبون مطبق: {appliedCoupon.code}</span>
+            <span className="text-sm text-green-600 mr-4">(خصم {appliedCoupon.discount.toFixed(2)} ريال)</span>
+          </div>
+          <button onClick={handleRemove} className="text-red-500 hover:text-red-700 text-sm font-medium">
+            إلغاء
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="أدخل كود الخصم"
+            className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            disabled={loading}
+            dir="ltr"
+          />
+          <button
+            onClick={handleApply}
+            disabled={loading || !code.trim()}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+          >
+            {loading ? 'جاري...' : 'تطبيق'}
+          </button>
+        </div>
+      )}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <p className="text-xs text-gray-400">يمكنك إدخال كود الخصم المتوفر لديك للحصول على خصم إضافي</p>
+    </div>
+  );
+}
