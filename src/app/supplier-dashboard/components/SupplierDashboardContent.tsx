@@ -433,3 +433,12 @@ export default function RetailerDashboardContent() {
                   >
                     <div className="space-y-2">
                       <div classNam
+                        // داخل supplier-inventory عند تحديث المنتج
+await fetch('/api/revalidate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    path: `/products/${productSlug}`, 
+    secret: process.env.NEXT_PUBLIC_REVALIDATION_SECRET 
+  })
+});
