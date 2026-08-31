@@ -9,6 +9,6 @@
     "clean": "rm -rf .next node_modules package-lock.json",
     "reset": "npm run clean && npm install",
     "update-deps": "npx npm-check-updates -u && npm install",
-    "generate": "npx plop"  // لإنشاء ملفات جديدة بقالب موحد
+    "generate": "npx plop" 
   }
 }
