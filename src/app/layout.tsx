@@ -1,24 +1,14 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { Toaster } from "@/components/ui/Toast"; // Assuming you build a Toaster component
-import { baseMetadata } from "@/config/seo";
-import "./globals.css";
+import { Sidebar } from "@/components/shared/Sidebar";
+import { Topbar } from "@/components/shared/Topbar";
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = baseMetadata;
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className={`${inter.className} antialiased`}>
-        {children}
-        <Toaster />
-      </body>
-    </html>
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-1 ml-64">
+        <Topbar />
+        <main className="p-6">{children}</main>
+      </div>
+    </div>
   );
 }
