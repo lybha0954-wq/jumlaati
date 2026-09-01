@@ -1,31 +1,53 @@
+import { retailerService } from "@/lib/services/retailerService";
 import { BarChart } from "@/components/charts/BarChart";
-import { Sidebar } from "@/components/shared/Sidebar";
-import { Topbar } from "@/components/shared/Topbar";
+import { StatsCard } from "@/components/shared/StatsCard";
 
-export default function RetailerOverviewPage() {
-  const dummyData = [
-    { name: "الأسبوع 1", value: 400 },
-    { name: "الأسبوع 2", value: 300 },
-    { name: "الأسبوع 3", value: 550 },
-    { name: "الأسبوع 4", value: 490 },
-  ];
+export default async function RetailerOverviewPage() {
+  // جلب طلبات التاجر الحقيقي
+  const orders = await retailerService.getMyOrders();
+  
+  // حساب الإحصائيات من البيانات الحقيقية
+  const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
+  const pendingOrders = orders.filter(o => o.status === "pending").length;
+  const deliveredOrders = orders.filter(o => o.status === "delivered").length;
+
+  // تحويل الطلبات لبيانات الرسم البياني (مثال بسيط)
+  const chartData = orders.slice(0, 4).map((order, index) => ({
+    name: `طلب #${index + 1}`,
+    value: order.total
+  }));
 
   return (
     <div>
-      <Topbar />
       <h1 className="text-3xl font-bold mb-6">نظرة عامة للتاجر</h1>
+      
+      {/* إحصائيات مباشرة من قاعدة البيانات */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <StatsCard title="إجمالي المبيعات" value={`${totalSales.toLocaleString()} د.ع`} icon="💰" trend="+12%" trendUp={true} />
+        <StatsCard title="طلبات قيد الانتظار" value={pendingOrders.toString()} icon="⏳" />
+        <StatsCard title="طلبات مكتملة" value={deliveredOrders.toString()} icon="✅" />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">المبيعات الأسبوعية</h2>
-          <BarChart data={dummyData} />
+          <h2 className="text-xl font-semibold mb-4">قيمة الطلبات الأخيرة</h2>
+          {chartData.length > 0 ? (
+             <BarChart data={chartData} />
+          ) : (
+             <p className="text-gray-500">لا توجد طلبات بعد.</p>
+          )}
         </div>
         <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">إحصائيات سريعة</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between"><span>إجمالي الطلبات:</span><strong>1,240</strong></div>
-            <div className="flex justify-between"><span>العملاء:</span><strong>85</strong></div>
-            <div className="flex justify-between"><span>العمولات:</span><strong>450,000 د.ع</strong></div>
-          </div>
+          <h2 className="text-xl font-semibold mb-4">آخر نشاط</h2>
+          <ul className="space-y-3">
+            {orders.slice(0, 5).map((order) => (
+              <li key={order.id} className="flex justify-between border-b pb-2">
+                 <span className="font-medium">طلب #{order.id}</span>
+                 <span className="text-primary font-bold">{order.total.toLocaleString()} د.ع</span>
+              </li>
+            ))}
+            {orders.length === 0 && <li className="text-gray-500">لا يوجد نشاط بعد.</li>}
+          </ul>
         </div>
       </div>
     </div>
