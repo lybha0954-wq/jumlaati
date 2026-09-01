@@ -1,14 +1,22 @@
-import { Sidebar } from "@/components/shared/Sidebar";
-import { Topbar } from "@/components/shared/Topbar";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { baseMetadata } from "@/config/seo";
+import "./globals.css";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = baseMetadata;
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 ml-64">
-        <Topbar />
-        <main className="p-6">{children}</main>
-      </div>
-    </div>
+    <html lang="ar" dir="rtl">
+      <body className={`${inter.className} antialiased`}>
+        {children}
+      </body>
+    </html>
   );
 }
