@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 
 export default async function Home() {
   // جلب المنتجات الحقيقية من قاعدة البيانات
-  const products = await productService.getAllProducts();
+  const products = await productService?.getAllProducts();
 
   return (
     <main dir="rtl" className="min-h-screen bg-background">
@@ -30,12 +30,12 @@ export default async function Home() {
           <Button variant="ghost">المزيد ←</Button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <RequestCard key={product.id} product={product} />
+          {products?.map((product) => (
+            <RequestCard key={product?.id} product={product} />
           ))}
           
           {/* في حال عدم وجود منتجات بعد */}
-          {products.length === 0 && (
+          {products?.length === 0 && (
             <div className="col-span-4 text-center py-10 text-gray-500">
               <p>لا توجد منتجات بعد. أضف أول منتج من لوحة تحكم الجملة!</p>
             </div>
