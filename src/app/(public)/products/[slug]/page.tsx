@@ -9,16 +9,21 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Minus, Plus, ShoppingCart, Heart, Truck, ShieldCheck, RotateCcw } from "lucide-react";
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
+export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [slug, setSlug] = useState<string>("");
   const addItem = useCartStore((state) => state.addItem);
   const { showToast } = useToast();
   const router = useRouter();
 
+  useState(() => {
+    params.then((p) => setSlug(p.slug));
+  });
+
   // هنا يتم جلب البيانات من الـ API أو Supabase في الوضع الحقيقي
   const product = {
-    id: params.slug,
+    id: slug,
     name: "ساعة ذكية فاخرة بإطار من الفولاذ",
     price: 85000,
     oldPrice: 100000,

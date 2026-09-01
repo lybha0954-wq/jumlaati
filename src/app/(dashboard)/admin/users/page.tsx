@@ -1,3 +1,4 @@
+"use client";
 import { Topbar } from "@/components/shared/Topbar";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";

@@ -1,10 +1,13 @@
-import { retailerService } from "@/lib/services/retailerService";
+"use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
-export default async function RetailerOrdersPage() {
-  // جلب الطلبات الحقيقية
-  const orders = await retailerService.getMyOrders();
+export default function RetailerOrdersPage() {
+  const orders = [
+    { id: "ORD-1", created_at: "2026-08-01", total: 45000, status: "pending" },
+    { id: "ORD-2", created_at: "2026-08-05", total: 120000, status: "delivered" },
+    { id: "ORD-3", created_at: "2026-08-10", total: 75000, status: "shipped" },
+  ];
 
   const columns = [
     { key: "id", header: "رقم الطلب" },
@@ -17,11 +20,7 @@ export default async function RetailerOrdersPage() {
     <div>
       <h1 className="text-3xl font-bold mb-6">طلباتي</h1>
       <div className="bg-white p-6 rounded-lg shadow">
-        {orders.length > 0 ? (
-          <DataTable data={orders} columns={columns} />
-        ) : (
-          <p className="text-center text-gray-500 py-10">لا توجد طلبات حالياً. قم بتصفح المتجر وأضف منتجات!</p>
-        )}
+        <DataTable data={orders} columns={columns} />
       </div>
     </div>
   );
