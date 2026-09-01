@@ -6,11 +6,11 @@ import type { Order } from "@/types/order";
 export const retailerService = {
   // جلب المنتجات المتاحة للشراء (لا يملك صلاحية إنشائها)
   async getAvailableProducts(): Promise<Product[]> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .eq("status", "active") // فقط المنتجات النشطة
+      .eq("status", "active")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -22,7 +22,7 @@ export const retailerService = {
 
   // إنشاء طلب شراء جديد (خاص بالتاجر)
   async createOrder(orderData: any): Promise<Order> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("يجب تسجيل الدخول");
 
@@ -38,7 +38,7 @@ export const retailerService = {
 
   // جلب طلباته الخاصة فقط
   async getMyOrders(): Promise<Order[]> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("يجب تسجيل الدخول");
 

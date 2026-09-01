@@ -13,17 +13,17 @@ export default function DeliveryTasksPage() {
       <Topbar />
       <h1 className="text-3xl font-bold mb-6">مهام التوصيل</h1>
       <div className="space-y-4">
-        {tasks.map((task) => (
-          <div key={task.id} className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
+        {tasks?.map((task) => (
+          <div key={task?.id} className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
             <div>
-              <p className="font-semibold">طلب #{task.id}</p>
-              <p className="text-sm text-gray-500">{task.address}</p>
+              <p className="font-semibold">طلب #{task?.id}</p>
+              <p className="text-sm text-gray-500">{task?.address}</p>
             </div>
             <div className="flex items-center gap-4">
-              <Badge variant={task.status === "delivered" ? "default" : "secondary"}>
-                {task.status === "delivered" ? "تم التوصيل" : "قيد الانتظار"}
+              <Badge variant={task?.status === "delivered" ? "default" : "secondary"}>
+                {task?.status === "delivered" ? "تم التوصيل" : "قيد الانتظار"}
               </Badge>
-              {task.status !== "delivered" && (
+              {task?.status !== "delivered" && (
                 <Button size="sm" variant="outline">بدء التسليم</Button>
               )}
             </div>

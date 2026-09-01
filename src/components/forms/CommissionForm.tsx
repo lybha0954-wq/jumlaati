@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+
 import { useCommissionStore } from "@/lib/stores/commissionStore";
 
 export function CommissionForm({ orderId, retailerId }: { orderId: string; retailerId: string }) {

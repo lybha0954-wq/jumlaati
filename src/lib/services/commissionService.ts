@@ -11,7 +11,7 @@ export const commissionService = {
 
   // إنشاء عمولة تلقائياً عند إتمام طلب
   async createCommission(orderId: string, retailerId: string, orderTotal: number) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const amount = this.calculateCommission(orderTotal);
     
     const { data, error } = await supabase
@@ -34,7 +34,7 @@ export const commissionService = {
 
   // جلب عمولاتي (بصفتي تاجر تجزئة)
   async getMyCommissions(): Promise<Commission[]> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data, error } = await supabase

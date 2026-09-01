@@ -1,5 +1,6 @@
 "use client";
-import * as React from "react";
+
+import React, { useState, useContext } from "react";
 import { cn } from "@/lib/utils";
 
 interface TabsContextType { activeTab: string; setActiveTab: (id: string) => void; }

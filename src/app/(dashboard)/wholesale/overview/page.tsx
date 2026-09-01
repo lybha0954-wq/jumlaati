@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/shared/Sidebar";
+
 import { Topbar } from "@/components/shared/Topbar";
 import { LineChart } from "@/components/charts/LineChart";
 import { Button } from "@/components/ui/Button";

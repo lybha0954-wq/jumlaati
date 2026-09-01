@@ -13,16 +13,16 @@ export function BottomNavBar() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-lg flex justify-around py-2">
-      {links.map((link) => (
+      {links?.map((link) => (
         <Link
-          key={link.href}
-          href={link.href}
+          key={link?.href}
+          href={link?.href}
           className={`flex flex-col items-center text-xs p-2 ${
-            pathname === link.href ? "text-primary font-bold" : "text-gray-500"
+            pathname === link?.href ? "text-primary font-bold" : "text-gray-500"
           }`}
         >
-          <span className="text-xl">{link.icon}</span>
-          {link.label}
+          <span className="text-xl">{link?.icon}</span>
+          {link?.label}
         </Link>
       ))}
     </nav>

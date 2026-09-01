@@ -1,8 +1,9 @@
 import * as React from "react";
-import { cn } from "@/lib/utils"; // Ensure you have a cn utility, or use clsx/tailwind-merge
+import { cn } from "@/lib/utils"
+; // Ensure you have a cn utility, or use clsx/tailwind-merge
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "outline" | "ghost" | "destructive";
+  variant?: "default" | "outline" | "ghost" | "destructive" | "secondary";
   size?: "sm" | "md" | "lg";
 }
 
@@ -13,6 +14,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       outline: "border border-input bg-background hover:bg-accent",
       ghost: "hover:bg-accent hover:text-accent-foreground",
       destructive: "bg-red-500 text-white hover:bg-red-600",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
     };
     const sizes = {
       sm: "h-8 px-3 text-xs",

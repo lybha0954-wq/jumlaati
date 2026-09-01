@@ -1,10 +1,12 @@
 "use client";
+
+import React, { useEffect } from 'react';
 import { useUserStore } from "@/lib/stores/userStore";
 import { useNotificationStore } from "@/hooks/useNotification";
 
 export function Topbar() {
-  const user = useUserStore((state) => state.user);
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const user = useUserStore((state) => state?.user);
+  const unreadCount = useNotificationStore((state) => state?.unreadCount);
 
   return (
     <header className="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-40">
@@ -23,3 +25,17 @@ export function Topbar() {
     </header>
   );
 }
+
+const Header: React.FC = () => {
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.warn('Placeholder: Header is not implemented yet.');
+  }, []);
+  return (
+    <div>
+      {/* Header placeholder */}
+    </div>
+  );
+};
+
+export default Header;

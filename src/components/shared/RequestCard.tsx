@@ -1,4 +1,6 @@
 "use client";
+
+import React, { useEffect } from 'react';
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
@@ -35,3 +37,17 @@ export function RequestCard({ product }: { product: any }) {
     </div>
   );
 }
+
+const ProductCard: React.FC = () => {
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.warn('Placeholder: ProductCard is not implemented yet.');
+  }, []);
+  return (
+    <div>
+      {/* ProductCard placeholder */}
+    </div>
+  );
+};
+
+export default ProductCard;
