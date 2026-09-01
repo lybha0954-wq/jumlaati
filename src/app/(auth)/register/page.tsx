@@ -51,7 +51,8 @@ export default function RegisterPage() {
       return;
     }
 
-    showToast("تم إنشاء الحساب بنجاح، تحقق من بريدك الآن!", "success");
+    // إرسال إشعار نجاح
+    showToast("تم إنشاء الحساب بنجاح!", "success");
     router.push("/auth/login");
     setLoading(false);
   };
