@@ -27,3 +27,11 @@ export function timeAgo(date: string | Date): string {
   if (interval > 1) return Math.floor(interval) + " دقيقة مضت";
   return Math.floor(seconds) + " ثانية مضت";
 }
+
+function formatTimeAgo(...args: any[]): any {
+  // eslint-disable-next-line no-console
+  console.warn('Placeholder: formatTimeAgo is not implemented yet.', args);
+  return null;
+}
+
+export { formatTimeAgo };

@@ -1,5 +1,7 @@
-import Header from "@/components/shared/Topbar"; // أو استخدم Header المخصص للمتجر
-import ProductCard from "@/components/shared/RequestCard"; // أو استخدم ProductCard من الصفحة السابقة
+import Header from "@/components/shared/Topbar"
+; // أو استخدم Header المخصص للمتجر
+import ProductCard from "@/components/shared/RequestCard"
+; // أو استخدم ProductCard من الصفحة السابقة
 import { Button } from "@/components/ui/Button";
 
 export default function Home() {

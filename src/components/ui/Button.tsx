@@ -1,5 +1,6 @@
 import * as React from "react";
-import { cn } from "@/lib/utils"; // Ensure you have a cn utility, or use clsx/tailwind-merge
+import { cn } from "@/lib/utils"
+; // Ensure you have a cn utility, or use clsx/tailwind-merge
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "outline" | "ghost" | "destructive";

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { productService } from '@/lib/services/productService'; // لو كنت قد أنشأتها، أو استخدم خدمة الجملة/التاجر حسب الدور
+; // لو كنت قد أنشأتها، أو استخدم خدمة الجملة/التاجر حسب الدور
 
 // هنا سنستخدم خدمة الجملة لأن إضافة المنتجات تكون من تاجر الجملة أو الأدمن
 import { wholesaleService } from '@/lib/services/wholesaleService';

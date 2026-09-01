@@ -49,7 +49,7 @@ export const orchestrationService = {
   },
 
   // دورة حياة التوصيل (تحديث حالة وتسليم طلب)
-  async updateDeliveryStatus(orderId: string, status: "shipped" | "delivered", deliveryId: string) {
+  async updateDeliveryStatus(orderId: string, status: "shipped\" | \"delivered", deliveryId: string) {
     try {
       // 1. تحديث الحالة في قاعدة البيانات عبر خدمة التوصيل
       await deliveryService.updateDeliveryStatus(orderId, status);

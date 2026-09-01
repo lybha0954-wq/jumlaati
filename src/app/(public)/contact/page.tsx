@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { formatCurrency } from "@/lib/utils/currency";
-import { 
-  ArrowLeft, CreditCard, Wallet, MapPin, Phone, User, 
-  ShieldCheck, Lock, Truck, CheckCircle2 
-} from "lucide-react";
+import { ArrowLeft, CreditCard, Wallet, MapPin, Phone, User, ShieldCheck, Lock } from "lucide-react";
 
 export default function CheckoutPage() {
   const { items, clearCart, getTotal } = useCartStore();

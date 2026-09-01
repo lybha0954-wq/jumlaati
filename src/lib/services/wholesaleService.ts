@@ -1,6 +1,42 @@
-// ... داخل الكائن wholesaleService
+import { createClient } from "@/lib/supabase/server";
 
-  // حذف منتج
+export const wholesaleService = {
+  async getMyProducts(): Promise<any[]> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
+  async createProduct(product: any): Promise<any> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .insert(product)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async updateStock(productId: string, stock: number): Promise<any> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .update({ stock })
+      .eq("id", productId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
   async deleteProduct(productId: string): Promise<void> {
     const supabase = createClient();
     const { error } = await supabase
@@ -11,7 +47,6 @@
     if (error) throw new Error(error.message);
   },
 
-  // تعديل بيانات منتج (بدل المخزون فقط)
   async updateProduct(productId: string, updates: any): Promise<any> {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -23,4 +58,5 @@
 
     if (error) throw new Error(error.message);
     return data;
-  }
+  },
+};
