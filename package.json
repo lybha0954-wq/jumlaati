@@ -1,38 +1,26 @@
 {
-  "name": "jumlaati-platform",
-  "version": "1.0.0",
-  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next node_modules package-lock.json",
+    "reset": "npm run clean && npm install",
+    "update-deps": "npx npm-check-updates -u && npm install",
+    "generate": "npx plop"
   },
   "dependencies": {
-    "@dhiwise/component-tagger": "latest",
-    "@heroicons/react": "^2.2.0",
-    "@stripe/stripe-js": "^9.14.0",
-    "@supabase/ssr": "^0.5.0",
-    "@supabase/supabase-js": "^2.39.0",
-    "@tailwindcss/forms": "^0.5.11",
-    "@tailwindcss/typography": "^0.5.20",
-    "clsx": "^2.1.0",
-    "date-fns": "^4.4.0",
-    "lucide-react": "^1.37.0",
-    "next": "^14.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "recharts": "^2.12.0",
-    "sonner": "^1.4.4",
-    "tailwind-merge": "^2.2.1"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "autoprefixer": "^10.5.4",
+    "next": "^16.3.4",
+    "postcss": "^8.5.26",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
   }
 }

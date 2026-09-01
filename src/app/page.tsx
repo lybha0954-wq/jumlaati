@@ -1,35 +1,22 @@
-'use client';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import Header from "@/components/shared/Topbar"; // أو استخدم Header المخصص للمتجر
+import ProductCard from "@/components/shared/RequestCard"; // أو استخدم ProductCard من الصفحة السابقة
+import { Button } from "@/components/ui/Button";
 
-export default function RootPage() {
-  const { user, role, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      router?.replace('/sign-up-login');
-      return;
-    }
-    if (role === 'retailer') {
-      router?.replace('/retailer-home');
-    } else if (role === 'supplier') {
-      router?.replace('/supplier-dashboard');
-    } else if (role === 'admin') {
-      router?.replace('/admin-hub');
-    } else {
-      router?.replace('/retailer-home');
-    }
-  }, [user, role, loading, router]);
-
+export default function Home() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="font-arabic text-muted-foreground text-sm">جاري التحميل...</p>
-      </div>
-    </div>
+    <main dir="rtl" className="min-h-screen bg-gray-50">
+      <Header />
+      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20 text-center">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">مرحباً بك في جملا</h1>
+        <p className="text-lg md:text-xl mb-8">أفضل منصة عراقية للبيع بالجملة والتجزئة</p>
+        <Button className="bg-white text-blue-600 hover:bg-gray-100">تصفح المتجر</Button>
+      </section>
+      <section className="container mx-auto py-12">
+        <h2 className="text-2xl font-bold mb-6">أحدث المنتجات</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* هنا يتم جلب المنتجات من الـ API أو قاعدة البيانات */}
+        </div>
+      </section>
+    </main>
   );
 }
