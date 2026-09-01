@@ -16,10 +16,10 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({
             request})
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
         }}}
   )
 
@@ -70,40 +70,6 @@ export async function middleware(request: NextRequest) {
 // تحديد المسارات التي يغطيها هذا الوسيط
 export const config = {
   matcher: [
-    /*
-     * تطابق كل المسارات ما عدا:
-     * - _next/static (ملفات ثابتة)
-     * - _next/image (معالجة الصور)
-     * - favicon.ico
-     * - أي ملفات ثابتة مثل الصور أو الخطوط
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)']}
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-
-  // 1. تجاهل مسارات الملفات الثابتة (الصور، الخطوط، إلخ)
-  if (path.startsWith('/_next') || path.startsWith('/api') || path.startsWith('/favicon.ico')) {
-    return NextResponse.next();
-  }
-
-  // 2. إضافة رؤوس أمان (Security Headers) لجميع الصفحات
-  const response = NextResponse.next();
-
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // 3. سياسة أمان المحتوى (CSP) - تحمي من هجمات XSS
-  response.headers.set(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' *.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: *.supabase.co;"
-  );
-
-  return response;
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+  ]
 }
-
-// تحديد المسارات التي يُطبق عليها الـ Middleware فقط (حتى لا يعمل على كل شيء)
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']};

@@ -1,14 +1,27 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
-const StatsCard = () => {
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.warn('Placeholder: StatsCard is not implemented yet.');
-  }, []);
+interface StatsCardProps {
+  title: string;
+  value?: string | number;
+  icon?: string;
+  trend?: string;
+  trendUp?: boolean;
+}
+
+const StatsCard = ({ title, value, icon, trend, trendUp }: StatsCardProps) => {
   return (
-    <>
-  { /*StatsCard */} 
- </>
+    <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-gray-500 text-sm font-medium">{title}</span>
+        {icon && <span className="text-2xl">{icon}</span>}
+      </div>
+      <div className="text-2xl font-bold text-gray-900">{value ?? '—'}</div>
+      {trend && (
+        <div className={`text-sm font-medium ${trendUp ? 'text-green-600' : 'text-red-500'}`}>
+          {trendUp ? '▲' : '▼'} {trend}
+        </div>
+      )}
+    </div>
   );
 };
 
