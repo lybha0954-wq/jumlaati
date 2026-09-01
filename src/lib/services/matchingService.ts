@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export const matchingService = {
   // إنشاء طلب مطابقة (من التاجر إلى الجملة)
   async createMatchRequest(payload: any) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data, error } = await supabase
@@ -18,7 +18,7 @@ export const matchingService = {
 
   // قبول مطابقة من تاجر الجملة
   async acceptMatch(matchId: string) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase
       .from("matches")
       .update({ status: "approved" })

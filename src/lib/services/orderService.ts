@@ -4,7 +4,7 @@ import type { Order } from "@/types/order";
 export const orderService = {
   // عرض تفاصيل طلب واحد
   async getOrderById(id: string): Promise<Order> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("orders")
       .select("*")
@@ -17,7 +17,7 @@ export const orderService = {
 
   // جلب الطلبات من منظور الأدمن (كل الطلبات)
   async getAllOrders(): Promise<Order[]> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("orders")
       .select("*")

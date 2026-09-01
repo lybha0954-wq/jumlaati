@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notificationService } from '@/lib/services/notificationService';
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -21,7 +21,6 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    // استدعاء خدمة الإشعارات لإرسال إشعار (مثلاً من الأدمن أو النظام)
     await notificationService.notify(body);
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {

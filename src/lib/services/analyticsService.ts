@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export const analyticsService = {
   // إجمالي المبيعات
   async getTotalRevenue(): Promise<number> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("orders")
       .select("total")
@@ -15,7 +15,7 @@ export const analyticsService = {
 
   // عدد المستخدمين حسب الدور
   async getUsersCountByRole(role: string): Promise<number> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { count } = await supabase
       .from("users")
       .select("*", { count: 'exact', head: true })

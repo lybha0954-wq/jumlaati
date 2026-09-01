@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const wholesaleService = {
   async getMyProducts(): Promise<any[]> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -13,7 +13,7 @@ export const wholesaleService = {
   },
 
   async createProduct(product: any): Promise<any> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .insert(product)
@@ -25,7 +25,7 @@ export const wholesaleService = {
   },
 
   async updateStock(productId: string, stock: number): Promise<any> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .update({ stock })
@@ -38,7 +38,7 @@ export const wholesaleService = {
   },
 
   async deleteProduct(productId: string): Promise<void> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase
       .from("products")
       .delete()
@@ -48,7 +48,7 @@ export const wholesaleService = {
   },
 
   async updateProduct(productId: string, updates: any): Promise<any> {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .update(updates)

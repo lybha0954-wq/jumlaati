@@ -3,15 +3,17 @@ import { BarChart } from "@/components/charts/BarChart";
 import { StatsCard } from "../../../../components/shared/StatsCard";
 
 export default async function RetailerOverviewPage() {
-  // جلب طلبات التاجر الحقيقي
-  const orders = await retailerService?.getMyOrders();
-  
-  // حساب الإحصائيات من البيانات الحقيقية
-  const totalSales = orders?.reduce((sum, order) => sum + order?.total, 0);
-  const pendingOrders = orders?.filter(o => o?.status === "pending")?.length;
-  const deliveredOrders = orders?.filter(o => o?.status === "delivered")?.length;
+  let orders: any[] = [];
+  try {
+    orders = await retailerService.getMyOrders();
+  } catch {
+    orders = [];
+  }
 
-  // تحويل الطلبات لبيانات الرسم البياني (مثال بسيط)
+  const totalSales = orders?.reduce((sum, order) => sum + (order?.total ?? 0), 0);
+  const pendingOrders = orders?.filter(o => o?.status === "pending")?.length ?? 0;
+  const deliveredOrders = orders?.filter(o => o?.status === "delivered")?.length ?? 0;
+
   const chartData = orders?.slice(0, 4)?.map((order, index) => ({
     name: `طلب #${index + 1}`,
     value: order?.total
@@ -21,7 +23,6 @@ export default async function RetailerOverviewPage() {
     <div>
       <h1 className="text-3xl font-bold mb-6">نظرة عامة للتاجر</h1>
 
-      {/* إحصائيات مباشرة من قاعدة البيانات */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <StatsCard title="إجمالي المبيعات" value={`${totalSales?.toLocaleString()} د.ع`} icon="💰" trend="+12%" trendUp={true} />
         <StatsCard title="طلبات قيد الانتظار" value={pendingOrders?.toString()} icon="⏳" />
