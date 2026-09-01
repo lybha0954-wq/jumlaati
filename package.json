@@ -9,6 +9,18 @@
     "clean": "rm -rf .next node_modules package-lock.json",
     "reset": "npm run clean && npm install",
     "update-deps": "npx npm-check-updates -u && npm install",
-    "generate": "npx plop" 
+    "generate": "npx plop"
+  },
+  "dependencies": {
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "autoprefixer": "^10.5.4",
+    "next": "^16.3.4",
+    "postcss": "^8.5.26",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
   }
 }
