@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { loginSchema } from "@/lib/validations/auth.schema";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -13,31 +16,87 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const formData = new FormData(e.target as HTMLFormElement);
-    
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email: formData.get("email"), password: formData.get("password") }),
-    });
 
-    if (!res.ok) {
-      showToast("فشل تسجيل الدخول", "error");
+    const formData = new FormData(e.target as HTMLFormElement);
+    const rawData = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    };
+
+    // التحقق من صحة البيانات (Validation)
+    const parsed = loginSchema.safeParse(rawData);
+    if (!parsed.success) {
+      showToast("يرجى إدخال بريد إلكتروني وكلمة مرور صحيحة", "error");
       setLoading(false);
       return;
     }
-    showToast("تم تسجيل الدخول بنجاح", "success");
+
+    // الاتصال بـ Supabase
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+
+    if (error) {
+      showToast(error.message || "خطأ في تسجيل الدخول", "error");
+      setLoading(false);
+      return;
+    }
+
+    // نجاح الدخول
+    showToast("تم تسجيل الدخول بنجاح! 🎉", "success");
     router.push("/dashboard");
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4">
-        <h1 className="text-2xl font-bold text-center">تسجيل الدخول</h1>
-        <Input name="email" type="email" placeholder="البريد الإلكتروني" required />
-        <Input name="password" type="password" placeholder="كلمة المرور" required />
-        <Button type="submit" disabled={loading} className="w-full">{loading ? "جارٍ الدخول..." : "دخول"}</Button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-extrabold text-gray-900">مرحباً بعودتك 👋</h1>
+          <p className="text-gray-500 mt-2">سجل دخولك للمتابعة إلى لوحة التحكم</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1.5 block">البريد الإلكتروني</label>
+            <Input 
+              name="email" 
+              type="email" 
+              placeholder="example@email.com" 
+              required 
+              className="h-12 rounded-xl"
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1.5 block">كلمة المرور</label>
+            <Input 
+              name="password" 
+              type="password" 
+              placeholder="********" 
+              required 
+              className="h-12 rounded-xl"
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            disabled={loading} 
+            size="lg" 
+            className="w-full justify-center text-lg shadow-lg shadow-primary/20"
+          >
+            {loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول"}
+          </Button>
+        </form>
+
+        <div className="text-center mt-6 text-sm text-gray-500">
+          ليس لديك حساب؟{" "}
+          <Link href="/auth/register" className="text-primary font-semibold hover:underline">
+            إنشاء حساب جديد
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
