@@ -6,17 +6,48 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Trash2, Plus, Minus, ArrowLeft, CreditCard, Wallet, MapPin } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowLeft, MapPin } from "lucide-react";
+import { useState } from "react";
 
 export default function RetailerCartPage() {
-  const { items, updateQuantity, removeItem, clearCart, getTotal } = useCartStore();
+  const { items, updateQuantity, removeItem, getTotal } = useCartStore();
   const { showToast } = useToast();
   const router = useRouter();
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleCheckout = () => {
-    showToast("تم إرسال طلبك بنجاح! 🎉", "success");
-    clearCart();
-    router.push("/dashboard/retailer/orders");
+  const handleCheckout = async () => {
+    if (!address.trim()) {
+      showToast("يرجى إدخال عنوان التوصيل", "error");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+          address: address
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "حدث خطأ ما");
+      }
+
+      useCartStore.getState().clearCart();
+      showToast("تم إتمام الطلب بنجاح! 🎉", "success");
+      router.push(`/dashboard/retailer/orders/${data.order.id}`); // سيتم توجيهه لصفحة التتبع
+      
+    } catch (error: any) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {
@@ -32,21 +63,18 @@ export default function RetailerCartPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-primary transition-colors">
-         <ArrowLeft size={16} /> متابعة التسوق
-      </button>
+      <div className="max-w-6xl mx-auto">
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-primary transition-colors">
+          <ArrowLeft size={16} /> متابعة التسوق
+        </button>
 
-      <h1 className="text-3xl font-extrabold text-gray-900 mb-8">سلة المشتريات</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-8">سلة المشتريات</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* قائمة المنتجات */}
-         <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
                <div key={item.productId} className="flex gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="h-24 w-24 bg-gray-100 rounded-xl flex items-center justify-center text-4xl shrink-0">
-                     {/* استخدم Next/Image هنا */}
-                     🛍️
-                  </div>
+                  <div className="h-24 w-24 bg-gray-100 rounded-xl flex items-center justify-center text-4xl shrink-0">🛍️</div>
                   <div className="flex-1 flex flex-col justify-between py-1">
                      <div className="flex justify-between items-start gap-4">
                         <div>
@@ -57,7 +85,6 @@ export default function RetailerCartPage() {
                            <Trash2 size={18} />
                         </button>
                      </div>
-                     
                      <div className="flex justify-between items-center mt-4">
                         <div className="flex items-center border border-gray-200 rounded-full bg-gray-50">
                            <button onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))} className="p-2 hover:bg-gray-200 rounded-r-full transition-colors"><Minus size={14} /></button>
@@ -69,13 +96,11 @@ export default function RetailerCartPage() {
                   </div>
                </div>
             ))}
-         </div>
+          </div>
 
-         {/* ملخص الطلب */}
-         <div className="lg:col-span-1">
+          <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
                <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلب</h2>
-               
                <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-gray-600">
                      <span>المجموع الفرعي</span>
@@ -85,10 +110,6 @@ export default function RetailerCartPage() {
                      <span>الشحن</span>
                      <Badge variant="secondary">مجاني</Badge>
                   </div>
-                  <div className="flex justify-between text-gray-600">
-                     <span>الضريبة</span>
-                     <span>0 د.ع</span>
-                  </div>
                   <div className="h-px bg-gray-200 my-4"></div>
                   <div className="flex justify-between text-xl font-extrabold text-gray-900">
                      <span>الإجمالي</span>
@@ -96,32 +117,17 @@ export default function RetailerCartPage() {
                   </div>
                </div>
 
-               {/* عنوان التوصيل */}
                <div className="mb-6">
                   <label className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin size={16} /> عنوان التوصيل</label>
-                  <Input placeholder="بغداد - الكرادة - شارع 62" />
+                  <Input placeholder="بغداد - الكرادة - شارع 62" value={address} onChange={(e) => setAddress(e.target.value)} />
                </div>
 
-               {/* طريقة الدفع */}
-               <div className="mb-6">
-                  <label className="text-sm font-semibold mb-2">طريقة الدفع</label>
-                  <div className="space-y-2">
-                     <label className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-primary transition-colors">
-                        <input type="radio" name="payment" defaultChecked className="accent-primary" />
-                        <Wallet size={18} /> الدفع عند الاستلام (نقداً)
-                     </label>
-                     <label className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-primary transition-colors">
-                        <input type="radio" name="payment" className="accent-primary" />
-                        <CreditCard size={18} /> بطاقة ائتمانية
-                     </label>
-                  </div>
-               </div>
-
-               <Button onClick={handleCheckout} size="lg" className="w-full justify-center gap-2 shadow-lg">
-                  إتمام الطلب الآن
+               <Button onClick={handleCheckout} size="lg" disabled={loading} className="w-full justify-center gap-2 shadow-lg">
+                 {loading ? "جارٍ إتمام الطلب..." : "إتمام الطلب الآن"}
                </Button>
             </div>
-         </div>
+          </div>
+        </div>
       </div>
     </div>
   );
