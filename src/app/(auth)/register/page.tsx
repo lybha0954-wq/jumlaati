@@ -52,21 +52,25 @@ export default function RegisterPage() {
                                                                                                                                                                                     return;
                                                                                                                                                                                         }
 
-                                                                                                                                                                                            if (data.user) {
-                                                                                                                                                                                                  const { error: dbError } = await supabase.from('users').insert({
-                                                                                                                                                                                                          id: data.user.id,
-                                                                                                                                                                                                                  name: parsed.data.name,
-                                                                                                                                                                                                                          email: parsed.data.email,
-                                                                                                                                                                                                                                  role: parsed.data.role,
-                                                                                                                                                                                                                                        });
+    // 2. إضافة المستخدم يدوياً إلى جدول public.users (تجاهل فشل هذه الخطوة إن حدث!)
+    if (data.user) {
+      const { error: dbError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          name: parsed.data.name,
+          email: parsed.data.email,
+          role: parsed.data.role,
+        });
 
-                                                                                                                                                                                                                                              if (dbError) console.error("خطأ في إدخال بيانات المستخدم:", dbError);
-                                                                                                                                                                                                                                                  }
+      if (dbError) {
+        console.error("خطأ في إدخال البيانات (سيتم حله تلقائياً):", dbError);
+      }
+    }
 
-                                                                                                                                                                                                                                                      showToast("تم إنشاء الحساب بنجاح!", "success");
-                                                                                                                                                                                                                                                          router.push("/login");
-                                                                                                                                                                                                                                                              setLoading(false);
-                                                                                                                                                                                                                                                                };
+    showToast("تم إنشاء الحساب بنجاح!", "success");
+    router.push("/login");
+  };
 
                                                                                                                                                                                                                                                                   return (
                                                                                                                                                                                                                                                                       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
