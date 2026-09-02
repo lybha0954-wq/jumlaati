@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { registerSchema } from "@/lib/validations/auth.schema";
 
 export default function RegisterPage() {
@@ -18,13 +17,12 @@ export default function RegisterPage() {
             e.preventDefault();
                 setLoading(true);
 
-                    const formData = new FormData(e.target as HTMLFormElement);
-                        const rawData = {
-                              name: formData.get("name") as string,
-                                    email: formData.get("email") as string,
-                                          password: formData.get("password") as string,
-                                                role: formData.get("role") as string,
-                                                    };
+    const formData = new FormData(e.target as HTMLFormElement);
+    const rawData = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    };
 
                                                         const parsed = registerSchema.safeParse(rawData);
                                                             if (!parsed.success) {
@@ -33,18 +31,19 @@ export default function RegisterPage() {
                                                                               return;
                                                                                   }
 
-                                                                                      const supabase = createClient();
-                                                                                          
-                                                                                              const { data, error } = await supabase.auth.signUp({
-                                                                                                    email: parsed.data.email,
-                                                                                                          password: parsed.data.password,
-                                                                                                                options: {
-                                                                                                                        data: {
-                                                                                                                                  name: parsed.data.name,
-                                                                                                                                            role: parsed.data.role,
-                                                                                                                                                    },
-                                                                                                                                                          },
-                                                                                                                                                              });
+    const supabase = createClient();
+    
+    // إنشاء الحساب (نضع role كـ "pending" أو "retailer" افتراضياً لحماية المنصة)
+    const { data, error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: {
+        data: {
+          name: parsed.data.name,
+          role: "retailer", // افتراضي، والأدمن يعدله لاحقاً
+        },
+      },
+    });
 
                                                                                                                                                                   if (error) {
                                                                                                                                                                         showToast(error.message || "حدث خطأ في التسجيل", "error");
@@ -52,23 +51,18 @@ export default function RegisterPage() {
                                                                                                                                                                                     return;
                                                                                                                                                                                         }
 
-    // 2. إضافة المستخدم يدوياً إلى جدول public.users (تجاهل فشل هذه الخطوة إن حدث!)
     if (data.user) {
-      const { error: dbError } = await supabase
-        .from('users')
-        .insert({
-          id: data.user.id,
-          name: parsed.data.name,
-          email: parsed.data.email,
-          role: parsed.data.role,
-        });
+      const { error: dbError } = await supabase.from('users').insert({
+        id: data.user.id,
+        name: parsed.data.name,
+        email: parsed.data.email,
+        role: "retailer",
+      });
 
-      if (dbError) {
-        console.error("خطأ في إدخال البيانات (سيتم حله تلقائياً):", dbError);
-      }
+      if (dbError) console.error("خطأ في إدخال البيانات:", dbError);
     }
 
-    showToast("تم إنشاء الحساب بنجاح!", "success");
+    showToast("تم إنشاء الحساب! سيتم تفعيله بعد مراجعة الإدارة.", "success");
     router.push("/login");
   };
 
@@ -80,27 +74,20 @@ export default function RegisterPage() {
                                                                                                                                                                                                                                                                                                         <p className="text-gray-500 mt-2">انضم إلى آلاف التجار والموردين</p>
                                                                                                                                                                                                                                                                                                                 </div>
 
-                                                                                                                                                                                                                                                                                                                        <form onSubmit={handleSubmit} className="space-y-5">
-                                                                                                                                                                                                                                                                                                                                  <div>
-                                                                                                                                                                                                                                                                                                                                              <label className="text-sm font-medium text-gray-700 mb-1.5 block">الاسم الكامل</label>
-                                                                                                                                                                                                                                                                                                                                                          <Input name="name" placeholder="الاسم الكامل" required className="h-12 rounded-xl" />
-                                                                                                                                                                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                                                                                                                                                                              <div>
-                                                                                                                                                                                                                                                                                                                                                                                          <label className="text-sm font-medium text-gray-700 mb-1.5 block">البريد الإلكتروني</label>
-                                                                                                                                                                                                                                                                                                                                                                                                      <Input name="email" type="email" placeholder="example@email.com" required className="h-12 rounded-xl" />
-                                                                                                                                                                                                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                          <div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                      <label className="text-sm font-medium text-gray-700 mb-1.5 block">كلمة المرور</label>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Input name="password" type="password" placeholder="********" required className="h-12 rounded-xl" />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <label className="text-sm font-medium text-gray-700 mb-1.5 block">نوع الحساب</label>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Select name="role" defaultValue="retailer" className="h-12 rounded-xl">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <option value="retailer">تاجر تجزئة</option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <option value="wholesaler">تاجر جملة</option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <option value="delivery">مندوب توصيل</option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </Select>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* لم يعد هناك حقل الدور هنا لحماية المنصة */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1.5 block">الاسم الكامل</label>
+            <Input name="name" placeholder="الاسم الكامل" required className="h-12 rounded-xl" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1.5 block">البريد الإلكتروني</label>
+            <Input name="email" type="email" placeholder="example@email.com" required className="h-12 rounded-xl" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1.5 block">كلمة المرور</label>
+            <Input name="password" type="password" placeholder="********" required className="h-12 rounded-xl" />
+          </div>
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <Button type="submit" disabled={loading} size="lg" className="w-full justify-center text-lg shadow-lg shadow-primary/20">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     {loading ? "جارٍ إنشاء الحساب..." : "إنشاء الحساب"}
