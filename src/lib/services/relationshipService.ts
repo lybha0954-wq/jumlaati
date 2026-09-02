@@ -1,17 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 
 export const relationshipService = {
-  // إرسال طلب ارتباط (تاجر الجملة يضيف تاجر التجزئة أو العكس)
-  async sendRequest(wholesalerId: string, retailerId: string) {
+  // إرسال طلب ارتباط (يدعم: جملة -> تجزئة، جملة -> توصيل، تجزئة -> جملة، توصيل -> جملة)
+  async sendRequest(data: { wholesalerId?: string; retailerId?: string; deliveryId?: string }) {
     const supabase = createClient();
-    const { data, error } = await supabase
+    const { data: relationship, error } = await supabase
       .from('relationships')
-      .insert({ wholesaler_id: wholesalerId, retailer_id: retailerId, status: 'pending' })
+      .insert({ 
+        wholesaler_id: data.wholesalerId || null, 
+        retailer_id: data.retailerId || null, 
+        delivery_id: data.deliveryId || null,
+        status: 'pending' 
+      })
       .select()
       .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return relationship;
   },
 
   // قبول طلب الارتباط
@@ -39,34 +44,16 @@ export const relationshipService = {
     if (error) throw new Error(error.message);
   },
 
-  // جلب جميع التجار المرتبطين بي (كعملاء)
-  async getMyConnectedRetailers() {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) throw new Error("Unauthorized");
-
-    const { data, error } = await supabase
-      .from('relationships')
-      .select('*, retailer:retailer_id(id, name, email)')
-      .eq('wholesaler_id', user.id)
-      .eq('status', 'active');
-
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
-  // جلب العلاقات المعلقة (الطلبات الجديدة التي تنتظر القبول)
+  // جلب طلبات الانضمام المعلقة (لكل الأدوار)
   async getPendingRequests() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) throw new Error("Unauthorized");
 
     const { data, error } = await supabase
       .from('relationships')
-      .select('*, retailer:retailer_id(id, name, email), wholesaler:wholesaler_id(id, name, email)')
-      .or(`wholesaler_id.eq.${user.id},retailer_id.eq.${user.id}`)
+      .select('*, retailer:retailer_id(id, name, email), wholesaler:wholesaler_id(id, name, email), delivery:delivery_id(id, name, email)')
+      .or(`wholesaler_id.eq.${user.id},retailer_id.eq.${user.id},delivery_id.eq.${user.id}`)
       .eq('status', 'pending');
 
     if (error) throw new Error(error.message);
