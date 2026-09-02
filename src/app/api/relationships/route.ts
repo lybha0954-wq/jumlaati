@@ -6,10 +6,8 @@ export async function GET() {
   try {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // جلب الطلبات المعلقة الخاصة بالمستخدم الحالي
     const pendingRequests = await relationshipService.getPendingRequests();
     return NextResponse.json(pendingRequests);
   } catch (error: any) {
@@ -20,13 +18,13 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { wholesalerId, retailerId } = body;
+    const { wholesalerId, retailerId, deliveryId } = body;
     
-    if (!wholesalerId || !retailerId) {
+    if (!wholesalerId && !retailerId && !deliveryId) {
       return NextResponse.json({ error: 'بيانات ناقصة' }, { status: 400 });
     }
 
-    const relationship = await relationshipService.sendRequest(wholesalerId, retailerId);
+    const relationship = await relationshipService.sendRequest({ wholesalerId, retailerId, deliveryId });
     return NextResponse.json(relationship, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
