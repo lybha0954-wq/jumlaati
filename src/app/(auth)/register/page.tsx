@@ -34,6 +34,8 @@ export default function RegisterPage() {
     }
 
     const supabase = createClient();
+    
+    // 1. إنشاء الحساب في Auth
     const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
@@ -51,9 +53,24 @@ export default function RegisterPage() {
       return;
     }
 
-    // إرسال إشعار نجاح
+    // 2. إضافة المستخدم يدوياً إلى جدول public.users (خطة أمان وضمان)
+    if (data.user) {
+      const { error: dbError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          name: parsed.data.name,
+          email: parsed.data.email,
+          role: parsed.data.role,
+        });
+
+      if (dbError) {
+        console.error("خطأ في إدخال بيانات المستخدم في الجدول:", dbError);
+      }
+    }
+
     showToast("تم إنشاء الحساب بنجاح!", "success");
-    router.push("/auth/login");
+    router.push("/login");
     setLoading(false);
   };
 
@@ -94,7 +111,7 @@ export default function RegisterPage() {
 
         <div className="text-center mt-6 text-sm text-gray-500">
           لديك حساب بالفعل؟{" "}
-          <Link href="/auth/login" className="text-primary font-semibold hover:underline">تسجيل الدخول</Link>
+          <Link href="/login" className="text-primary font-semibold hover:underline">تسجيل الدخول</Link>
         </div>
       </div>
     </div>
