@@ -13,6 +13,21 @@ export default function LoginPage() {
   const router = useRouter();
   const { showToast } = useToast();
 
+  // دالة لتحديد مسار لوحة التحكم حسب الدور
+  const getDashboardPath = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "/dashboard/admin/overview";
+      case "wholesaler":
+        return "/dashboard/wholesale/overview";
+      case "delivery":
+        return "/dashboard/delivery/overview";
+      case "retailer":
+      default:
+        return "/dashboard/retailer/overview";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -23,7 +38,7 @@ export default function LoginPage() {
       password: formData.get("password") as string,
     };
 
-    // التحقق من صحة البيانات (Validation)
+    // التحقق من صحة البيانات
     const parsed = loginSchema.safeParse(rawData);
     if (!parsed.success) {
       showToast("يرجى إدخال بريد إلكتروني وكلمة مرور صحيحة", "error");
@@ -33,7 +48,7 @@ export default function LoginPage() {
 
     // الاتصال بـ Supabase
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     });
@@ -44,9 +59,12 @@ export default function LoginPage() {
       return;
     }
 
-    // نجاح الدخول
+    // نجاح الدخول: جلب المستخدم لتحديد الدور والتوجيه للوحة الصحيحة
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.user_metadata?.role || "retailer";
+    
     showToast("تم تسجيل الدخول بنجاح! 🎉", "success");
-    router.push("/dashboard");
+    router.push(getDashboardPath(role));
   };
 
   return (
