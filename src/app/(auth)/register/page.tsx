@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { registerSchema } from "@/lib/validations/auth.schema";
 
 export default function RegisterPage() {
@@ -23,7 +22,6 @@ export default function RegisterPage() {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       password: formData.get("password") as string,
-      role: formData.get("role") as string,
     };
 
     const parsed = registerSchema.safeParse(rawData);
@@ -35,14 +33,14 @@ export default function RegisterPage() {
 
     const supabase = createClient();
     
-    // 1. إنشاء الحساب في Auth
+    // إنشاء الحساب (نضع role كـ "pending" أو "retailer" افتراضياً لحماية المنصة)
     const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
         data: {
           name: parsed.data.name,
-          role: parsed.data.role,
+          role: "retailer", // افتراضي، والأدمن يعدله لاحقاً
         },
       },
     });
@@ -53,23 +51,18 @@ export default function RegisterPage() {
       return;
     }
 
-    // 2. إضافة المستخدم يدوياً إلى جدول public.users (تجاهل فشل هذه الخطوة إن حدث!)
     if (data.user) {
-      const { error: dbError } = await supabase
-        .from('users')
-        .insert({
-          id: data.user.id,
-          name: parsed.data.name,
-          email: parsed.data.email,
-          role: parsed.data.role,
-        });
+      const { error: dbError } = await supabase.from('users').insert({
+        id: data.user.id,
+        name: parsed.data.name,
+        email: parsed.data.email,
+        role: "retailer",
+      });
 
-      if (dbError) {
-        console.error("خطأ في إدخال البيانات (سيتم حله تلقائياً):", dbError);
-      }
+      if (dbError) console.error("خطأ في إدخال البيانات:", dbError);
     }
 
-    showToast("تم إنشاء الحساب بنجاح!", "success");
+    showToast("تم إنشاء الحساب! سيتم تفعيله بعد مراجعة الإدارة.", "success");
     router.push("/login");
   };
 
@@ -82,6 +75,7 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* لم يعد هناك حقل الدور هنا لحماية المنصة */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1.5 block">الاسم الكامل</label>
             <Input name="name" placeholder="الاسم الكامل" required className="h-12 rounded-xl" />
@@ -93,14 +87,6 @@ export default function RegisterPage() {
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1.5 block">كلمة المرور</label>
             <Input name="password" type="password" placeholder="********" required className="h-12 rounded-xl" />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-1.5 block">نوع الحساب</label>
-            <Select name="role" defaultValue="retailer" className="h-12 rounded-xl">
-              <option value="retailer">تاجر تجزئة</option>
-              <option value="wholesaler">تاجر جملة</option>
-              <option value="delivery">مندوب توصيل</option>
-            </Select>
           </div>
 
           <Button type="submit" disabled={loading} size="lg" className="w-full justify-center text-lg shadow-lg shadow-primary/20">
