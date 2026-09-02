@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { CheckCircle2, XCircle, UserPlus } from "lucide-react";
+import { CheckCircle2, XCircle, UserPlus, Truck, Store } from "lucide-react";
 
 export default function NearbyRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -53,6 +53,18 @@ export default function NearbyRequestsPage() {
 
   if (loading) return <LoadingSpinner />;
 
+  // تحديد نوع الطلب والمرسل
+  const getRequesterInfo = (request: any) => {
+    if (request.retailer) {
+      return { name: request.retailer.name, email: request.retailer.email, type: "تاجر تجزئة", icon: UserPlus };
+    } else if (request.delivery) {
+      return { name: request.delivery.name, email: request.delivery.email, type: "مندوب توصيل", icon: Truck };
+    } else if (request.wholesaler) {
+      return { name: request.wholesaler.name, email: request.wholesaler.email, type: "تاجر جملة", icon: Store };
+    }
+    return { name: "غير معروف", email: "", type: "غير معروف", icon: UserPlus };
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">طلبات الانضمام</h1>
@@ -65,21 +77,22 @@ export default function NearbyRequestsPage() {
       ) : (
         <div className="space-y-4">
           {requests.map((request) => {
-            const requester = request.retailer || request.wholesaler;
+            const requester = getRequesterInfo(request);
+            const RequesterIcon = requester.icon;
             return (
               <div key={request.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-lg">
-                      {requester?.name?.charAt(0) || "؟"}
+                      <RequesterIcon size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg">{requester?.name || "تاجر"}</h3>
-                      <p className="text-sm text-gray-500">{requester?.email}</p>
+                      <h3 className="font-bold text-lg">{requester.name}</h3>
+                      <p className="text-sm text-gray-500">{requester.email}</p>
                     </div>
                   </div>
                   <Badge variant="secondary" className="mt-2">
-                    {request.status === "pending" ? "بانتظار الموافقة" : request.status}
+                    {requester.type} يطلب الانضمام
                   </Badge>
                 </div>
                 
