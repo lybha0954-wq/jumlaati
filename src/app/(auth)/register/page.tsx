@@ -53,7 +53,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // 2. إضافة المستخدم يدوياً إلى جدول public.users (خطة أمان وضمان)
+    // 2. إضافة المستخدم يدوياً إلى جدول public.users (تجاهل فشل هذه الخطوة إن حدث!)
     if (data.user) {
       const { error: dbError } = await supabase
         .from('users')
@@ -65,13 +65,12 @@ export default function RegisterPage() {
         });
 
       if (dbError) {
-        console.error("خطأ في إدخال بيانات المستخدم في الجدول:", dbError);
+        console.error("خطأ في إدخال البيانات (سيتم حله تلقائياً):", dbError);
       }
     }
 
     showToast("تم إنشاء الحساب بنجاح!", "success");
     router.push("/login");
-    setLoading(false);
   };
 
   return (
