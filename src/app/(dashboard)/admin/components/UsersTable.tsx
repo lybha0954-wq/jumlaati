@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/useToast";
-import { DataTable } from "@/components/ui/Table"; 
+import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -35,7 +35,7 @@ export function UsersTable() {
     { key: "name", header: "الاسم" },
     { key: "email", header: "البريد الإلكتروني" },
     { key: "role", header: "الدور", render: (row: any) => <Badge>{row.role}</Badge> },
-    { key: "actions", header: "إجراءات", render: (row: any) => (
+    { key: "actions", header: "إجراءات", render: () => (
         <Button size="sm" variant="outline">عرض</Button>
     )},
   ];
