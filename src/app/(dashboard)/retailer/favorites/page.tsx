@@ -1,3 +1,4 @@
+"use client";
 import { RequestCard } from "@/components/shared/RequestCard";
 import { Topbar } from "@/components/dashboard/Topbar";
 
