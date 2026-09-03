@@ -5,9 +5,11 @@ import { notFound } from "next/navigation";
 
 export default async function StorePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createClient(); // تعديل مهم جداً
   const { data: store } = await supabase.from("stores").select("*").eq("slug", slug).single();
+
   if (!store) notFound();
+
   const { data: products } = await supabase.from("products").select("*").eq("store_id", store.id);
 
   return (
