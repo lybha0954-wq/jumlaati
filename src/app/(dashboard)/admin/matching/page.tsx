@@ -14,7 +14,7 @@ export default function AdminMatchingPage() {
     { key: "retailer", header: "تاجر التجزئة" },
     { key: "wholesaler", header: "تاجر الجملة" },
     { key: "status", header: "الحالة" },
-    { key: "actions", header: "إجراءات", render: (r: any) => (
+    { key: "actions", header: "إجراءات", render: () => (
         <div className="flex gap-2">
             <Button size="sm" variant="outline">قبول</Button>
             <Button size="sm" variant="destructive">رفض</Button>
