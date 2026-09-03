@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { Topbar } from "@/components/dashboard/Topbar";
 import { Search, Store, Send } from "lucide-react";
 
 export default function NearbyWholesalePage() {
@@ -14,7 +15,6 @@ export default function NearbyWholesalePage() {
   useEffect(() => {
     const fetchWholesalers = async () => {
       try {
-        // هذا الـ API سنقوم بإنشائه لاحقاً لجلب تجار الجملة
         const res = await fetch("/api/users?role=wholesaler");
         if (res.ok) {
           const data = await res.json();
@@ -52,9 +52,9 @@ export default function NearbyWholesalePage() {
 
   return (
     <div>
+      <Topbar />
       <h1 className="text-3xl font-bold mb-6">تجار الجملة المتاحون</h1>
       
-      {/* مربع البحث */}
       <div className="relative mb-6">
         <Search className="absolute right-3 top-3 text-gray-400" size={20} />
         <input 
