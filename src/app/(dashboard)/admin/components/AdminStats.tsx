@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/Card";
 
-export function AnalyticsStats() {
+export function AdminStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <Card className="p-6 bg-white shadow-sm">
