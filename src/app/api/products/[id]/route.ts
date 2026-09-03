@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { wholesaleService } from '@/lib/services/wholesaleService';
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const product = await wholesaleService.getMyProducts();
-    const specific = product.find(p => p.id === id);
+    const products = await wholesaleService.getMyProducts();
+    const specific = products.find(p => p.id === params.id);
     if (!specific) return NextResponse.json({ error: 'غير موجود' }, { status: 404 });
     return NextResponse.json(specific);
   } catch (error) {
@@ -13,21 +12,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
     const body = await req.json();
-    const product = await wholesaleService.updateStock(id, body.stock);
+    const product = await wholesaleService.updateProduct(params.id, body);
     return NextResponse.json(product);
   } catch (error) {
     return NextResponse.json({ error: 'خطأ في تحديث المنتج' }, { status: 400 });
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    await wholesaleService.deleteProduct(id);
+    await wholesaleService.deleteProduct(params.id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'خطأ في حذف المنتج' }, { status: 500 });
