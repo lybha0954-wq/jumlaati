@@ -1,6 +1,7 @@
 "use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function RetailerOrdersPage() {
   const orders = [
@@ -18,6 +19,7 @@ export default function RetailerOrdersPage() {
 
   return (
     <div>
+      <Topbar />
       <h1 className="text-3xl font-bold mb-6">طلباتي</h1>
       <div className="bg-white p-6 rounded-lg shadow">
         <DataTable data={orders} columns={columns} />
