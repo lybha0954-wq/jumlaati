@@ -1,4 +1,4 @@
-import { AnalyticsStats } from "./components/AnalyticsStats";
+import { AnalyticsStats } from "../components/AdminStats";
 import { BarChart } from "@/components/charts/BarChart";
 import { Topbar } from "@/components/dashboard/Topbar";
 
