@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Trash2, Plus, Minus, ArrowLeft, MapPin, Store } from "lucide-react";
 import { useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function RetailerCartPage() {
   const { items, updateQuantity, removeItem, getTotal, getGroupedItems, clearCart } = useCartStore();
@@ -16,7 +17,6 @@ export default function RetailerCartPage() {
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // تجميع المنتجات حسب تاجر الجملة
   const groupedItems = getGroupedItems();
   const wholesalers = Object.keys(groupedItems);
 
@@ -28,7 +28,6 @@ export default function RetailerCartPage() {
     
     setLoading(true);
     try {
-      // إرسال الطلب إلى الـ API الذي سيقوم بتقسيمه تلقائياً
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,6 +67,7 @@ export default function RetailerCartPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
+      <Topbar />
       <div className="max-w-6xl mx-auto">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-primary transition-colors">
           <ArrowLeft size={16} /> متابعة التسوق
@@ -129,7 +129,7 @@ export default function RetailerCartPage() {
             })}
           </div>
 
-          {/* ملخص الطلب (يبقى كما هو) */}
+          {/* ملخص الطلب */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
                <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلبات</h2>
