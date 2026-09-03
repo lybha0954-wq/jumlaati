@@ -1,7 +1,7 @@
 "use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
-import { Topbar } from "@/components/shared/Topbar";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function RetailerInvoicesPage() {
   const invoices = [

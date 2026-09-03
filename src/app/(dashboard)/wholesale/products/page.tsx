@@ -1,6 +1,6 @@
 "use client";
 import { ProductForm } from "@/components/forms/ProductForm";
-import { Topbar } from "@/components/shared/Topbar";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 import { Input } from "@/components/ui/Input";
 

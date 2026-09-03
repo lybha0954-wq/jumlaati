@@ -1,5 +1,5 @@
 import { RequestCard } from "@/components/shared/RequestCard";
-import { Topbar } from "@/components/shared/Topbar";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function RetailerFavoritesPage() {
   // سيتم جلب المفضلة من قاعدة البيانات لاحقاً

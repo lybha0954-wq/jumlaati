@@ -1,5 +1,5 @@
 
-import { Topbar } from "@/components/shared/Topbar";
+import { Topbar } from "@/components/dashboard/Topbar";
 import { LineChart } from "@/components/charts/LineChart";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";

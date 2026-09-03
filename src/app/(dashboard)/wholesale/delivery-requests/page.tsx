@@ -1,4 +1,4 @@
-import { Topbar } from "@/components/shared/Topbar";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function WholesaleDeliveryRequestsPage() {
   const requests = [
