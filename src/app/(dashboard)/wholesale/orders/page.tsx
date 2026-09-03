@@ -1,4 +1,3 @@
-"use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -12,8 +11,8 @@ export default function WholesaleOrdersPage() {
   const columns = [
     { key: "id", header: "رقم الطلب" },
     { key: "buyer", header: "المشتري" },
-    { key: "total", header: "المجموع" },
-    { key: "status", header: "الحالة", render: (r: any) => <StatusBadge status={r.status} /> },
+    { key: "total", header: "المجموع", render: (row: any) => `${row.total.toLocaleString()} د.ع` },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
   ];
 
   return (
