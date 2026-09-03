@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-; // لو كنت قد أنشأتها، أو استخدم خدمة الجملة/التاجر حسب الدور
-
-// هنا سنستخدم خدمة الجملة لأن إضافة المنتجات تكون من تاجر الجملة أو الأدمن
+import { createClient } from '@/lib/supabase/server';
 import { wholesaleService } from '@/lib/services/wholesaleService';
 
 export async function GET() {
   try {
+    const supabase = await createClient(); // تعديل
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const products = await wholesaleService.getMyProducts();
     return NextResponse.json(products);
   } catch (error) {
