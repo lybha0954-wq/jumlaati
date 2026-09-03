@@ -1,7 +1,7 @@
 "use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Topbar } from "@/components/shared/Topbar";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function AdminDisputesPage() {
   const disputes = [
