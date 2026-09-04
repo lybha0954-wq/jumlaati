@@ -1,10 +1,11 @@
 "use client";
+import Image from "next/image";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/utils/currency";
-import { ShoppingCart, Heart, ImageOff } from "lucide-react";
+import { ShoppingCart, Heart } from "lucide-react";
 import { useState } from "react";
 
 export function RequestCard({ product }: { product: any }) {
@@ -22,9 +23,9 @@ export function RequestCard({ product }: { product: any }) {
     <div className="group relative flex flex-col bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 mb-4">
         {image ? (
-          <img src={image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+          <Image src={image} alt={product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300"><ImageOff /></div>
+          <div className="w-full h-full flex items-center justify-center text-6xl">📦</div>
         )}
         <Badge className="absolute top-2 right-2" variant={product.is_wholesale ? "default" : "secondary"}>
           {product.is_wholesale ? "جملة" : "تجزئة"}

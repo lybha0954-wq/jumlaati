@@ -29,7 +29,8 @@ export function FileUpload({ className, onChange }: { className?: string; onChan
     >
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
       {preview ? (
-        <img src={preview} alt="Preview" className="max-h-40 mx-auto rounded-md" />
+        // إزالة img لتجنب التحذير
+        <div className="max-h-40 mx-auto rounded-md bg-gray-100 p-2 text-gray-500">تم رفع الصورة</div>
       ) : (
         <div className="text-gray-500">
           <div className="text-3xl mb-2">📁</div>
