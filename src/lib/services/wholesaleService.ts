@@ -1,53 +1,45 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/utils/logger";
+import type { Product, ProductInput } from "@/types/product";
 
 export const wholesaleService = {
-  async getMyProducts(): Promise<any[]> {
+  // إضافة منتج جديد
+  async createProduct(input: ProductInput): Promise<Product> {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert({ ...input, owner_id: user.id, is_active: true })
+      .select()
+      .single();
+
+    if (error) {
+      logger.error("Wholesale: Error creating product", error);
+      throw new Error(error.message);
+    }
+    return data as Product;
+  },
+
+  // جلب منتجاتي فقط (المخزون الخاص بي)
+  async getMyProducts(): Promise<Product[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
-    return data || [];
+    return data as Product[];
   },
 
-  async createProduct(product: any): Promise<any> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .insert(product)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
-  async updateStock(productId: string, stock: number): Promise<any> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .update({ stock })
-      .eq("id", productId)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
-  async deleteProduct(productId: string): Promise<void> {
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", productId);
-
-    if (error) throw new Error(error.message);
-  },
-
-  async updateProduct(productId: string, updates: any): Promise<any> {
+  // تعديل المخزون أو المنتج
+  async updateProduct(productId: string, updates: Partial<ProductInput>): Promise<Product> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
@@ -57,6 +49,17 @@ export const wholesaleService = {
       .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return data as Product;
   },
+
+  // حذف منتج
+  async deleteProduct(productId: string): Promise<void> {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId);
+
+    if (error) throw new Error(error.message);
+  }
 };
