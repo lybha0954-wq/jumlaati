@@ -25,23 +25,20 @@ export default function RetailerCartPage() {
       showToast("يرجى إدخال عنوان التوصيل", "error");
       return;
     }
-    
     setLoading(true);
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId })),
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })),
           address: address
         }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "حدث خطأ");
-
       clearCart();
-      showToast("تم إرسال طلباتك بنجاح! 🎉", "success");
+      showToast("تم إرسال طلباتك بنجاح!", "success");
       router.push("/dashboard/retailer/orders");
     } catch (error: any) {
       showToast(error.message, "error");
@@ -71,15 +68,12 @@ export default function RetailerCartPage() {
         <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-primary transition-colors">
           <ArrowLeft size={16} /> متابعة التسوق
         </button>
-
         <h1 className="text-3xl font-extrabold text-gray-900 mb-8">سلة المشتريات</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {wholesalers.map((wholesalerId) => {
               const wholesalerItems = groupedItems[wholesalerId];
               const wholesalerTotal = wholesalerItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-              
               return (
                 <div key={wholesalerId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="bg-gray-50 px-6 py-4 border-b flex items-center gap-3">
@@ -87,7 +81,6 @@ export default function RetailerCartPage() {
                     <h3 className="font-bold text-lg">طلب إلى تاجر الجملة</h3>
                     <Badge variant="secondary">{wholesalerItems.length} منتج</Badge>
                   </div>
-
                   <div className="p-4 space-y-4">
                     {wholesalerItems.map((item) => (
                       <div key={item.productId} className="flex gap-4 bg-white rounded-xl p-3 border border-gray-100">
@@ -102,7 +95,6 @@ export default function RetailerCartPage() {
                               <Trash2 size={16} />
                             </button>
                           </div>
-                          
                           <div className="flex justify-between items-center mt-2">
                             <div className="flex items-center border border-gray-200 rounded-full bg-gray-50">
                               <button onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))} className="p-2 hover:bg-gray-200 rounded-r-full transition-colors"><Minus size={12} /></button>
@@ -115,7 +107,6 @@ export default function RetailerCartPage() {
                       </div>
                     ))}
                   </div>
-
                   <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
                     <span className="font-bold">إجمالي الطلب من هذه الجملة</span>
                     <span className="text-xl font-extrabold text-primary">{formatCurrency(wholesalerTotal)}</span>
@@ -124,7 +115,6 @@ export default function RetailerCartPage() {
               );
             })}
           </div>
-
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
                <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلبات</h2>
@@ -139,12 +129,10 @@ export default function RetailerCartPage() {
                      <span className="text-primary">{formatCurrency(getTotal())}</span>
                   </div>
                </div>
-
                <div className="mb-6">
                   <label className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin size={16} /> عنوان التوصيل</label>
                   <Input placeholder="بغداد - الكرادة - شارع 62" value={address} onChange={(e) => setAddress(e.target.value)} />
                </div>
-
                <Button onClick={handleCheckout} size="lg" disabled={loading} className="w-full justify-center gap-2 shadow-lg">
                  {loading ? "جارٍ إرسال الطلبات..." : "إتمام الطلبات الآن"}
                </Button>
