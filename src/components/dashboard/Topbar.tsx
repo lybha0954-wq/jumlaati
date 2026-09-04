@@ -1,11 +1,11 @@
 "use client";
 import { useUserStore } from "@/lib/stores/userStore";
 import { useNotificationStore } from "@/hooks/useNotification";
-import { Package, Bell, UserCircle } from "lucide-react";
+import { Package, Bell } from "lucide-react";
 
 export function Topbar() {
-  const user = useUserStore((state) => state.user);
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const user = useUserStore((state) => state?.user);
+  const unreadCount = useNotificationStore((state) => state?.unreadCount);
 
   return (
     <header className="h-16 sticky top-0 z-40 flex items-center justify-between bg-[#0F172A] px-6 text-white shadow-lg">
