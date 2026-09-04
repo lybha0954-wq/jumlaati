@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+
 import type { Product, ProductInput } from "@/types/product";
 import { logger } from "@/lib/utils/logger";
 
