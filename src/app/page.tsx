@@ -15,17 +15,15 @@ export default async function Home() {
     <main dir="rtl" className="min-h-screen bg-gray-50 text-slate-900">
       <Topbar />
 
-      {/* Hero - بسيط وجميل */}
-      <section className="bg-[#0F172A] text-white py-24 text-center">
+      <section className="bg-[#0F172A] text-white py-24 text-center px-4">
         <h1 className="text-5xl font-black mb-6">جُمْلَتِي</h1>
-        <p className="text-lg text-gray-300 mb-10">منصة عراقية متكاملة للبيع بالجملة والتجزئة.</p>
+        <p className="text-lg text-gray-300 mb-10">منصة عراقية متكاملة للبيع بالجملة والتجزئة والتوصيل.</p>
         <div className="flex justify-center gap-4">
           <Button size="lg" className="bg-[#f59e0b] text-gray-900 hover:bg-[#d97706]">تصفح المتجر</Button>
-          <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">إنشاء حساب</Button>
+          <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">انضم إلينا</Button>
         </div>
       </section>
 
-      {/* عرض المنتجات الحقيقية من قاعدة البيانات */}
       <section className="container mx-auto py-16 px-4">
         <h2 className="text-3xl font-bold mb-8">أحدث المنتجات</h2>
         {products.length === 0 ? (

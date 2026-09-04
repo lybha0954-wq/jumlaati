@@ -1,102 +1,83 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { useToast } from "@/hooks/useToast";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
       });
 
-      if (authError) {
-        setError(authError.message || 'فشل تسجيل الدخول');
-        return;
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "خطأ في تسجيل الدخول");
 
-      router.push('/');
-    } catch {
-      setError('حدث خطأ غير متوقع');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      const role = user?.user_metadata?.role || "retailer";
+
+      let dashboardPath = "/dashboard/retailer/overview";
+      if (role === "admin") dashboardPath = "/dashboard/admin/overview";
+      else if (role === "wholesaler") dashboardPath = "/dashboard/wholesale/overview";
+      else if (role === "delivery") dashboardPath = "/dashboard/delivery/overview";
+
+      showToast("تم تسجيل الدخول بنجاح!", "success");
+      router.push(dashboardPath);
+    } catch (error: any) {
+      showToast(error.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4" dir="rtl">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
-          <p className="text-gray-500 mt-2 text-sm">أدخل بياناتك للوصول إلى حسابك</p>
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="flex items-center justify-center p-4 pt-20">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+          <h1 className="text-3xl font-extrabold text-center mb-6">مرحباً بعودتك 👋</h1>
+          <p className="text-center text-gray-500 mb-8">سجل دخولك بالبريد الإلكتروني أو رقم الهاتف</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input 
+              placeholder="البريد الإلكتروني أو رقم الهاتف" 
+              value={identifier} 
+              onChange={(e) => setIdentifier(e.target.value)} 
+              required 
+              className="h-12"
+            />
+            <Input 
+              type="password" 
+              placeholder="كلمة المرور" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+              className="h-12"
+            />
+            <Button type="submit" disabled={loading} size="lg" className="w-full">
+              {loading ? "جارٍ الدخول..." : "تسجيل الدخول"}
+            </Button>
+          </form>
+          <div className="text-center mt-6 text-sm text-gray-500">
+            ليس لديك حساب؟ <Link href="/register" className="text-primary font-semibold">إنشاء حساب جديد</Link>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              البريد الإلكتروني
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="example@email.com"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              كلمة المرور
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors text-sm"
-          >
-            {loading ? 'جارٍ تسجيل الدخول...' : 'تسجيل الدخول'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          ليس لديك حساب؟{' '}
-          <Link href="/register" className="text-blue-600 hover:underline font-medium">
-            إنشاء حساب
-          </Link>
-        </p>
       </div>
     </div>
   );
