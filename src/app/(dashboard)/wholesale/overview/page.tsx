@@ -1,7 +1,7 @@
 import { Topbar } from "@/components/dashboard/Topbar";
-import { WholesaleStats } from "@/components/shared/StatsCard";
+import { StatsCard } from "@/components/shared/StatsCard";
 import { LineChart } from "@/components/charts/LineChart";
-import { wholesalesService } from "@/lib/services/wholesaleService";
+import { wholesaleService } from "@/lib/services/wholesaleService";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/Button";
 
@@ -11,12 +11,10 @@ export default async function WholesaleOverviewPage() {
   let totalRevenue = 0;
   
   try {
-    const userProducts = await wholesalesService.getMyProducts();
+    const userProducts = await wholesaleService.getMyProducts();
     products = userProducts || [];
     
-    // جلب الطلبات المرتبطة بهذا التاجر (سنضيف هذه الدالة في الخدمة لاحقاً لكن هنا نستخدم الحالية)
-    // ملاحظة: يجب أن تكون دالة getMyWholesaleOrders موجودة في الخدمة
-    const wholesaleOrders = await wholesalesService.getMyOrders?.() || [];
+    const wholesaleOrders = await wholesaleService.getMyOrders?.() || [];
     orders = wholesaleOrders;
     totalRevenue = orders.reduce((sum, order) => sum + (order?.total || 0), 0);
   } catch (error) {
@@ -38,9 +36,9 @@ export default async function WholesaleOverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <WholesaleStats title="إجمالي الإيرادات" value={formatCurrency(totalRevenue)} icon="💰" trend="+12%" trendUp={true} />
-          <WholesaleStats title="عدد الطلبات" value={orders.length.toString()} icon="📦" trend="+5%" trendUp={true} />
-          <WholesaleStats title="المنتجات النشطة" value={products.length.toString()} icon="🛍️" />
+          <StatsCard title="إجمالي الإيرادات" value={formatCurrency(totalRevenue)} icon="💰" trend="+12%" trendUp={true} />
+          <StatsCard title="عدد الطلبات" value={orders.length.toString()} icon="📦" trend="+5%" trendUp={true} />
+          <StatsCard title="المنتجات النشطة" value={products.length.toString()} icon="🛍️" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -52,7 +50,6 @@ export default async function WholesaleOverviewPage() {
               <div className="h-64 flex items-center justify-center text-gray-400">لا توجد بيانات للإيرادات بعد</div>
             )}
           </div>
-
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-xl font-semibold mb-4">أحدث الطلبات</h2>
             {orders.length > 0 ? (
