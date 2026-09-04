@@ -1,41 +1,36 @@
 "use client";
-
-import React, { useEffect } from 'react';
 import { useUserStore } from "@/lib/stores/userStore";
 import { useNotificationStore } from "@/hooks/useNotification";
+import { Package, Bell, UserCircle } from "lucide-react";
 
 export function Topbar() {
-  const user = useUserStore((state) => state?.user);
-  const unreadCount = useNotificationStore((state) => state?.unreadCount);
+  const user = useUserStore((state) => state.user);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   return (
-    <header className="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-40">
-      <div className="font-semibold text-lg">مرحباً، {user?.name || "زائر"}</div>
+    <header className="h-16 sticky top-0 z-40 flex items-center justify-between bg-[#0F172A] px-6 text-white shadow-lg">
+      <div className="flex items-center gap-3">
+        <Package className="h-6 w-6 text-[#f59e0b]" />
+        <span className="text-xl font-black">جُمْلَتِي</span>
+      </div>
+
       <div className="flex items-center gap-4">
-        <button className="relative p-2 rounded-full hover:bg-gray-100">
-          <span className="text-xl">🔔</span>
+        <button className="relative p-2 rounded-full hover:bg-white/10 transition-colors">
+          <Bell size={20} />
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-4 w-4 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">{unreadCount}</span>
+            <span className="absolute top-0 right-0 h-5 w-5 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
+              {unreadCount}
+            </span>
           )}
         </button>
-        <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-          {user?.name?.charAt(0) || "U"}
+
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-[#f59e0b] text-gray-900 flex items-center justify-center font-bold">
+            {user?.name?.charAt(0) || "ز"}
+          </div>
+          <span className="text-sm font-medium hidden md:block">{user?.name || "زائر"}</span>
         </div>
       </div>
     </header>
   );
 }
-
-const Header: React.FC = () => {
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.warn('Placeholder: Header is not implemented yet.');
-  }, []);
-  return (
-    <div>
-      {/* Header placeholder */}
-    </div>
-  );
-};
-
-export default Header;
