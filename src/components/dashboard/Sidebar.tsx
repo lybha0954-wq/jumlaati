@@ -21,6 +21,8 @@ export function Sidebar() {
     { href: "/dashboard/retailer/points", label: "نقاطي", icon: Coins, roles: ["retailer"] },
     { href: "/dashboard/delivery/tasks", label: "المهام", icon: Truck, roles: ["delivery"] },
     { href: "/dashboard/delivery/my-wholesalers", label: "شركائي", icon: Store, roles: ["delivery"] },
+    // إضافة رابط الرسائل للجميع
+    { href: "/dashboard/messages", label: "الرسائل", icon: MessageCircle, roles: ["admin", "wholesaler", "retailer", "delivery"] },
     { href: "/dashboard/settings", label: "الإعدادات", icon: Settings, roles: ["admin", "wholesaler", "retailer", "delivery"] },
   ];
 
