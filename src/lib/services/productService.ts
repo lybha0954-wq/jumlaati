@@ -4,7 +4,7 @@ import { logger } from "@/lib/utils/logger";
 
 export const productService = {
   async getAllProducts(): Promise<Product[]> {
-    const supabase = await createClient(); // تعديل مهم جداً
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -18,7 +18,7 @@ export const productService = {
   },
 
   async getProductById(id: string): Promise<Product> {
-    const supabase = await createClient(); // تعديل مهم
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -33,7 +33,7 @@ export const productService = {
   },
 
   async getProductsByOwner(userId: string): Promise<Product[]> {
-    const supabase = await createClient(); // تعديل مهم
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -48,7 +48,7 @@ export const productService = {
   },
 
   async createProduct(input: ProductInput): Promise<Product> {
-    const supabase = await createClient(); // تعديل مهم
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("يجب تسجيل الدخول لإضافة منتج");
@@ -67,7 +67,7 @@ export const productService = {
   },
 
   async updateProduct(id: string, updates: Partial<ProductInput>): Promise<Product> {
-    const supabase = await createClient(); // تعديل مهم
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .update(updates)
@@ -83,7 +83,7 @@ export const productService = {
   },
 
   async deleteProduct(id: string): Promise<void> {
-    const supabase = await createClient(); // تعديل مهم
+    const supabase = await createClient();
     const { error } = await supabase
       .from("products")
       .delete()
