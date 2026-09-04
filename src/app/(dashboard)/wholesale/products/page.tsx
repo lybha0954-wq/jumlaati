@@ -19,31 +19,73 @@ export default function WholesaleProductsPage() {
   const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch("/api/products");
-      if (res.ok) setProducts(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data);
+      }
     } catch (error) {
       showToast("خطأ في جلب المنتجات", "error");
     }
   }, [showToast]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
     const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-    if (res.ok) { showToast("تم حذف المنتج", "success"); fetchProducts(); } else { showToast("خطأ في الحذف", "error"); }
+    if (res.ok) {
+      showToast("تم حذف المنتج", "success");
+      fetchProducts();
+    } else {
+      showToast("خطأ في الحذف", "error");
+    }
   };
 
   const columns = [
     { key: "name", header: "المنتج" },
     { key: "category", header: "الفئة" },
-    { key: "price", header: "السعر", render: (row: any) => formatCurrency(row.price) },
-    { key: "stock", header: "الكمية", render: (row: any) => (row.stock < 10 ? <Badge variant="destructive">منخفض ({row.stock})</Badge> : <Badge>{row.stock}</Badge>) },
-    { key: "actions", header: "إجراءات", render: (row: any) => (
+    {
+      key: "price",
+      header: "السعر",
+      render: (row: any) => formatCurrency(row.price),
+    },
+    {
+      key: "stock",
+      header: "الكمية",
+      render: (row: any) =>
+        row.stock < 10 ? (
+          <Badge variant="destructive">منخفض ({row.stock})</Badge>
+        ) : (
+          <Badge>{row.stock}</Badge>
+        ),
+    },
+    {
+      key: "actions",
+      header: "إجراءات",
+      render: (row: any) => (
         <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => { setEditingProduct(row); setShowForm(true); }}><Pencil size={14} /></Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDelete(row.id)}><Trash2 size={14} /></Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setEditingProduct(row);
+              setShowForm(true);
+            }}
+          >
+            <Pencil size={14} />
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 size={14} />
+          </Button>
         </div>
-    )},
+      ),
+    },
   ];
 
   return (
@@ -52,18 +94,37 @@ export default function WholesaleProductsPage() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">إدارة منتجات الجملة</h1>
-          <Button onClick={() => { setEditingProduct(null); setShowForm(true); }}><Plus size={18} className="ml-2" /> إضافة منتج</Button>
+          <Button
+            onClick={() => {
+              setEditingProduct(null);
+              setShowForm(true);
+            }}
+          >
+            <Plus size={18} className="ml-2" /> إضافة منتج
+          </Button>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           {products.length === 0 ? (
-            <p className="text-center text-gray-500 py-10">لم تقم بإضافة أي منتجات بعد. اضغط على زر إضافة منتج للبدء.</p>
+            <p className="text-center text-gray-500 py-10">
+              لم تقم بإضافة أي منتجات بعد. اضغط على زر إضافة منتج للبدء.
+            </p>
           ) : (
             <DataTable data={products} columns={columns} />
           )}
         </div>
       </div>
-      <Modal open={showForm} onClose={() => setShowForm(false)} title={editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}>
-        <ProductForm initialData={editingProduct} onSuccess={() => { setShowForm(false); fetchProducts(); }} />
+      <Modal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title={editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}
+      >
+        <ProductForm
+          initialData={editingProduct}
+          onSuccess={() => {
+            setShowForm(false);
+            fetchProducts();
+          }}
+        />
       </Modal>
     </div>
   );
