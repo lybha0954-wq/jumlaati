@@ -56,7 +56,7 @@ export default function WholesaleProductsPage() {
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           {products.length === 0 ? (
-            <p className="text-center text-gray-500 py-10">لم تقم بإضافة أي منتجات بعد. اضغط &quot;إضافة منتج&quot; للبدء.</p>
+            <p className="text-center text-gray-500 py-10">لم تقم بإضافة أي منتجات بعد. اضغط على زر إضافة منتج للبدء.</p>
           ) : (
             <DataTable data={products} columns={columns} />
           )}
