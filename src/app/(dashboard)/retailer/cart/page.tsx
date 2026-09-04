@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Trash2, Plus, Minus, ArrowLeft, MapPin, Store } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowLeft, MapPin, Store, CreditCard, Wallet } from "lucide-react";
 import { useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
 
@@ -15,6 +15,7 @@ export default function RetailerCartPage() {
   const { showToast } = useToast();
   const router = useRouter();
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cod"); // "cod" أو "card"
   const [loading, setLoading] = useState(false);
 
   const groupedItems = getGroupedItems();
@@ -27,18 +28,35 @@ export default function RetailerCartPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/orders", {
+      // 1. إرسال الطلب وتقسيمه حسب الجملة
+      const orderRes = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })),
-          address: address
+          address: address,
+          payment_method: paymentMethod
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "حدث خطأ");
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) throw new Error(orderData.error || "خطأ في إرسال الطلب");
+
+      // 2. إنشاء عملية دفع (للبطاقة) أو الاعتماد على الدفع عند الاستلام
+      if (paymentMethod === "card") {
+        const paymentRes = await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: orderData.orders[0].id, amount: getTotal(), gateway: "sindipay" }),
+        });
+        const paymentData = await paymentRes.json();
+        if (!paymentRes.ok) throw new Error(paymentData.error || "خطأ في الدفع");
+        // في المستقبل: سيتم هنا تحويل المستخدم إلى رابط SindiPay
+        showToast("تم إرسال الطلب لبوابة الدفع (قيد الربط الفعلي)", "info");
+      } else {
+        showToast("تم إرسال طلبك، ستدفع عند الاستلام!", "success");
+      }
+
       clearCart();
-      showToast("تم إرسال طلباتك بنجاح!", "success");
       router.push("/dashboard/retailer/orders");
     } catch (error: any) {
       showToast(error.message, "error");
@@ -129,10 +147,26 @@ export default function RetailerCartPage() {
                      <span className="text-primary">{formatCurrency(getTotal())}</span>
                   </div>
                </div>
+               
                <div className="mb-6">
                   <label className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin size={16} /> عنوان التوصيل</label>
                   <Input placeholder="بغداد - الكرادة - شارع 62" value={address} onChange={(e) => setAddress(e.target.value)} />
                </div>
+
+               <div className="mb-6">
+                  <label className="text-sm font-semibold mb-2">طريقة الدفع</label>
+                  <div className="space-y-2">
+                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
+                      <input type="radio" name="payment" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="accent-primary" />
+                      <Wallet size={18} /> الدفع عند الاستلام
+                    </label>
+                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
+                      <input type="radio" name="payment" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="accent-primary" />
+                      <CreditCard size={18} /> بطاقة إلكترونية (SindiPay)
+                    </label>
+                  </div>
+               </div>
+
                <Button onClick={handleCheckout} size="lg" disabled={loading} className="w-full justify-center gap-2 shadow-lg">
                  {loading ? "جارٍ إرسال الطلبات..." : "إتمام الطلبات الآن"}
                </Button>
