@@ -17,6 +17,7 @@ export default function RetailerCartPage() {
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // تجميع المنتجات حسب تاجر الجملة
   const groupedItems = getGroupedItems();
   const wholesalers = Object.keys(groupedItems);
 
@@ -28,6 +29,7 @@ export default function RetailerCartPage() {
     
     setLoading(true);
     try {
+      // إرسال الطلب إلى الـ API الذي سيقوم بتقسيمه تلقائياً
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -164,4 +166,4 @@ export default function RetailerCartPage() {
       </div>
     </div>
   );
-}
+} 
