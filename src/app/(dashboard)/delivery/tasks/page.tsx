@@ -1,35 +1,73 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export default function DeliveryTasksPage() {
-  const tasks = [
-    { id: 1, address: "بغداد - الكرادة", status: "pending" },
-    { id: 2, address: "أربيل - عنكاوا", status: "delivered" },
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  const fetchTasks = async () => {
+    try {
+      const res = await fetch("/api/delivery/tasks");
+      if (res.ok) setTasks(await res.json());
+    } catch (error) {
+      showToast("خطأ في جلب المهام", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchTasks(); }, []);
+
+  const updateStatus = async (id: string, status: string) => {
+    const res = await fetch("/api/delivery/tasks", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    if (res.ok) {
+      showToast("تم تحديث حالة الطلب", "success");
+      fetchTasks();
+    } else {
+      showToast("حدث خطأ", "error");
+    }
+  };
+
+  const columns = [
+    { key: "id", header: "رقم الطلب" },
+    { key: "address", header: "العنوان" },
+    { key: "total", header: "القيمة", render: (row: any) => formatCurrency(row.total) },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex gap-2">
+            {row.status === 'processing' && (
+                <Button size="sm" onClick={() => updateStatus(row.id, 'shipped')}>بدء التسليم</Button>
+            )}
+            {row.status === 'shipped' && (
+                <Button size="sm" variant="success" onClick={() => updateStatus(row.id, 'delivered')}>تم التوصيل</Button>
+            )}
+        </div>
+    )},
   ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <Topbar />
-      <h1 className="text-3xl font-bold mb-6">مهام التوصيل</h1>
-      <div className="space-y-4">
-        {tasks.map((task) => (
-          <div key={task.id} className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
-            <div>
-              <p className="font-semibold">طلب #{task.id}</p>
-              <p className="text-sm text-gray-500">{task.address}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Badge variant={task.status === "delivered" ? "default" : "secondary"}>
-                {task.status === "delivered" ? "تم التوصيل" : "قيد الانتظار"}
-              </Badge>
-              {task.status !== "delivered" && (
-                <Button size="sm" variant="outline">بدء التسليم</Button>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">مهام التوصيل</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          {tasks.length === 0 ? (
+            <p className="text-center text-gray-500 py-10">لا توجد مهام حاليًا.</p>
+          ) : (
+            <DataTable data={tasks} columns={columns} />
+          )}
+        </div>
       </div>
     </div>
   );
