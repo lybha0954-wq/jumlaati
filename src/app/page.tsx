@@ -1,55 +1,45 @@
-import { Button } from "@/components/ui/Button";
-import { RequestCard } from "@/components/shared/RequestCard";
-import { productService } from "@/lib/services/productService";
-import { Menu, X, Package } from "lucide-react";
-import { useState } from "react";
-
-// دالة الهيدر مدمجة هنا حتى لا يبحث Rocket عن ملف خارجي
-function PublicHeader() {
-  const [isOpen, setIsOpen] = useState(false);
-
+export default function Home() {
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#0f172a]/80 backdrop-blur-md border-b border-white/10 text-white">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <a href="/" className="flex items-center gap-2 text-2xl font-black tracking-tight">
-          <Package className="h-6 w-6 text-[#f59e0b]" />
-          جُمْلَتِي
-        </a>
-        <nav className="hidden md:flex items-center gap-8">
-          <a href="/about" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">عن المنصة</a>
-          <a href="/contact" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">اتصل بنا</a>
-          <a href="/register" className="rounded-lg bg-[#f59e0b] px-4 py-2 text-sm font-bold text-gray-900 hover:bg-[#d97706] transition-all">إنشاء حساب</a>
-        </nav>
-        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2">
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-      {isOpen && (
-        <div className="md:hidden bg-[#0f172a] border-t border-white/10 p-4 space-y-4">
-          <a href="/about" className="block text-gray-300 hover:text-white">عن المنصة</a>
-          <a href="/contact" className="block text-gray-300 hover:text-white">اتصل بنا</a>
-          <a href="/register" className="block rounded-lg bg-[#f59e0b] px-4 py-2 text-center font-bold text-gray-900">إنشاء حساب</a>
+    <main dir="rtl" className="min-h-screen bg-gray-50 text-slate-900">
+      
+      {/* القسم العلوي (Hero) */}
+      <section className="bg-[#0F172A] text-white py-24 text-center">
+        <h1 className="text-5xl font-black mb-6">جُمْلَتِي</h1>
+        <p className="text-lg text-gray-300 mb-10">منصة عراقية متكاملة للبيع بالجملة والتجزئة.</p>
+        <div className="flex justify-center gap-4">
+          <button className="bg-[#f59e0b] text-gray-900 px-8 py-3 rounded-lg font-bold hover:bg-[#d97706] transition-colors">
+            تصفح المتجر
+          </button>
+          <button className="border border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-white/10 transition-colors">
+            إنشاء حساب
+          </button>
         </div>
-      )}
-    </header>
-  );
-}
-
-export default async function Home() {
-  let products = [];
-  try {
-    products = await productService.getAllProducts();
-  } catch (error) {
-    console.error("Error fetching products:", error);
-  }
-
-  return (
-    <main dir="rtl" className="min-h-screen bg-[#F8FAFC] text-slate-900">
-      <PublicHeader />
-      {/* باقي أقسام الصفحة كما هي (Hero, Stats, Features, Footer) */}
-      <section className="relative overflow-hidden bg-[#0F172A] text-white py-28 text-center">
-         {/* ... ضع هنا بقية كود الصفحة التي أرسلتها سابقاً ... */}
       </section>
+
+      {/* قسم المزايا البسيطة */}
+      <section className="container mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h2 className="font-bold text-xl mb-2">تاجر جملة</h2>
+          <p className="text-gray-600">أضف منتجاتك وتواصل مع التجار مباشرة.</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h2 className="font-bold text-xl mb-2">تاجر تجزئة</h2>
+          <p className="text-gray-600">اطلب احتياجاتك بأفضل أسعار الجملة.</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h2 className="font-bold text-xl mb-2">مندوب توصيل</h2>
+          <p className="text-gray-600">وصّل الطلبات بأمان واحصل على أرباحك.</p>
+        </div>
+      </section>
+
+      {/* قسم المنتجات (قابل للتعديل لاحقاً) */}
+      <section className="container mx-auto pb-16 px-4">
+        <h2 className="text-2xl font-bold mb-6">أحدث المنتجات</h2>
+        <div className="bg-white p-10 text-center text-gray-500 border border-dashed border-gray-300 rounded-xl">
+          لا توجد منتجات بعد. قم بإضافة أول منتج من لوحة التحكم.
+        </div>
+      </section>
+
     </main>
   );
 }
