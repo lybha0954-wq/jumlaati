@@ -17,7 +17,6 @@ export default function RetailerCartPage() {
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // تجميع المنتجات حسب تاجر الجملة
   const groupedItems = getGroupedItems();
   const wholesalers = Object.keys(groupedItems);
 
@@ -29,7 +28,6 @@ export default function RetailerCartPage() {
     
     setLoading(true);
     try {
-      // إرسال الطلب إلى الـ API الذي سيقوم بتقسيمه تلقائياً
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,15 +38,11 @@ export default function RetailerCartPage() {
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "حدث خطأ ما");
-      }
+      if (!res.ok) throw new Error(data.error || "حدث خطأ");
 
       clearCart();
-      showToast("تم إرسال طلباتك إلى تجار الجملة بنجاح! 🎉", "success");
+      showToast("تم إرسال طلباتك بنجاح! 🎉", "success");
       router.push("/dashboard/retailer/orders");
-      
     } catch (error: any) {
       showToast(error.message, "error");
     } finally {
@@ -58,11 +52,14 @@ export default function RetailerCartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-         <div className="text-8xl mb-6">🛒</div>
-         <h2 className="text-2xl font-bold text-gray-800 mb-2">سلتك فارغة</h2>
-         <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات بعد.</p>
-         <Button onClick={() => router.push("/")}>تصفح المنتجات</Button>
+      <div className="min-h-screen bg-gray-50">
+        <Topbar />
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="text-8xl mb-6">🛒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">سلتك فارغة</h2>
+          <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات بعد.</p>
+          <Button onClick={() => router.push("/")}>تصفح المنتجات</Button>
+        </div>
       </div>
     );
   }
@@ -78,7 +75,6 @@ export default function RetailerCartPage() {
         <h1 className="text-3xl font-extrabold text-gray-900 mb-8">سلة المشتريات</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* قائمة المنتجات مقسمة حسب الجملة */}
           <div className="lg:col-span-2 space-y-8">
             {wholesalers.map((wholesalerId) => {
               const wholesalerItems = groupedItems[wholesalerId];
@@ -86,7 +82,6 @@ export default function RetailerCartPage() {
               
               return (
                 <div key={wholesalerId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  {/* رأس القسم الخاص بتاجر الجملة */}
                   <div className="bg-gray-50 px-6 py-4 border-b flex items-center gap-3">
                     <Store size={20} className="text-primary" />
                     <h3 className="font-bold text-lg">طلب إلى تاجر الجملة</h3>
@@ -96,7 +91,7 @@ export default function RetailerCartPage() {
                   <div className="p-4 space-y-4">
                     {wholesalerItems.map((item) => (
                       <div key={item.productId} className="flex gap-4 bg-white rounded-xl p-3 border border-gray-100">
-                        <div className="h-20 w-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl shrink-0">🛍️</div>
+                        <div className="h-20 w-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl shrink-0">📦</div>
                         <div className="flex-1 flex flex-col justify-between py-1">
                           <div className="flex justify-between items-start gap-4">
                             <div>
@@ -121,7 +116,6 @@ export default function RetailerCartPage() {
                     ))}
                   </div>
 
-                  {/* إجمالي الجملة */}
                   <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
                     <span className="font-bold">إجمالي الطلب من هذه الجملة</span>
                     <span className="text-xl font-extrabold text-primary">{formatCurrency(wholesalerTotal)}</span>
@@ -131,19 +125,13 @@ export default function RetailerCartPage() {
             })}
           </div>
 
-          {/* ملخص الطلب */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
                <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلبات</h2>
-               
                <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-gray-600">
                      <span>المجموع الفرعي</span>
                      <span>{formatCurrency(getTotal())}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                     <span>الشحن</span>
-                     <Badge variant="secondary">حسب كل جملة</Badge>
                   </div>
                   <div className="h-px bg-gray-200 my-4"></div>
                   <div className="flex justify-between text-xl font-extrabold text-gray-900">
@@ -166,4 +154,4 @@ export default function RetailerCartPage() {
       </div>
     </div>
   );
-} 
+}
