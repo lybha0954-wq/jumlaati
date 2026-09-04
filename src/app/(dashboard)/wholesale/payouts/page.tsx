@@ -1,27 +1,41 @@
 "use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
-import { Topbar } from "@/components/dashboard/Topbar";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export default function WholesalePayoutsPage() {
-  const payouts = [
-    { id: "PAY-1", date: "2023-10-20", amount: 50000, status: "paid" },
-    { id: "PAY-2", date: "2023-11-01", amount: 75000, status: "pending" },
-  ];
+  const [payouts, setPayouts] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchPayouts = async () => {
+      try {
+        const res = await fetch("/api/payouts");
+        if (res.ok) setPayouts(await res.json());
+      } catch (error) {
+        showToast("خطأ في جلب المدفوعات", "error");
+      }
+    };
+    fetchPayouts();
+  }, []);
 
   const columns = [
     { key: "id", header: "رقم الدفعة" },
-    { key: "date", header: "التاريخ" },
-    { key: "amount", header: "المبلغ" },
-    { key: "status", header: "الحالة", render: (r: any) => <Badge>{r.status === 'paid' ? 'مدفوع' : 'معلق'}</Badge> },
+    { key: "amount", header: "المبلغ", render: (row: any) => formatCurrency(row.amount) },
+    { key: "status", header: "الحالة", render: (row: any) => <Badge variant={row.status === 'processed' ? 'success' : 'secondary'}>{row.status === 'processed' ? 'مدفوع' : 'معلق'}</Badge> },
   ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <Topbar />
-      <h1 className="text-3xl font-bold mb-6">المدفوعات والمستحقات</h1>
-      <div className="bg-white p-6 rounded-lg shadow">
-        <DataTable data={payouts} columns={columns} />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">المدفوعات والمستحقات</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <DataTable data={payouts} columns={columns} />
+        </div>
       </div>
     </div>
   );
