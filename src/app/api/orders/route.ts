@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { retailerService } from '@/lib/services/retailerService';
 import { commissionService } from '@/lib/services/commissionService';
 import { notificationService } from '@/lib/services/notificationService';
+import { couponService } from '@/lib/services/couponService';
 import { createOrderSchema } from '@/lib/validations/order.schema';
 
 export async function POST(req: Request) {
@@ -14,6 +15,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = createOrderSchema.parse(body);
 
+    // تطبيق كود الخصم إن وجد
+    let discountPercent = 0;
+    let appliedCouponId = null;
+    if (parsed.coupon_code) {
+      const coupon = await couponService.validateCoupon(parsed.coupon_code);
+      discountPercent = coupon.discount_percent;
+      appliedCouponId = coupon.id;
+      await couponService.incrementUsage(coupon.id);
+    }
+
     // تجميع العناصر حسب تاجر الجملة
     const groupedItems: { [wholesalerId: string]: typeof parsed.items } = {};
     for (const item of parsed.items) {
@@ -24,9 +35,10 @@ export async function POST(req: Request) {
     const retailerId = user.id;
     const createdOrders = [];
 
-    // إنشاء طلب منفصل لكل جملة
     for (const [wholesalerId, items] of Object.entries(groupedItems)) {
-      const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      // تطبيق الخصم على إجمالي كل جملة
+      const total = subtotal - (subtotal * discountPercent) / 100;
 
       const order = await retailerService.createOrder({
         user_id: retailerId,
@@ -36,10 +48,7 @@ export async function POST(req: Request) {
         address: parsed.address,
       });
 
-      // إنشاء العمولة
       await commissionService.createCommission(order.id, retailerId, total);
-
-      // إرسال إشعار لتاجر الجملة
       await notificationService.notify({
         userId: wholesalerId,
         type: "order",
