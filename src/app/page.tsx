@@ -2,6 +2,7 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/Button";
 import { RequestCard } from "@/components/shared/RequestCard";
 import { productService } from "@/lib/services/productService";
+import { Package, Store, Truck, Users } from "lucide-react";
 
 export default async function Home() {
   let products: any[] = [];
@@ -15,6 +16,7 @@ export default async function Home() {
     <main dir="rtl" className="min-h-screen bg-gray-50 text-slate-900">
       <Topbar />
 
+      {/* Hero Section */}
       <section className="bg-[#0F172A] text-white py-24 text-center px-4">
         <h1 className="text-5xl font-black mb-6">جُمْلَتِي</h1>
         <p className="text-lg text-gray-300 mb-10">منصة عراقية متكاملة للبيع بالجملة والتجزئة والتوصيل.</p>
@@ -24,6 +26,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Featured Products */}
       <section className="container mx-auto py-16 px-4">
         <h2 className="text-3xl font-bold mb-8">أحدث المنتجات</h2>
         {products.length === 0 ? (
@@ -38,6 +41,11 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      {/* Footer Minimal */}
+      <footer className="bg-[#0F172A] text-gray-400 py-10 text-center text-sm">
+        <p>© 2026 جُمْلَتِي. جميع الحقوق محفوظة.</p>
+      </footer>
     </main>
   );
 }
