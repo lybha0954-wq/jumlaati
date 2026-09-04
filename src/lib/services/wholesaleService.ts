@@ -9,7 +9,7 @@ export const wholesaleService = {
 
     const { data, error } = await supabase
       .from("products")
-      .insert({ ...input, owner_id: user.id })
+      .insert({ ...input, owner_id: user.id, is_active: true })
       .select()
       .single();
 
@@ -32,20 +32,39 @@ export const wholesaleService = {
     return data as Product[];
   },
 
-  async updateStock(productId: string, stock: number) {
+  async updateProduct(productId: string, updates: any): Promise<Product> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .update(updates)
+      .eq("id", productId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as Product;
+  },
+
+  async deleteProduct(productId: string): Promise<void> {
     const supabase = await createClient();
     const { error } = await supabase
       .from("products")
-      .update({ stock })
+      .delete()
       .eq("id", productId);
     if (error) throw new Error(error.message);
   },
 
-  async getMyOrders() {
+  async getMyOrders(): Promise<any[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
-    const { data, error } = await supabase.from("orders").select("*").eq("wholesaler_id", user.id);
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("wholesaler_id", user.id)
+      .order("created_at", { ascending: false });
+
     if (error) throw new Error(error.message);
     return data;
   }
