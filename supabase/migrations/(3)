@@ -1,0 +1,48 @@
+-- تفعيل الأمان لجميع الجداول
+alter table public.users enable row level security;
+alter table public.products enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
+alter table public.commissions enable row level security;
+alter table public.payouts enable row level security;
+alter table public.matches enable row level security;
+alter table public.notifications enable row level security;
+alter table public.points_transactions enable row level security;
+alter table public.offers enable row level security;
+alter table public.addresses enable row level security;
+alter table public.reviews enable row level security;
+alter table public.wishlist enable row level security;
+alter table public.chat_messages enable row level security;
+alter table public.wallets enable row level security;
+alter table public.refunds enable row level security;
+alter table public.audit_logs enable row level security;
+
+-- منح الصلاحيات الأساسية للأدوار (يمنع خطأ 42501)
+grant usage on schema public to anon, authenticated;
+grant all on all tables in schema public to anon, authenticated;
+grant all on all sequences in schema public to anon, authenticated;
+
+-- سياسات الأدمن (التحكم الكامل)
+create policy "Admins can do everything" on public.users for all using (auth.uid() in (select id from public.users where role = 'admin'));
+
+-- سياسات المستخدمين (القراءة الذاتية)
+create policy "Users can view own data" on public.users for select using (auth.uid() = id);
+create policy "Users can update own data" on public.users for update using (auth.uid() = id);
+
+-- سياسات المنتجات (الجملة يدير منتجاته)
+create policy "Owners manage own products" on public.products for all using (auth.uid() = owner_id);
+create policy "Public can view active products" on public.products for select using (is_active = true);
+
+-- سياسات الطلبات
+create policy "Users can view related orders" on public.orders for select using (auth.uid() = user_id or auth.uid() = wholesaler_id);
+create policy "Users can create orders" on public.orders for insert with check (auth.uid() = user_id);
+
+-- سياسات بقية الجداول (العناوين، النقاط، التقييمات، إلخ)
+create policy "Users manage own addresses" on public.addresses for all using (auth.uid() = user_id);
+create policy "Users manage own points" on public.points_transactions for select using (auth.uid() = user_id);
+create policy "Users manage own wishlist" on public.wishlist for all using (auth.uid() = user_id);
+create policy "Users manage own chat" on public.chat_messages for all using (auth.uid() = sender_id or auth.uid() = receiver_id);
+create policy "Users view own wallet" on public.wallets for select using (auth.uid() = user_id);
+
+-- سياسات العروض العامة
+create policy "Public can view offers" on public.offers for select using (is_active = true);
