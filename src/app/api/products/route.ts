@@ -4,9 +4,10 @@ import { wholesaleService } from '@/lib/services/wholesaleService';
 
 export async function GET() {
   try {
-    const supabase = await createClient(); // تعديل
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
     const products = await wholesaleService.getMyProducts();
     return NextResponse.json(products);
   } catch (error) {
