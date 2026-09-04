@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/hooks/useToast";
+import { useUserStore } from "@/lib/stores/userStore";
 
 export function ProductForm({ initialData }: { initialData?: any }) {
   const [loading, setLoading] = useState(false);
@@ -19,13 +20,14 @@ export function ProductForm({ initialData }: { initialData?: any }) {
     const data = Object.fromEntries(formData.entries());
 
     const res = await fetch("/api/products", {
-      method: initialData ? "PUT" : "POST",
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
     if (res.ok) {
-      showToast(initialData ? "تم تحديث المنتج" : "تم إنشاء المنتج", "success");
-      router.refresh();
+      showToast("تم إنشاء المنتج بنجاح", "success");
+      router.refresh(); // لتحديث الجدول بدون إعادة تحميل الصفحة
     } else {
       showToast("حدث خطأ ما", "error");
     }
