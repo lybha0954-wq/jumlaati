@@ -6,7 +6,7 @@ import { productService } from "@/lib/services/productService";
 export default async function Home() {
   let products: any[] = [];
   try {
-    products = await productService.getAllProducts(); // بيانات حقيقية
+    products = await productService.getAllProducts();
   } catch (error) {
     console.error("Error fetching products:", error);
   }
@@ -15,7 +15,7 @@ export default async function Home() {
     <main dir="rtl" className="min-h-screen bg-gray-50 text-slate-900">
       <Topbar />
 
-      {/* Hero - بسيط وجميل مثل الكود الأخير */}
+      {/* Hero - بسيط وجميل */}
       <section className="bg-[#0F172A] text-white py-24 text-center">
         <h1 className="text-5xl font-black mb-6">جُمْلَتِي</h1>
         <p className="text-lg text-gray-300 mb-10">منصة عراقية متكاملة للبيع بالجملة والتجزئة.</p>
