@@ -4,7 +4,6 @@ import type { Product } from "@/types/product";
 import type { Order } from "@/types/order";
 
 export const retailerService = {
-  // جلب المنتجات المتاحة للشراء (لا يملك صلاحية إنشائها)
   async getAvailableProducts(): Promise<Product[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -20,7 +19,6 @@ export const retailerService = {
     return data as Product[];
   },
 
-  // إنشاء طلب شراء جديد (خاص بالتاجر)
   async createOrder(orderData: any): Promise<Order> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -36,7 +34,6 @@ export const retailerService = {
     return data as Order;
   },
 
-  // جلب طلباته الخاصة فقط
   async getMyOrders(): Promise<Order[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
