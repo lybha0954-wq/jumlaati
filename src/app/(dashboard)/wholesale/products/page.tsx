@@ -10,8 +10,6 @@ import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Pencil, Trash2, Plus } from "lucide-react";
 
-/* eslint-disable react/no-unescaped-entities */
-
 export default function WholesaleProductsPage() {
   const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
