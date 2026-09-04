@@ -50,7 +50,7 @@ export default function DeliveryTasksPage() {
                 <Button size="sm" onClick={() => updateStatus(row.id, 'shipped')}>بدء التسليم</Button>
             )}
             {row.status === 'shipped' && (
-                <Button size="sm" variant="success" onClick={() => updateStatus(row.id, 'delivered')}>تم التوصيل</Button>
+                <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, 'delivered')}>تم التوصيل</Button>
             )}
         </div>
     )},
@@ -61,9 +61,12 @@ export default function DeliveryTasksPage() {
       <Topbar />
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-6">مهام التوصيل</h1>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           {tasks.length === 0 ? (
-            <p className="text-center text-gray-500 py-10">لا توجد مهام حاليًا.</p>
+            <div className="py-10 text-center text-gray-500">
+              <p className="text-xl font-bold">لا توجد مهام حاليًا.</p>
+              <p className="text-gray-400 mt-2">ستظهر الطلبات هنا عندما يقوم تجار الجملة بإسناد مهام التوصيل إليك.</p>
+            </div>
           ) : (
             <DataTable data={tasks} columns={columns} />
           )}
