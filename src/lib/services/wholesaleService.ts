@@ -1,9 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/utils/logger";
 import type { Product, ProductInput } from "@/types/product";
 
 export const wholesaleService = {
-  // إضافة منتج جديد
   async createProduct(input: ProductInput): Promise<Product> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -11,18 +9,14 @@ export const wholesaleService = {
 
     const { data, error } = await supabase
       .from("products")
-      .insert({ ...input, owner_id: user.id, is_active: true })
+      .insert({ ...input, owner_id: user.id })
       .select()
       .single();
 
-    if (error) {
-      logger.error("Wholesale: Error creating product", error);
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
     return data as Product;
   },
 
-  // جلب منتجاتي فقط (المخزون الخاص بي)
   async getMyProducts(): Promise<Product[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -38,28 +32,21 @@ export const wholesaleService = {
     return data as Product[];
   },
 
-  // تعديل المخزون أو المنتج
-  async updateProduct(productId: string, updates: Partial<ProductInput>): Promise<Product> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .update(updates)
-      .eq("id", productId)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return data as Product;
-  },
-
-  // حذف منتج
-  async deleteProduct(productId: string): Promise<void> {
+  async updateStock(productId: string, stock: number) {
     const supabase = await createClient();
     const { error } = await supabase
       .from("products")
-      .delete()
+      .update({ stock })
       .eq("id", productId);
-
     if (error) throw new Error(error.message);
+  },
+
+  async getMyOrders() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    const { data, error } = await supabase.from("orders").select("*").eq("wholesaler_id", user.id);
+    if (error) throw new Error(error.message);
+    return data;
   }
 };

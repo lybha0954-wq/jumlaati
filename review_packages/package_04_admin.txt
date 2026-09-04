@@ -1,0 +1,869 @@
+=====FILE: src/app/(dashboard)/admin/analytics/page.tsx=====
+import { Topbar } from "@/components/dashboard/Topbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { BarChart } from "@/components/charts/BarChart";
+import { Users, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+
+export default function AdminAnalyticsPage() {
+  // بيانات تجريبية مؤقتة لملء الواجهة (سيتم ربطها بالـ API لاحقاً)
+  const data = [
+    { name: "يناير", value: 1000 },
+    { name: "فبراير", value: 1500 },
+    { name: "مارس", value: 1200 },
+    { name: "أبريل", value: 1800 },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">تحليلات المنصة</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">إجمالي المبيعات</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">150,000 د.ع</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">عدد الطلبات</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,240</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">العملاء النشطون</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">85</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">نمو الأرباح</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">+12%</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">المبيعات الشهرية</h2>
+          <BarChart data={data} />
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/commissions/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
+
+export default function AdminCommissionsPage() {
+  const [commissions, setCommissions] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    setCommissions([
+      { id: "C1", order: "ORD-101", amount: 5000, status: "pending" },
+      { id: "C2", order: "ORD-102", amount: 7500, status: "paid" },
+    ]);
+  }, []);
+
+  const columns = [
+    { key: "id", header: "رقم العمولة" },
+    { key: "order", header: "رقم الطلب" },
+    { key: "amount", header: "المبلغ", render: (row: any) => formatCurrency(row.amount) },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">إدارة العمولات</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <DataTable data={commissions} columns={columns} />
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/disputes/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/hooks/useToast";
+
+export default function AdminDisputesPage() {
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  // مؤقت حتى يتم ربطها بقاعدة البيانات
+  useEffect(() => {
+    setDisputes([
+      { id: "D1", user: "أحمد", order: "ORD-1", status: "pending" },
+      { id: "D2", user: "سارة", order: "ORD-2", status: "approved" },
+    ]);
+  }, []);
+
+  const handleAction = (id: string, status: string) => {
+    setDisputes(disputes.map(d => d.id === id ? { ...d, status } : d));
+    showToast(`تم تحديث حالة النزاع إلى ${status}`, "success");
+  };
+
+  const columns = [
+    { key: "id", header: "رقم النزاع" },
+    { key: "user", header: "المستخدم" },
+    { key: "order", header: "الطلب" },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAction(row.id, "approved")}>قبول</Button>
+          <Button size="sm" variant="destructive" onClick={() => handleAction(row.id, "rejected")}>رفض</Button>
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">إدارة النزاعات</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <DataTable data={disputes} columns={columns} />
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/matching/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/hooks/useToast";
+
+export default function AdminMatchingPage() {
+  const [matches, setMatches] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    setMatches([
+      { id: "M1", retailer: "متجر الأمل", wholesaler: "شركة النور", status: "pending" },
+      { id: "M2", retailer: "متجر السلام", wholesaler: "مؤسسة الخير", status: "approved" },
+    ]);
+  }, []);
+
+  const handleAction = (id: string, status: string) => {
+    setMatches(matches.map(m => m.id === id ? { ...m, status } : m));
+    showToast(`تم تحديث حالة المطابقة إلى ${status}`, "success");
+  };
+
+  const columns = [
+    { key: "id", header: "رقم المطابقة" },
+    { key: "retailer", header: "تاجر التجزئة" },
+    { key: "wholesaler", header: "تاجر الجملة" },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAction(row.id, "approved")}>قبول</Button>
+          <Button size="sm" variant="destructive" onClick={() => handleAction(row.id, "rejected")}>رفض</Button>
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">مطابقة الطلبات</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <DataTable data={matches} columns={columns} />
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/overview/page.tsx=====
+import { Topbar } from "@/components/dashboard/Topbar";
+import { StatsCard } from "@/components/shared/StatsCard";
+import { BarChart } from "@/components/charts/BarChart";
+import { createClient } from "@/lib/supabase/server";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Users, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+
+export default async function AdminOverviewPage() {
+  const supabase = await createClient();
+
+  // جلب الإحصائيات الحقيقية من قاعدة البيانات
+  const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
+  const { count: totalOrders } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+  const { data: allOrders } = await supabase.from('orders').select('total');
+  
+  const totalRevenue = allOrders?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+
+  // بيانات تجريبية للرسم البياني (سيتم ربطها لاحقاً بشكل ديناميكي)
+  const chartData = [
+    { name: "يناير", value: totalRevenue * 0.2 },
+    { name: "فبراير", value: totalRevenue * 0.3 },
+    { name: "مارس", value: totalRevenue * 0.5 },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">نظرة عامة للمنصة</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <StatsCard title="إجمالي المستخدمين" value={totalUsers?.toString() || "0"} icon={<Users size={24} />} />
+          <StatsCard title="إجمالي الطلبات" value={totalOrders?.toString() || "0"} icon={<ShoppingCart size={24} />} />
+          <StatsCard title="إجمالي الإيرادات" value={formatCurrency(totalRevenue)} icon={<DollarSign size={24} />} />
+          <StatsCard title="نمو الأرباح" value="+12%" icon={<TrendingUp size={24} />} trend="+12%" trendUp={true} />
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-xl font-semibold mb-4">الإيرادات الشهرية</h2>
+          <BarChart data={chartData} />
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/requests/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/hooks/useToast";
+
+export default function AdminRequestsPage() {
+  const [requests, setRequests] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    setRequests([
+      { id: "REQ-1", user: "تاجر جديد", type: "تسجيل", status: "pending" },
+      { id: "REQ-2", user: "متجر 1", type: "تعديل بيانات", status: "approved" },
+    ]);
+  }, []);
+
+  const handleAction = (id: string, status: string) => {
+    setRequests(requests.map(r => r.id === id ? { ...r, status } : r));
+    showToast(`تم تحديث حالة الطلب إلى ${status}`, "success");
+  };
+
+  const columns = [
+    { key: "id", header: "رقم الطلب" },
+    { key: "user", header: "المستخدم" },
+    { key: "type", header: "نوع الطلب" },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAction(row.id, "approved")}>قبول</Button>
+          <Button size="sm" variant="destructive" onClick={() => handleAction(row.id, "rejected")}>رفض</Button>
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">طلبات المساعدة</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <DataTable data={requests} columns={columns} />
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/settings/page.tsx=====
+"use client";
+import { useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { useToast } from "@/hooks/useToast";
+
+export default function AdminSettingsPage() {
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    showToast("تم حفظ إعدادات المنصة بنجاح", "success");
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <div className="bg-white p-6 rounded-lg shadow max-w-lg">
+          <h1 className="text-2xl font-bold mb-6">إعدادات المنصة</h1>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">نسبة العمولة العامة</label>
+              <Input type="number" defaultValue="5" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">طرق الدفع المتاحة</label>
+              <Select defaultValue="card">
+                <option value="card">بطاقة ائتمان</option>
+                <option value="cod">الدفع عند الاستلام</option>
+              </Select>
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/users/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { useToast } from "@/hooks/useToast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { UserCog, UserCheck, UserX, Users } from "lucide-react";
+
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/admin/users", { method: "GET" });
+      if (res.ok) setUsers(await res.json());
+      else showToast("خطأ في جلب المستخدمين", "error");
+    } catch (error) {
+      showToast("تعذر الاتصال بالخادم", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleUpdate = async (id: string, data: any) => {
+    const res = await fetch(`/api/admin/users/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      showToast("تم تحديث بيانات المستخدم بنجاح", "success");
+      fetchUsers();
+    } else {
+      const errorData = await res.json();
+      showToast(errorData.error || "حدث خطأ", "error");
+    }
+  };
+
+  // حساب الإحصائيات
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.status !== 'suspended').length;
+  const retailers = users.filter(u => u.role === 'retailer').length;
+  const wholesalers = users.filter(u => u.role === 'wholesaler').length;
+  const deliveries = users.filter(u => u.role === 'delivery').length;
+
+  const columns = [
+    { key: "name", header: "الاسم" },
+    { key: "email", header: "البريد الإلكتروني" },
+    { key: "created_at", header: "تاريخ التسجيل", render: (row: any) => new Date(row.created_at).toLocaleDateString('ar-IQ') },
+    { key: "role", header: "الدور", render: (row: any) => <Badge variant="secondary">{row.role}</Badge> },
+    { key: "status", header: "الحالة", render: (row: any) => (
+        row.status === 'suspended' ? <Badge variant="destructive">محظور</Badge> : <Badge variant="success">نشط</Badge>
+    )},
+    { key: "actions", header: "إجراءات التحكم", render: (row: any) => (
+        <div className="flex items-center gap-2">
+            <Select
+                defaultValue={row.role}
+                className="h-8 w-32 text-xs"
+                onChange={(e) => handleUpdate(row.id, { role: e.target.value })}
+            >
+                <option value="retailer">تاجر تجزئة</option>
+                <option value="wholesaler">تاجر جملة</option>
+                <option value="delivery">مندوب توصيل</option>
+                <option value="admin">أدمن</option>
+            </Select>
+            {row.status !== 'suspended' ? (
+                <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleUpdate(row.id, { status: 'suspended' })}>
+                    <UserX size={14} /> حظر
+                </Button>
+            ) : (
+                <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50" onClick={() => handleUpdate(row.id, { status: 'active' })}>
+                    <UserCheck size={14} /> تفعيل
+                </Button>
+            )}
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">إدارة المستخدمين والصلاحيات</h1>
+            <Button variant="outline" size="sm"><UserCog size={18} className="ml-2" /> إدارة الصلاحيات</Button>
+        </div>
+
+        {/* بطاقات الإحصائيات */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">إجمالي المستخدمين</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{totalUsers}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">الحسابات النشطة</CardTitle>
+                    <UserCheck className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{activeUsers}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">تجار الجملة</CardTitle>
+                    <Users className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">{wholesalers}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">تجزئة وتوصيل</CardTitle>
+                    <Users className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">{retailers + deliveries}</div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* جدول المستخدمين */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {loading ? (
+            <p className="text-center text-gray-500 py-10">جارٍ تحميل البيانات...</p>
+          ) : users.length === 0 ? (
+            <div className="py-10 text-center">
+              <h3 className="text-xl font-bold text-gray-500">لا يوجد مستخدمون بعد</h3>
+              <p className="text-gray-400 mt-2">سيظهر هنا جميع التجار والمندوبين المسجلين.</p>
+            </div>
+          ) : (
+            <DataTable data={users} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/components/AdminStats.tsx=====
+'use client';
+
+import React from 'react';
+
+interface AdminStatsProps {
+  title?: string;
+  value?: string | number;
+  icon?: string;
+  [key: string]: unknown;
+}
+
+const AdminStats = ({ title, value, icon }: AdminStatsProps) => {
+  return (
+    <div className="bg-white rounded-lg p-4 shadow flex items-center gap-4">
+      {icon && <span className="text-3xl">{icon}</span>}
+      <div>
+        {title && <p className="text-sm text-gray-500">{title}</p>}
+        {value !== undefined && <p className="text-xl font-bold">{value}</p>}
+      </div>
+    </div>
+  );
+};
+
+export { AdminStats };
+=====FILE: src/app/(dashboard)/admin/components/UsersTable.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/useToast";
+import { DataTable } from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+
+export function UsersTable() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/admin/users");
+        if (res.ok) setUsers(await res.json());
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleUpdate = async (id: string, data: any) => {
+    const res = await fetch(`/api/admin/users/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      showToast("تم تحديث بيانات المستخدم بنجاح", "success");
+      setUsers(users.map(u => u.id === id ? { ...u, ...data } : u));
+    } else {
+      showToast("حدث خطأ في التحديث", "error");
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+
+  const columns = [
+    { key: "name", header: "الاسم" },
+    { key: "email", header: "البريد الإلكتروني" },
+    { key: "role", header: "الدور", render: (row: any) => <Badge>{row.role}</Badge> },
+    { key: "status", header: "الحالة", render: (row: any) => (
+        <Badge variant={row.status === 'active' ? 'success' : 'secondary'}>{row.status || 'active'}</Badge>
+    )},
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex items-center gap-2">
+          <Select
+            defaultValue={row.role}
+            className="h-8 w-32 text-xs"
+            onChange={(e) => handleUpdate(row.id, { role: e.target.value })}
+          >
+            <option value="retailer">تاجر تجزئة</option>
+            <option value="wholesaler">تاجر جملة</option>
+            <option value="delivery">مندوب توصيل</option>
+            <option value="admin">أدمن</option>
+          </Select>
+          {row.status !== 'active' ? (
+            <Button size="sm" onClick={() => handleUpdate(row.id, { status: 'active' })}>قبول</Button>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => handleUpdate(row.id, { status: 'suspended' })}>حظر</Button>
+          )}
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow">
+      <DataTable data={users} columns={columns} />
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/refunds/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Check, X } from "lucide-react";
+
+export default function AdminRefundsPage() {
+  const [refunds, setRefunds] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  const fetchRefunds = async () => {
+    const res = await fetch("/api/refunds");
+    if (res.ok) setRefunds(await res.json());
+  };
+
+  useEffect(() => { fetchRefunds(); }, []);
+
+  const handleStatus = async (id: string, status: string) => {
+    const res = await fetch(`/api/refunds/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب`, "success");
+      fetchRefunds();
+    } else {
+      showToast("حدث خطأ", "error");
+    }
+  };
+
+  const columns = [
+    { key: "id", header: "رقم الطلب" },
+    { key: "reason", header: "السبب" },
+    { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleDateString('ar-IQ') },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex gap-2">
+          {row.status === 'pending' && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => handleStatus(row.id, 'approved')}><Check size={14} /> قبول</Button>
+              <Button size="sm" variant="destructive" onClick={() => handleStatus(row.id, 'rejected')}><X size={14} /> رفض</Button>
+            </>
+          )}
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">إدارة طلبات الاسترجاع</h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {refunds.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد طلبات استرجاع حالياً.</div>
+          ) : (
+            <DataTable data={refunds} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/audit-logs/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/hooks/useToast";
+import { ShieldAlert } from "lucide-react";
+
+export default function AdminAuditLogsPage() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch("/api/admin/audit-logs");
+        if (res.ok) setLogs(await res.json());
+      } catch (error) {
+        showToast("خطأ في جلب السجلات", "error");
+      }
+    };
+    fetchLogs();
+  }, []);
+
+  const columns = [
+    { key: "id", header: "المعرف" },
+    { key: "action", header: "الإجراء" },
+    { key: "users", header: "المستخدم", render: (row: any) => row.users?.name || row.user_id },
+    { key: "details", header: "التفاصيل", render: (row: any) => JSON.stringify(row.details) },
+    { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleString('ar-IQ') },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
+          <ShieldAlert className="text-red-500" size={28} /> سجل الأمان
+        </h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {logs.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد سجلات أمان حالياً.</div>
+          ) : (
+            <DataTable data={logs} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/payments/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
+import { CreditCard } from "lucide-react";
+
+export default function AdminPaymentsPage() {
+  const [payments, setPayments] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const res = await fetch("/api/admin/payments");
+        if (res.ok) setPayments(await res.json());
+      } catch (error) {
+        showToast("خطأ في جلب المدفوعات", "error");
+      }
+    };
+    fetchPayments();
+  }, []);
+
+  const columns = [
+    { key: "id", header: "معرف الدفع" },
+    { key: "order_id", header: "رقم الطلب" },
+    { key: "amount", header: "المبلغ", render: (row: any) => formatCurrency(row.amount) },
+    { key: "gateway", header: "البوابة", render: (row: any) => row.gateway },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleString('ar-IQ') },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
+          <CreditCard className="text-primary" size={28} /> سجل المدفوعات
+        </h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {payments.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد مدفوعات حالياً.</div>
+          ) : (
+            <DataTable data={payments} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/admin/coupons/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/hooks/useToast";
+import { Ticket, Plus } from "lucide-react";
+
+export default function AdminCouponsPage() {
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  const fetchCoupons = async () => {
+    const res = await fetch("/api/coupons");
+    if (res.ok) setCoupons(await res.json());
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchCoupons(); }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const res = await fetch("/api/coupons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: formData.get("code"),
+        discount_percent: Number(formData.get("discount_percent")),
+        max_uses: Number(formData.get("max_uses")),
+      }),
+    });
+    if (res.ok) {
+      showToast("تم إنشاء الكود بنجاح", "success");
+      setShowModal(false);
+      fetchCoupons();
+    } else {
+      showToast("حدث خطأ", "error");
+    }
+  };
+
+  const columns = [
+    { key: "code", header: "الكود" },
+    { key: "discount_percent", header: "الخصم", render: (row: any) => `${row.discount_percent}%` },
+    { key: "max_uses", header: "الحد الأقصى" },
+    { key: "used_count", header: "المستخدم" },
+    { key: "is_active", header: "الحالة", render: (row: any) => row.is_active ? <Badge variant="success">نشط</Badge> : <Badge variant="destructive">معطل</Badge> },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Ticket className="text-primary" size={28} /> أكواد الخصم
+          </h1>
+          <Button onClick={() => setShowModal(true)}><Plus size={18} className="ml-2" /> إنشاء كود</Button>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {coupons.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد أكواد خصم حالياً.</div>
+          ) : (
+            <DataTable data={coupons} columns={columns} />
+          )}
+        </div>
+      </div>
+
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="إنشاء كود خصم جديد">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <Input name="code" placeholder="الكود (مثال: SAVE10)" required />
+          <Input name="discount_percent" type="number" placeholder="نسبة الخصم (%)" required />
+          <Input name="max_uses" type="number" placeholder="الحد الأقصى للاستخدام" required />
+          <Button type="submit" className="w-full">إنشاء الكود</Button>
+        </form>
+      </Modal>
+    </div>
+  );
+}

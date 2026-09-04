@@ -1,0 +1,719 @@
+=====FILE: src/app/(dashboard)/retailer/cart/page.tsx=====
+"use client";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { useToast } from "@/hooks/useToast";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Trash2, Plus, Minus, ArrowLeft, MapPin, Store, Tag } from "lucide-react";
+import { useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+
+export default function RetailerCartPage() {
+  const { items, updateQuantity, removeItem, getTotal, getGroupedItems, clearCart } = useCartStore();
+  const { showToast } = useToast();
+  const router = useRouter();
+  const [address, setAddress] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const groupedItems = getGroupedItems();
+  const wholesalers = Object.keys(groupedItems);
+  const total = getTotal();
+  const finalTotal = total - (total * appliedDiscount) / 100;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    const res = await fetch("/api/coupons/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: couponCode }),
+    });
+    const data = await res.json();
+    if (data.valid) {
+      setAppliedDiscount(data.discount_percent);
+      showToast(`تم تطبيق خصم ${data.discount_percent}%`, "success");
+    } else {
+      showToast(data.error || "كود غير صالح", "error");
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!address.trim()) {
+      showToast("يرجى إدخال عنوان التوصيل", "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      const orderRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })),
+          address: address,
+          coupon_code: couponCode,
+        }),
+      });
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) throw new Error(orderData.error || "خطأ");
+      clearCart();
+      router.push("/dashboard/retailer/orders");
+    } catch (error: any) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Topbar />
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="text-8xl mb-6">🛒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">سلتك فارغة</h2>
+          <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات بعد.</p>
+          <Button onClick={() => router.push("/")}>تصفح المنتجات</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen p-6">
+      <Topbar />
+      <div className="max-w-6xl mx-auto">
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-primary transition-colors">
+          <ArrowLeft size={16} /> متابعة التسوق
+        </button>
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-8">سلة المشتريات</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {wholesalers.map((wholesalerId) => {
+              const wholesalerItems = groupedItems[wholesalerId];
+              const wholesalerTotal = wholesalerItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+              return (
+                <div key={wholesalerId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="bg-gray-50 px-6 py-4 border-b flex items-center gap-3">
+                    <Store size={20} className="text-primary" />
+                    <h3 className="font-bold text-lg">طلب إلى تاجر الجملة</h3>
+                    <Badge variant="secondary">{wholesalerItems.length} منتج</Badge>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    {wholesalerItems.map((item) => (
+                      <div key={item.productId} className="flex gap-4 bg-white rounded-xl p-3 border border-gray-100">
+                        <div className="h-20 w-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl shrink-0">📦</div>
+                        <div className="flex-1 flex flex-col justify-between py-1">
+                          <div className="flex justify-between items-start gap-4">
+                            <div>
+                              <h4 className="font-bold text-gray-800">{item.name}</h4>
+                              <p className="text-sm text-gray-500">{formatCurrency(item.price)}</p>
+                            </div>
+                            <button onClick={() => removeItem(item.productId)} className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <div className="flex items-center border border-gray-200 rounded-full bg-gray-50">
+                              <button onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))} className="p-2 hover:bg-gray-200 rounded-r-full transition-colors"><Minus size={12} /></button>
+                              <span className="w-10 text-center font-bold text-sm">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="p-2 hover:bg-gray-200 rounded-l-full transition-colors"><Plus size={12} /></button>
+                            </div>
+                            <p className="text-lg font-extrabold text-primary">{formatCurrency(item.price * item.quantity)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
+                    <span className="font-bold">إجمالي الطلب من هذه الجملة</span>
+                    <span className="text-xl font-extrabold text-primary">{formatCurrency(wholesalerTotal)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
+               <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلبات</h2>
+               
+               <div className="mb-4 flex gap-2">
+                 <Input placeholder="كود الخصم" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
+                 <Button variant="outline" onClick={handleApplyCoupon}><Tag size={16} /></Button>
+               </div>
+
+               {appliedDiscount > 0 && (
+                 <div className="mb-4 bg-green-50 p-2 rounded text-green-700 text-center font-bold">
+                   خصم {appliedDiscount}% مفعل
+                 </div>
+               )}
+
+               <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-gray-600">
+                     <span>المجموع الفرعي</span>
+                     <span>{formatCurrency(total)}</span>
+                  </div>
+                  {appliedDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>الخصم ({appliedDiscount}%)</span>
+                      <span>- {formatCurrency((total * appliedDiscount) / 100)}</span>
+                    </div>
+                  )}
+                  <div className="h-px bg-gray-200 my-4"></div>
+                  <div className="flex justify-between text-xl font-extrabold text-gray-900">
+                     <span>الإجمالي النهائي</span>
+                     <span className="text-primary">{formatCurrency(finalTotal)}</span>
+                  </div>
+               </div>
+               
+               <div className="mb-6">
+                  <label className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin size={16} /> عنوان التوصيل</label>
+                  <Input placeholder="بغداد - الكرادة - شارع 62" value={address} onChange={(e) => setAddress(e.target.value)} />
+               </div>
+
+               <Button onClick={handleCheckout} size="lg" disabled={loading} className="w-full justify-center gap-2 shadow-lg">
+                 {loading ? "جارٍ إرسال الطلبات..." : "إتمام الطلبات الآن"}
+               </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/commissions/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
+
+export default function RetailerCommissionsPage() {
+  const [commissions, setCommissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchCommissions = async () => {
+      try {
+        // ملاحظة: يجب أن يكون الـ API الخاص بالعمولات يدعم جلب عمولات المستخدم الحالي
+        const res = await fetch("/api/commissions", { method: "GET" });
+        if (res.ok) setCommissions(await res.json());
+      } catch (error) {
+        showToast("خطأ في جلب العمولات", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCommissions();
+  }, []);
+
+  const columns = [
+    { key: "order_id", header: "رقم الطلب" },
+    { key: "amount", header: "المبلغ", render: (row: any) => formatCurrency(row.amount) },
+    { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleDateString('ar-IQ') },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+  ];
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">العمولات المستحقة</h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {commissions.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد عمولات حالياً.</div>
+          ) : (
+            <DataTable data={commissions} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/favorites/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { RequestCard } from "@/components/shared/RequestCard";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
+import { Heart } from "lucide-react";
+
+export default function RetailerFavoritesPage() {
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const res = await fetch("/api/wishlist", { method: "GET" });
+        if (res.ok) {
+          const data = await res.json();
+          setFavorites(data.map((item: any) => item.products));
+        }
+      } catch (error) {
+        showToast("خطأ في جلب المفضلة", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFavorites();
+  }, []);
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">المنتجات المفضلة</h1>
+        {favorites.length === 0 ? (
+          <div className="text-center py-20 text-gray-500">
+            <Heart className="mx-auto mb-4 text-gray-300" size={48} />
+            لا توجد منتجات في المفضلة بعد.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {favorites.map((product) => (
+              <RequestCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/invoices/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
+import { FileText } from "lucide-react";
+
+export default function RetailerInvoicesPage() {
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    // مؤقت حتى يتم إنشاء جدول الفواتير أو استخدام الطلبات
+    setInvoices([]);
+  }, []);
+
+  const columns = [
+    { key: "id", header: "رقم الفاتورة" },
+    { key: "date", header: "التاريخ" },
+    { key: "amount", header: "المبلغ", render: (row: any) => formatCurrency(row.amount) },
+    { key: "status", header: "الحالة", render: (row: any) => <Badge variant="secondary">مدفوعة</Badge> },
+    { key: "actions", header: "تحميل", render: () => <Button size="sm" variant="outline">PDF</Button> },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">الفواتير</h1>
+        <div className="bg-white p-6 rounded-lg shadow">
+          {invoices.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">
+              <FileText className="mx-auto mb-4 text-gray-300" size={48} />
+              لا توجد فواتير حالياً.
+            </div>
+          ) : (
+            <DataTable data={invoices} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/nearby-wholesale/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { useToast } from "@/hooks/useToast";
+import { Store, Search, Send } from "lucide-react";
+
+export default function NearbyWholesalePage() {
+  const [wholesalers, setWholesalers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchWholesalers = async () => {
+      try {
+        const res = await fetch("/api/users?role=wholesaler");
+        if (res.ok) setWholesalers(await res.json());
+      } catch (error) {
+        showToast("خطأ في جلب تجار الجملة", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWholesalers();
+  }, []);
+
+  const handleSendRequest = async (wholesalerId: string) => {
+    try {
+      const res = await fetch("/api/relationships", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wholesalerId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast("تم إرسال طلب الانضمام بنجاح!", "success");
+      } else {
+        showToast(data.error || "حدث خطأ", "error");
+      }
+    } catch (error) {
+      showToast("تعذر الاتصال بالخادم", "error");
+    }
+  };
+
+  const filteredWholesalers = wholesalers.filter((w) => 
+    w.name?.includes(search) || w.email?.includes(search)
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">تجار الجملة المتاحون</h1>
+        
+        <div className="relative mb-6">
+          <Search className="absolute right-3 top-3 text-gray-400" size={20} />
+          <input 
+            type="text" 
+            placeholder="ابحث عن تاجر جملة..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-12 rounded-xl border border-gray-200 pr-10 pl-4 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        {filteredWholesalers.length === 0 ? (
+          <div className="bg-white p-10 rounded-2xl shadow-sm text-center text-gray-500">
+            <Store className="mx-auto mb-4 text-gray-300" size={48} />
+            لا يوجد تجار جملة مسجلون حالياً.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredWholesalers.map((wholesaler) => (
+              <div key={wholesaler.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-lg">
+                    {wholesaler.name?.charAt(0) || "ج"}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{wholesaler.name}</h3>
+                    <p className="text-sm text-gray-500">{wholesaler.email}</p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="mb-4">تاجر جملة</Badge>
+                <Button onClick={() => handleSendRequest(wholesaler.id)} className="w-full gap-2">
+                  <Send size={16} /> إرسال طلب انضمام
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/orders/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/hooks/useToast";
+import { formatCurrency } from "@/lib/utils/currency";
+import { XCircle, RotateCcw } from "lucide-react";
+
+export default function RetailerOrdersPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const { showToast } = useToast();
+
+  const fetchOrders = async () => {
+    const res = await fetch("/api/orders");
+    if (res.ok) setOrders(await res.json());
+  };
+
+  useEffect(() => { fetchOrders(); }, []);
+
+  const updateStatus = async (id: string, status: string) => {
+    const res = await fetch(`/api/orders/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      showToast("تم تحديث حالة الطلب", "success");
+      fetchOrders();
+    } else {
+      showToast("حدث خطأ", "error");
+    }
+  };
+
+  const handleCancel = async (id: string) => {
+    if (!confirm("هل أنت متأكد من إلغاء الطلب؟")) return;
+    await updateStatus(id, "cancelled");
+  };
+
+  const handleRefund = async (id: string) => {
+    const reason = prompt("يرجى كتابة سبب طلب الاسترجاع:");
+    if (!reason) return;
+    const res = await fetch("/api/refunds", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: id, reason }),
+    });
+    if (res.ok) {
+      showToast("تم إرسال طلب الاسترجاع للإدارة", "success");
+    } else {
+      showToast("حدث خطأ في إرسال الطلب", "error");
+    }
+  };
+
+  const columns = [
+    { key: "id", header: "رقم الطلب" },
+    { key: "total", header: "المجموع", render: (row: any) => formatCurrency(row.total) },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
+    { key: "actions", header: "إجراءات", render: (row: any) => (
+        <div className="flex gap-2">
+            {row.status === 'pending' && (
+                <Button size="sm" variant="destructive" onClick={() => handleCancel(row.id)}><XCircle size={14} /> إلغاء</Button>
+            )}
+            {row.status === 'delivered' && (
+                <Button size="sm" variant="outline" onClick={() => handleRefund(row.id)}><RotateCcw size={14} /> استرجاع</Button>
+            )}
+        </div>
+    )},
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">طلباتي</h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {orders.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد طلبات حالياً.</div>
+          ) : (
+            <DataTable data={orders} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/overview/page.tsx=====
+import { Topbar } from "@/components/dashboard/Topbar";
+import { RetailerStats } from "@/app/(dashboard)/retailer/components/RetailerStats";
+import { retailerService } from "@/lib/services/retailerService";
+import { BarChart } from "@/components/charts/BarChart";
+
+export default async function RetailerOverviewPage() {
+  let orders: any[] = [];
+  try {
+    orders = await retailerService.getMyOrders();
+  } catch {
+    orders = [];
+  }
+
+  const totalSales = orders?.reduce((sum, order) => sum + (order?.total ?? 0), 0);
+  const pendingOrders = orders?.filter(o => o?.status === "pending")?.length ?? 0;
+  const deliveredOrders = orders?.filter(o => o?.status === "delivered")?.length ?? 0;
+
+  const chartData = orders?.slice(0, 4)?.map((order, index) => ({
+    name: `طلب #${index + 1}`,
+    value: order?.total
+  }));
+
+  return (
+    <div>
+      <Topbar />
+      <h1 className="text-3xl font-bold mb-6">نظرة عامة للتاجر</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <RetailerStats title="إجمالي المبيعات" value={`${totalSales?.toLocaleString()} د.ع`} icon="💰" trend="+12%" trendUp={true} />
+        <RetailerStats title="طلبات قيد الانتظار" value={pendingOrders?.toString()} icon="⏳" trend="" trendUp={false} />
+        <RetailerStats title="طلبات مكتملة" value={deliveredOrders?.toString()} icon="✅" trend="" trendUp={false} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">قيمة الطلبات الأخيرة</h2>
+          {chartData?.length > 0 ? (
+             <BarChart data={chartData} />
+          ) : (
+             <p className="text-gray-500">لا توجد طلبات بعد.</p>
+          )}
+        </div>
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">آخر نشاط</h2>
+          <ul className="space-y-3">
+            {orders?.slice(0, 5)?.map((order) => (
+              <li key={order?.id} className="flex justify-between border-b pb-2">
+                 <span className="font-medium">طلب #{order?.id}</span>
+                 <span className="text-primary font-bold">{order?.total?.toLocaleString()} د.ع</span>
+              </li>
+            ))}
+            {orders?.length === 0 && <li className="text-gray-500">لا يوجد نشاط بعد.</li>}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/settings/page.tsx=====
+"use client";
+import { useUserStore } from "@/lib/stores/userStore";
+import { useToast } from "@/hooks/useToast";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Topbar } from "@/components/dashboard/Topbar";
+
+export default function RetailerSettingsPage() {
+  const user = useUserStore((state) => state.user);
+  const { showToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    showToast("تم حفظ الإعدادات بنجاح", "success");
+  };
+
+  return (
+    <div>
+      <Topbar />
+      <div className="bg-white p-6 rounded-lg shadow max-w-lg">
+        <h1 className="text-2xl font-bold mb-6">إعدادات المتجر</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input name="storeName" placeholder="اسم المتجر" defaultValue={`متجر ${user?.name}`} />
+          <Input name="phone" placeholder="رقم الهاتف" defaultValue={user?.phone} />
+          <Input name="address" placeholder="العنوان" />
+          <Button type="submit">حفظ التغييرات</Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/components/RetailerStats.tsx=====
+import { cn } from "@/lib/utils";
+
+interface StatsCardProps {
+  title: string;
+  value: string;
+  icon: string;
+  trend?: string;
+  trendUp?: boolean;
+}
+
+export function RetailerStats({ title, value, icon, trend, trendUp }: StatsCardProps) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <h4 className="text-2xl font-extrabold mt-2">{value}</h4>
+          {trend && (
+             <p className={cn("text-xs mt-2 font-semibold", trendUp ? "text-emerald-500" : "text-red-500")}>
+                {trendUp ? "↑" : "↓"} {trend}
+             </p>
+          )}
+        </div>
+        <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-primary/10 to-purple-500/10 flex items-center justify-center text-2xl">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/app/(dashboard)/retailer/points/page.tsx=====
+"use client";
+import { useEffect, useState } from "react";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/hooks/useToast";
+import { Coins, Star } from "lucide-react";
+
+export default function RetailerPointsPage() {
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [totalPoints, setTotalPoints] = useState(0);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchPoints = async () => {
+      try {
+        const res = await fetch("/api/points");
+        if (res.ok) {
+          const data = await res.json();
+          setTransactions(data);
+          const total = data.reduce((sum: number, tx: any) => sum + (tx.type === 'earn' ? tx.points : -tx.points), 0);
+          setTotalPoints(total);
+        }
+      } catch (error) {
+        showToast("خطأ في جلب النقاط", "error");
+      }
+    };
+    fetchPoints();
+  }, []);
+
+  const columns = [
+    { key: "id", header: "المعرف" },
+    { key: "type", header: "النوع", render: (row: any) => (
+        <Badge variant={row.type === 'earn' ? 'success' : 'destructive'}>{row.type === 'earn' ? 'كسب' : 'استهلاك'}</Badge>
+    )},
+    { key: "points", header: "النقاط", render: (row: any) => (
+        <span className={row.type === 'earn' ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+          {row.type === 'earn' ? '+' : '-'}{row.points}
+        </span>
+    )},
+    { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleDateString('ar-IQ') },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Topbar />
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">نقاط الولاء</h1>
+          <Badge variant="default" className="text-lg px-4 py-2">
+            <Coins className="ml-2" size={18} /> {totalPoints} نقطة
+          </Badge>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {transactions.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">
+              <Star className="mx-auto mb-4 text-gray-300" size={48} />
+              لا توجد معاملات نقاط بعد. ابدأ بالتسوق لتكسب النقاط!
+            </div>
+          ) : (
+            <DataTable data={transactions} columns={columns} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

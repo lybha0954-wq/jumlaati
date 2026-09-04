@@ -1,0 +1,1074 @@
+=====FILE: src/components/charts/AreaChart.tsx=====
+"use client";
+import { Area, AreaChart as RechartsAreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+export function AreaChart({ data }: { data: any[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <RechartsAreaChart data={data}>
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
+      </RechartsAreaChart>
+    </ResponsiveContainer>
+  );
+}
+=====FILE: src/components/charts/BarChart.tsx=====
+"use client";
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+export function BarChart({ data }: { data: any[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <RechartsBarChart data={data}>
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="value" fill="#8884d8" />
+      </RechartsBarChart>
+    </ResponsiveContainer>
+  );
+}
+=====FILE: src/components/charts/LineChart.tsx=====
+"use client";
+import { Line, LineChart as RechartsLineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+export function LineChart({ data }: { data: any[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <RechartsLineChart data={data}>
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Line type="monotone" dataKey="value" stroke="#8884d8" />
+      </RechartsLineChart>
+    </ResponsiveContainer>
+  );
+}
+=====FILE: src/components/charts/PieChart.tsx=====
+"use client";
+import { Cell, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip } from "recharts";
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+export function PieChart({ data }: { data: any[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <RechartsPieChart>
+        <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8">
+          {data.map((_, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+      </RechartsPieChart>
+    </ResponsiveContainer>
+  );
+}
+=====FILE: src/components/forms/CommissionForm.tsx=====
+"use client";
+import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+
+import { useCommissionStore } from "@/lib/stores/commissionStore";
+
+export function CommissionForm({ orderId, retailerId }: { orderId: string; retailerId: string }) {
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+  const setCommissions = useCommissionStore((s) => s.setCommissions);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = { orderId, retailerId, amount: Number(formData.get("amount")), status: "pending" };
+
+    const res = await fetch("/api/commissions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      const newCommission = await res.json();
+      setCommissions([newCommission]); // تحديث الـ store
+      showToast("تم إنشاء العمولة بنجاح", "success");
+    } else {
+      showToast("حدث خطأ في إنشاء العمولة", "error");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <Input name="amount" type="number" placeholder="مبلغ العمولة" required />
+      <Button type="submit" disabled={loading} className="w-full">إضافة عمولة</Button>
+    </form>
+  );
+}
+=====FILE: src/components/forms/MatchingForm.tsx=====
+"use client";
+import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+
+export function MatchingForm({ retailerId }: { retailerId: string }) {
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+
+    const res = await fetch("/api/matching", {
+      method: "POST",
+      body: JSON.stringify({ ...data, retailerId }),
+    });
+
+    if (res.ok) {
+      showToast("تم إرسال طلب المطابقة", "success");
+      (e.target as HTMLFormElement).reset();
+    } else {
+      showToast("فشل إرسال طلب المطابقة", "error");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <Input name="productName" placeholder="اسم المنتج المطلوب" required />
+      <Input name="quantity" type="number" placeholder="الكمية المطلوبة" required />
+      <Textarea name="notes" placeholder="ملاحظات إضافية..." />
+      <Button type="submit" disabled={loading} className="w-full">إرسال للمطابقة</Button>
+    </form>
+  );
+}
+=====FILE: src/components/forms/ProductForm.tsx=====
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { Select } from "@/components/ui/Select";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { useToast } from "@/hooks/useToast";
+
+export function ProductForm({ initialData, onSuccess }: { initialData?: any; onSuccess?: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(initialData?.images?.[0]);
+  const { showToast } = useToast();
+
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (res.ok) {
+      setImageUrl(data.url);
+      showToast("تم رفع الصورة بنجاح!", "success");
+    } else {
+      showToast(data.error || "خطأ في رفع الصورة", "error");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    data.images = JSON.stringify(imageUrl ? [imageUrl] : []);
+
+    const res = await fetch(initialData ? `/api/products/${initialData.id}` : "/api/products", {
+      method: initialData ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      showToast(initialData ? "تم تحديث المنتج" : "تم إنشاء المنتج", "success");
+      onSuccess?.();
+    } else {
+      const err = await res.json();
+      showToast(err.error || "حدث خطأ", "error");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FileUpload onChange={handleImageUpload} />
+      {imageUrl && <img src={imageUrl} alt="Product" className="h-20 w-20 object-cover rounded-lg" />}
+
+      <Input name="name" placeholder="اسم المنتج" defaultValue={initialData?.name} required />
+      <Textarea name="description" placeholder="وصف المنتج" defaultValue={initialData?.description} />
+      
+      <div className="grid grid-cols-2 gap-4">
+        <Input name="price" type="number" step="0.01" placeholder="سعر التجزئة" defaultValue={initialData?.price} required />
+        <Input name="wholesalePrice" type="number" step="0.01" placeholder="سعر الجملة" defaultValue={initialData?.wholesalePrice} required />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <Input name="stock" type="number" placeholder="الكمية" defaultValue={initialData?.stock} required />
+        <Select name="category" defaultValue={initialData?.category}>
+          <option value="electronics">إلكترونيات</option>
+          <option value="clothing">ملابس</option>
+          <option value="food">مواد غذائية</option>
+          <option value="general">مواد عامة</option>
+        </Select>
+      </div>
+
+      <Button type="submit" disabled={loading} className="w-full">
+        {loading ? "جارٍ الحفظ..." : initialData ? "حفظ التعديلات" : "إضافة المنتج"}
+      </Button>
+    </form>
+  );
+}
+=====FILE: src/components/forms/ProfileForm.tsx=====
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { useToast } from "@/hooks/useToast";
+import { useUserStore } from "@/lib/stores/userStore";
+
+export function ProfileForm() {
+  const [loading, setLoading] = useState(false);
+  const { user, setUser } = useUserStore();
+  const { showToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+
+    const res = await fetch("/api/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      showToast("تم حفظ الملف الشخصي", "success");
+    } else {
+      showToast("خطأ في الحفظ", "error");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <Input name="name" placeholder="الاسم" defaultValue={user?.name} required />
+      <Input name="phone" placeholder="رقم الهاتف" defaultValue={user?.phone} />
+      <Button type="submit" disabled={loading}>حفظ التغييرات</Button>
+    </form>
+  );
+}
+=====FILE: src/components/forms/RequestForm.tsx=====
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Textarea";
+import { Input } from "@/components/ui/Input";
+import { useToast } from "@/hooks/useToast";
+
+export function RequestForm({ type }: { type: "product" | "wholesale" }) {
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+
+    const res = await fetch("/api/requests", {
+      method: "POST",
+      body: JSON.stringify({ ...data, type }),
+    });
+
+    if (res.ok) {
+      showToast("تم إرسال الطلب", "success");
+      (e.target as HTMLFormElement).reset();
+    } else {
+      showToast("خطأ في إرسال الطلب", "error");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input name="title" placeholder="عنوان الطلب" required />
+      <Textarea name="details" placeholder="تفاصيل الطلب..." required />
+      <Button type="submit" disabled={loading}>إرسال الطلب</Button>
+    </form>
+  );
+}
+=====FILE: src/components/shared/BottomNavBar.tsx=====
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Home, Store, ShoppingCart, User, MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export function BottomNavBar() {
+  const pathname = usePathname();
+  const links = [
+    { href: "/", label: "الرئيسية", icon: Home },
+    { href: "/products", label: "المنتجات", icon: Store },
+    { href: "/offers", label: "العروض", icon: MessageCircle },
+    { href: "/cart", label: "السلة", icon: ShoppingCart },
+    { href: "/dashboard/retailer/overview", label: "حسابي", icon: User },
+  ];
+
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-lg flex justify-around py-2 pb-safe">
+      {links.map((link) => {
+        const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn(
+              "flex flex-col items-center text-xs p-2 transition-all",
+              isActive ? "text-[#f59e0b] font-bold scale-105" : "text-gray-500"
+            )}
+          >
+            <link.icon size={22} className="mb-1" />
+            {link.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+=====FILE: src/components/shared/LoadingSpinner.tsx=====
+export function LoadingSpinner({ className }: { className?: string }) {
+  return (
+    <div className={`flex justify-center items-center ${className || "h-32"}`}>
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
+=====FILE: src/components/shared/NotificationCenter.tsx=====
+"use client";
+import { useEffect } from "react";
+import { useNotificationStore } from "@/lib/stores/notificationStore";
+import { useRealtime } from "@/hooks/useRealtime";
+import { formatTimeAgo } from "@/lib/utils/date";
+
+export function NotificationCenter() {
+  const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotificationStore();
+
+  // تحديث عند الاستماع لقاعدة البيانات
+  useRealtime("notifications", () => {
+    fetchNotifications();
+  });
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  return (
+    <div className="fixed left-4 top-20 z-50 w-80 max-h-96 overflow-y-auto rounded-lg border bg-white shadow-xl p-4">
+      <h3 className="font-bold mb-4 text-lg border-b pb-2">الإشعارات ({unreadCount})</h3>
+      {notifications.length === 0 ? (
+        <p className="text-center text-gray-400 py-4">لا توجد إشعارات جديدة</p>
+      ) : (
+        <ul className="space-y-3">
+          {notifications.map((n) => (
+            <li key={n.id} className="flex gap-3 border-b pb-3 last:border-0">
+              <div className={`h-2 w-2 mt-2 rounded-full ${n.is_read ? "bg-gray-300" : "bg-blue-500"}`} />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{n.title}</p>
+                <p className="text-xs text-gray-500">{n.message}</p>
+                <span className="text-xs text-gray-400">{formatTimeAgo(n.created_at)}</span>
+                {!n.is_read && (
+                  <button onClick={() => markAsRead(n.id)} className="text-xs text-primary hover:underline block mt-1">
+                    تحديد كمقروء
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+=====FILE: src/components/shared/RequestCard.tsx=====
+"use client";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { useToast } from "@/hooks/useToast";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { formatCurrency } from "@/lib/utils/currency";
+import { ShoppingCart, Heart, ImageOff } from "lucide-react";
+import { useState } from "react";
+
+export function RequestCard({ product }: { product: any }) {
+  const addItem = useCartStore((state) => state.addItem);
+  const { showToast } = useToast();
+  const [isFav, setIsFav] = useState(false);
+  const image = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null;
+
+  const handleAddToCart = () => {
+    addItem({ productId: product.id, wholesalerId: product.owner_id || "default", name: product.name, price: product.price, quantity: 1, image: image || undefined });
+    showToast("تمت الإضافة إلى السلة بنجاح!", "success");
+  };
+
+  return (
+    <div className="group relative flex flex-col bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 mb-4">
+        {image ? (
+          <img src={image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300"><ImageOff /></div>
+        )}
+        <Badge className="absolute top-2 right-2" variant={product.is_wholesale ? "default" : "secondary"}>
+          {product.is_wholesale ? "جملة" : "تجزئة"}
+        </Badge>
+        <button onClick={() => setIsFav(!isFav)} className="absolute top-2 left-2 p-2 bg-white/80 rounded-full shadow hover:scale-110 transition-all">
+          <Heart size={16} className={isFav ? "fill-red-500 text-red-500" : "text-gray-500"} />
+        </button>
+      </div>
+      
+      <h3 className="font-bold text-lg text-gray-800 mb-1 line-clamp-1">{product.name}</h3>
+      <p className="text-sm text-gray-500 mb-3">{product.category}</p>
+      
+      <div className="mt-auto">
+        <span className="block font-extrabold text-primary text-xl mb-3">{formatCurrency(product.price)}</span>
+        <Button onClick={handleAddToCart} size="sm" className="w-full opacity-90 group-hover:opacity-100">
+          <ShoppingCart size={16} className="ml-1" /> أضف للسلة
+        </Button>
+      </div>
+    </div>
+  );
+}
+=====FILE: src/components/shared/StatsCard.tsx=====
+import React from 'react';
+
+interface StatsCardProps {
+  title: string;
+  value?: string | number;
+  icon?: string;
+  trend?: string;
+  trendUp?: boolean;
+}
+
+const StatsCard = ({ title, value, icon, trend, trendUp }: StatsCardProps) => {
+  return (
+    <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-gray-500 text-sm font-medium">{title}</span>
+        {icon && <span className="text-2xl">{icon}</span>}
+      </div>
+      <div className="text-2xl font-bold text-gray-900">{value ?? '—'}</div>
+      {trend && (
+        <div className={`text-sm font-medium ${trendUp ? 'text-green-600' : 'text-red-500'}`}>
+          {trendUp ? '▲' : '▼'} {trend}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export { StatsCard };
+=====FILE: src/components/shared/StatusBadge.tsx=====
+import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/lib/utils";
+
+type Status = "pending" | "approved" | "rejected" | "paid" | "shipped" | "delivered" | "cancelled" | "active" | "inactive";
+
+export function StatusBadge({ status }: { status: Status }) {
+  const styles: Record<Status, string> = {
+    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    approved: "bg-green-100 text-green-800 border-green-200",
+    rejected: "bg-red-100 text-red-800 border-red-200",
+    paid: "bg-blue-100 text-blue-800 border-blue-200",
+    shipped: "bg-purple-100 text-purple-800 border-purple-200",
+    delivered: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    cancelled: "bg-gray-100 text-gray-800 border-gray-200",
+    active: "bg-green-100 text-green-800 border-green-200",
+    inactive: "bg-gray-100 text-gray-800 border-gray-200",
+  };
+
+  return (
+    <Badge variant="outline" className={cn("capitalize", styles[status])}>
+      {status}
+    </Badge>
+  );
+}
+=====FILE: src/components/shared/Sidebar.tsx=====
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const links = [
+    { href: "/dashboard/retailer/overview", label: "نظرة عامة" },
+    { href: "/dashboard/retailer/orders", label: "الطلبات" },
+    { href: "/dashboard/retailer/products", label: "المنتجات" },
+    { href: "/dashboard/retailer/favorites", label: "المفضلة" },
+    { href: "/dashboard/retailer/settings", label: "الإعدادات" },
+  ];
+
+  return (
+    <aside className="w-64 bg-gray-900 text-white h-screen fixed top-0 right-0 p-4 border-l border-gray-800">
+      <h2 className="text-xl font-bold mb-6 px-2">لوحة التحكم</h2>
+      <nav className="space-y-2">
+        {links?.map((link) => (
+          <Link
+            key={link?.href}
+            href={link?.href}
+            className={cn("block px-4 py-2 rounded-md transition-colors", pathname === link?.href ? "bg-primary text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white")}
+          >
+            {link?.label}
+          </Link>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+=====FILE: src/components/ui/Badge.tsx=====
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+const badgeVariants = {
+  default: "bg-primary text-white",
+  secondary: "bg-gray-100 text-gray-700",
+  destructive: "bg-red-100 text-red-700",
+  success: "bg-emerald-100 text-emerald-700",
+  outline: "border border-gray-300 text-gray-600",
+};
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: keyof typeof badgeVariants;
+}
+
+function Badge({ className, variant = "default", ...props }: BadgeProps) {
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+        badgeVariants[variant],
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export { Badge, badgeVariants };
+=====FILE: src/components/ui/Button.tsx=====
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "secondary" | "outline" | "ghost" | "destructive";
+  size?: "sm" | "md" | "lg" | "icon";
+}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "md", ...props }, ref) => {
+    const variants = {
+      default: "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors",
+      outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors",
+      ghost: "hover:bg-accent hover:text-accent-foreground transition-colors",
+      destructive: "bg-destructive text-destructive-foreground shadow-md shadow-destructive/20 hover:bg-destructive/90 transition-colors",
+    };
+    const sizes = {
+      sm: "h-8 px-3 text-xs rounded-md",
+      md: "h-10 px-4 py-2 rounded-lg",
+      lg: "h-12 px-8 rounded-xl text-lg",
+      icon: "h-10 w-10 rounded-full",
+    };
+    return (
+      <button
+        className={cn(
+          "inline-flex items-center justify-center font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+          variants[variant],
+          sizes[size],
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Button.displayName = "Button";
+=====FILE: src/components/ui/Card.tsx=====
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-2xl border border-gray-200 bg-white text-gray-900 shadow-sm transition-all duration-300 hover:shadow-md",
+      className
+    )}
+    {...props}
+  />
+));
+Card.displayName = "Card";
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+));
+CardHeader.displayName = "CardHeader";
+
+const CardTitle = React.forwardRef<
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn("text-xl font-bold leading-none tracking-tight", className)}
+    {...props}
+  />
+));
+CardTitle.displayName = "CardTitle";
+
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-gray-500", className)}
+    {...props}
+  />
+));
+CardDescription.displayName = "CardDescription";
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+));
+CardContent.displayName = "CardContent";
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+));
+CardFooter.displayName = "CardFooter";
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+=====FILE: src/components/ui/DataTable.tsx=====
+"use client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+interface Column<T> {
+  key: keyof T | string;
+  header: string;
+  render?: (item: T) => React.ReactNode;
+}
+
+export function DataTable<T>({ data, columns, className }: { data: T[]; columns: Column<T>[]; className?: string }) {
+  return (
+    <div className={cn("w-full overflow-auto rounded-md border", className)}>
+      <table className="w-full caption-bottom text-sm">
+        <thead className="[&_tr]:border-b">
+          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            {columns.map((col) => (
+              <th key={col.key as string} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{col.header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="[&_tr:last-child]:border-0">
+          {data.map((row, index) => (
+            <tr key={index} className="border-b transition-colors hover:bg-muted/50">
+              {columns.map((col) => (
+                <td key={col.key as string} className="p-4 align-middle">
+                  {col.render ? col.render(row) : (row as any)[col.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+=====FILE: src/components/ui/Dropdown.tsx=====
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export function Dropdown({ trigger, children, align = "end" }: { trigger: React.ReactNode; children: React.ReactNode; align?: "start" | "end" }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <div onClick={() => setOpen(!open)}>{trigger}</div>
+      {open && (
+        <div className={cn("absolute z-50 mt-2 w-48 rounded-md border bg-white py-1 shadow-lg", align === "end" ? "left-0" : "right-0")}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+=====FILE: src/components/ui/FileUpload.tsx=====
+"use client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/useToast";
+
+export function FileUpload({ className, onChange }: { className?: string; onChange?: (file: File | null) => void }) {
+  const [preview, setPreview] = React.useState<string | null>(null);
+  const { showToast } = useToast();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("حجم الملف يتجاوز 5 ميغابايت", "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result as string);
+      reader.readAsDataURL(file);
+      onChange?.(file);
+    }
+  };
+
+  return (
+    <div
+      onClick={() => inputRef.current?.click()}
+      className={cn("border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors", className)}
+    >
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      {preview ? (
+        <img src={preview} alt="Preview" className="max-h-40 mx-auto rounded-md" />
+      ) : (
+        <div className="text-gray-500">
+          <div className="text-3xl mb-2">📁</div>
+          <p>اضغط لاختيار صورة أو اسحبها هنا</p>
+        </div>
+      )}
+    </div>
+  );
+}
+=====FILE: src/components/ui/Input.tsx=====
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-11 w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm transition-all placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Input.displayName = "Input";
+
+export { Input };
+=====FILE: src/components/ui/Modal.tsx=====
+"use client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export function Modal({ open, onClose, children, title, className }: { open: boolean; onClose: () => void; children: React.ReactNode; title?: string; className?: string }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div className={cn("bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 animate-slide-up", className)} onClick={(e) => e.stopPropagation()}>
+        {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+        <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">✕</button>
+        {children}
+      </div>
+    </div>
+  );
+}
+=====FILE: src/components/ui/Select.tsx=====
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+
+const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <select
+        className={cn(
+          "flex h-11 w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </select>
+    );
+  }
+);
+Select.displayName = "Select";
+
+export { Select };
+=====FILE: src/components/ui/Skeleton.tsx=====
+import { cn } from "@/lib/utils";
+
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={cn("animate-pulse rounded-md bg-gray-200", className)} />;
+}
+=====FILE: src/components/ui/Switch.tsx=====
+"use client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export function Switch({ checked, onCheckedChange, className }: { checked: boolean; onCheckedChange: (checked: boolean) => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onCheckedChange(!checked)}
+      className={cn("peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", checked ? "bg-primary" : "bg-input", className)}
+    >
+      <span className={cn("pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform", checked ? "translate-x-5" : "translate-x-0")} />
+    </button>
+  );
+}
+=====FILE: src/components/ui/Table.tsx=====
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export const Table = ({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
+  <div className="w-full overflow-auto">
+    <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
+  </div>
+);
+export const TableHeader = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <thead className={cn("[&_tr]:border-b", className)} {...props} />
+);
+export const TableBody = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <tbody className={cn("[&_tr:last-child]:border-0", className)} {...props} />
+);
+export const TableRow = ({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
+  <tr className={cn("border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted", className)} {...props} />
+);
+export const TableHead = ({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+  <th className={cn("h-12 px-4 text-left align-middle font-medium text-muted-foreground", className)} {...props} />
+);
+export const TableCell = ({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+  <td className={cn("p-4 align-middle", className)} {...props} />
+);
+=====FILE: src/components/ui/Tabs.tsx=====
+"use client";
+
+import React, { useState, useContext } from "react";
+import { cn } from "@/lib/utils";
+
+interface TabsContextType { activeTab: string; setActiveTab: (id: string) => void; }
+const TabsContext = React.createContext<TabsContextType>({ activeTab: "", setActiveTab: () => {} });
+
+export function Tabs({ defaultValue, children, className }: { defaultValue: string; children: React.ReactNode; className?: string }) {
+  const [activeTab, setActiveTab] = React.useState(defaultValue);
+  return <TabsContext.Provider value={{ activeTab, setActiveTab }}><div className={cn("w-full", className)}>{children}</div></TabsContext.Provider>;
+}
+
+export function TabsList({ className, children }: { className?: string; children: React.ReactNode }) {
+  return <div className={cn("inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground", className)}>{children}</div>;
+}
+
+export function TabsTrigger({ value, children }: { value: string; children: React.ReactNode }) {
+  const { activeTab, setActiveTab } = React.useContext(TabsContext);
+  return (
+    <button onClick={() => setActiveTab(value)} className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all", activeTab === value ? "bg-background text-foreground shadow-sm" : "hover:text-foreground")}>
+      {children}
+    </button>
+  );
+}
+
+export function TabsContent({ value, children }: { value: string; children: React.ReactNode }) {
+  const { activeTab } = React.useContext(TabsContext);
+  if (activeTab !== value) return null;
+  return <div className="mt-2">{children}</div>;
+}
+=====FILE: src/components/ui/Textarea.tsx=====
+'use client';
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <textarea
+        className={cn(
+          "flex w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm transition-all placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] resize-y",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Textarea.displayName = "Textarea";
+
+export { Textarea };=====FILE: src/components/ui/Toast.tsx=====
+=====FILE: src/components/dashboard/Topbar.tsx=====
+"use client";
+import { useEffect } from "react";
+import { useUserStore } from "@/lib/stores/userStore";
+import { useNotificationStore } from "@/lib/stores/notificationStore";
+import { useRealtime } from "@/hooks/useRealtime";
+import { Package, Bell, UserCircle } from "lucide-react";
+
+export function Topbar() {
+  const user = useUserStore((state) => state.user);
+  const { unreadCount, fetchNotifications } = useNotificationStore();
+
+  // الاستماع للتحديثات اللحظية
+  useRealtime("notifications", () => {
+    fetchNotifications();
+  });
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  return (
+    <header className="h-16 sticky top-0 z-40 flex items-center justify-between bg-[#0F172A] px-6 text-white shadow-lg">
+      <div className="flex items-center gap-3">
+        <Package className="h-6 w-6 text-[#f59e0b]" />
+        <span className="text-xl font-black">جُمْلَتِي</span>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <button className="relative p-2 rounded-full hover:bg-white/10 transition-colors">
+          <Bell size={20} />
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 h-5 w-5 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-[#f59e0b] text-gray-900 flex items-center justify-center font-bold">
+            {user?.name?.charAt(0) || "ز"}
+          </div>
+          <span className="text-sm font-medium hidden md:block">{user?.name || "زائر"}</span>
+        </div>
+      </div>
+    </header>
+  );
+}
+=====FILE: src/components/dashboard/Sidebar.tsx=====
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useUserStore } from "@/lib/stores/userStore";
+import { LayoutDashboard, Package, ShoppingCart, Coins, Users, FileText, Settings, Truck, Store, MessageCircle } from "lucide-react";
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const role = useUserStore((state) => state.user?.role) || "retailer";
+
+  const links = [
+    { href: "/dashboard/overview", label: "نظرة عامة", icon: LayoutDashboard, roles: ["admin"] },
+    { href: "/dashboard/admin/users", label: "المستخدمون", icon: Users, roles: ["admin"] },
+    { href: "/dashboard/wholesale/products", label: "المنتجات", icon: Package, roles: ["wholesaler"] },
+    { href: "/dashboard/wholesale/orders", label: "الطلبات", icon: ShoppingCart, roles: ["wholesaler"] },
+    { href: "/dashboard/wholesale/nearby-requests", label: "طلبات الانضمام", icon: MessageCircle, roles: ["wholesaler"] },
+    { href: "/dashboard/retailer/cart", label: "السلة", icon: ShoppingCart, roles: ["retailer"] },
+    { href: "/dashboard/retailer/orders", label: "طلباتي", icon: FileText, roles: ["retailer"] },
+    { href: "/dashboard/retailer/favorites", label: "المفضلة", icon: Store, roles: ["retailer"] },
+    { href: "/dashboard/retailer/points", label: "نقاطي", icon: Coins, roles: ["retailer"] },
+    { href: "/dashboard/delivery/tasks", label: "المهام", icon: Truck, roles: ["delivery"] },
+    { href: "/dashboard/delivery/my-wholesalers", label: "شركائي", icon: Store, roles: ["delivery"] },
+    // إضافة رابط الرسائل للجميع
+    { href: "/dashboard/messages", label: "الرسائل", icon: MessageCircle, roles: ["admin", "wholesaler", "retailer", "delivery"] },
+    { href: "/dashboard/settings", label: "الإعدادات", icon: Settings, roles: ["admin", "wholesaler", "retailer", "delivery"] },
+  ];
+
+  const visibleLinks = links.filter((link) => link.roles.includes(role));
+
+  return (
+    <aside className="hidden md:flex w-64 flex-col border-l border-gray-200 bg-white h-screen sticky top-0">
+      <div className="p-6">
+        <h2 className="text-xl font-black text-gray-900">جُمْلَتِي</h2>
+      </div>
+      <nav className="flex-1 space-y-1 p-4">
+        {visibleLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname === link.href
+                ? "bg-[#f59e0b]/10 text-[#f59e0b]"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            )}
+          >
+            <link.icon size={18} />
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+=====FILE: src/components/wallet/index.ts=====
+=====FILE: src/components/points/index.ts=====
+=====FILE: src/components/reviews/index.ts=====
+=====FILE: src/components/offers/index.ts=====
