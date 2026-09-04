@@ -1,0 +1,87 @@
+create extension if not exists "uuid-ossp";
+
+-- جدول المستخدمين
+create table if not exists public.users (
+  id uuid primary key references auth.users(id) on delete cascade,
+  name text not null,
+  email text not null unique,
+  role text check (role in ('admin', 'retailer', 'wholesaler', 'delivery')) default 'retailer',
+  phone text,
+  created_at timestamptz default now()
+);
+
+-- جدول المنتجات (تمت إضافة أعمدة العروض هنا: old_price و is_on_sale)
+create table if not exists public.products (
+  id uuid primary key default uuid_generate_v4(),
+  owner_id uuid references public.users(id) on delete cascade,
+  name text not null,
+  description text,
+  price numeric not null check (price >= 0),
+  wholesale_price numeric,
+  old_price numeric, -- السعر قبل الخصم
+  is_on_sale boolean default false, -- هل يوجد عرض؟
+  stock integer not null default 0,
+  category text,
+  images jsonb default '[]',
+  is_active boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- جداول الطلبات
+create table if not exists public.orders (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) not null,
+  wholesaler_id uuid references public.users(id),
+  status text check (status in ('pending', 'processing', 'shipped', 'delivered', 'cancelled')) default 'pending',
+  total numeric not null,
+  address text,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.order_items (
+  id uuid primary key default uuid_generate_v4(),
+  order_id uuid references public.orders(id) on delete cascade,
+  product_id uuid references public.products(id) on delete set null,
+  quantity integer not null,
+  price numeric not null
+);
+
+-- الجداول المالية
+create table if not exists public.commissions (
+  id uuid primary key default uuid_generate_v4(),
+  order_id uuid references public.orders(id) on delete cascade,
+  retailer_id uuid references public.users(id),
+  amount numeric not null,
+  status text check (status in ('pending', 'paid')) default 'pending',
+  created_at timestamptz default now()
+);
+
+create table if not exists public.payouts (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id),
+  amount numeric not null,
+  status text check (status in ('pending', 'processed')) default 'pending',
+  created_at timestamptz default now()
+);
+
+-- جدول العلاقات والمطابقة
+create table if not exists public.matches (
+  id uuid primary key default uuid_generate_v4(),
+  requester_id uuid references public.users(id),
+  responder_id uuid references public.users(id),
+  status text check (status in ('pending', 'approved', 'rejected')) default 'pending',
+  product_name text,
+  quantity integer,
+  created_at timestamptz default now()
+);
+
+-- جدول الإشعارات
+create table if not exists public.notifications (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  title text not null,
+  message text,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
