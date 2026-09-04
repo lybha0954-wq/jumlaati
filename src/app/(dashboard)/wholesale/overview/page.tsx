@@ -6,16 +6,13 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/Button";
 
 export default async function WholesaleOverviewPage() {
-  let products = [];
-  let orders = [];
+  let products: any[] = [];
+  let orders: any[] = [];
   let totalRevenue = 0;
-  
+
   try {
-    const userProducts = await wholesaleService.getMyProducts();
-    products = userProducts || [];
-    
-    const wholesaleOrders = await wholesaleService.getMyOrders?.() || [];
-    orders = wholesaleOrders;
+    products = await wholesaleService.getMyProducts() || [];
+    orders = await wholesaleService.getMyOrders?.() || [];
     totalRevenue = orders.reduce((sum, order) => sum + (order?.total || 0), 0);
   } catch (error) {
     console.error("Error fetching wholesale data:", error);
@@ -34,13 +31,11 @@ export default async function WholesaleOverviewPage() {
           <h1 className="text-3xl font-bold text-gray-900">نظرة عامة للجملة</h1>
           <Button variant="outline" size="sm">تصدير التقرير</Button>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatsCard title="إجمالي الإيرادات" value={formatCurrency(totalRevenue)} icon="💰" trend="+12%" trendUp={true} />
           <StatsCard title="عدد الطلبات" value={orders.length.toString()} icon="📦" trend="+5%" trendUp={true} />
           <StatsCard title="المنتجات النشطة" value={products.length.toString()} icon="🛍️" />
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-xl font-semibold mb-4">اتجاه الإيرادات</h2>

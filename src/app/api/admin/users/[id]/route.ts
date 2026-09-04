@@ -10,7 +10,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
     if (adminCheck?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { id } = await params; // استخراج المعرّف بعد انتظار الـ Promise
+    const { id } = await params;
     const body = await req.json();
     const { data, error } = await supabase.from('users').update(body).eq('id', id).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
