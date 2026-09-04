@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true, // هذا السطر "السحري" سيمنع كل أخطاء ESLint
+    ignoreDuringBuilds: true,
   },
 };
 export default nextConfig;
