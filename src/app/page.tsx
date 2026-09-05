@@ -1,51 +1,10 @@
-import { Topbar } from "@/components/dashboard/Topbar";
-import { Button } from "@/components/ui/Button";
-import { RequestCard } from "@/components/shared/RequestCard";
-import { productService } from "@/lib/services/productService";
-import { Package, Store, Truck, Users } from "lucide-react";
-
-export default async function Home() {
-  let products: any[] = [];
-  try {
-    products = await productService.getAllProducts();
-  } catch (error) {
-    console.error("Error fetching products:", error);
-  }
-
+export default function Home() {
   return (
-    <main dir="rtl" className="min-h-screen bg-gray-50 text-slate-900">
-      <Topbar />
-
-      {/* Hero Section */}
-      <section className="bg-[#0F172A] text-white py-24 text-center px-4">
-        <h1 className="text-5xl font-black mb-6">جُمْلَتِي</h1>
-        <p className="text-lg text-gray-300 mb-10">منصة عراقية متكاملة للبيع بالجملة والتجزئة والتوصيل.</p>
-        <div className="flex justify-center gap-4">
-          <Button size="lg" className="bg-[#f59e0b] text-gray-900 hover:bg-[#d97706]">تصفح المتجر</Button>
-          <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">انضم إلينا</Button>
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section className="container mx-auto py-16 px-4">
-        <h2 className="text-3xl font-bold mb-8">أحدث المنتجات</h2>
-        {products.length === 0 ? (
-          <div className="bg-white p-10 text-center text-gray-500 border border-dashed border-gray-300 rounded-xl">
-            لا توجد منتجات بعد. قم بإضافة أول منتج من لوحة التحكم.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <RequestCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Footer Minimal */}
-      <footer className="bg-[#0F172A] text-gray-400 py-10 text-center text-sm">
-        <p>© 2026 جُمْلَتِي. جميع الحقوق محفوظة.</p>
-      </footer>
+    <main dir="rtl" className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center p-10">
+        <h1 className="text-5xl font-bold text-gray-900">جُمْلَتِي</h1>
+        <p className="text-gray-500 mt-4">جاري تجهيز المنصة...</p>
+      </div>
     </main>
   );
 }
