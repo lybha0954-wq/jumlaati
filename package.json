@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "postinstall": "npm approve-scripts --allow-scripts-pending",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
