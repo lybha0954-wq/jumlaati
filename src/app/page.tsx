@@ -24,7 +24,6 @@ export default async function Home() {
           <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">انضم إلينا</Button>
         </div>
       </section>
-
       <section className="container mx-auto py-16 px-4">
         <h2 className="text-3xl font-bold mb-8">أحدث المنتجات</h2>
         {products.length === 0 ? (
