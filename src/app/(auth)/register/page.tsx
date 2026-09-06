@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { useToast } from "@/hooks/useToast";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,30 +14,32 @@ export default function RegisterPage() {
   const router = useRouter();
   const { showToast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const formData = new FormData(e.target as HTMLFormElement);
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
-    const phone = formData.get("phone") as string; // إضافة الهاتف
     const password = formData.get("password") as string;
+    const role = formData.get("role") as string;
 
     const supabase = createClient();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { name, role: "retailer", phone },
-      },
+      options: { data: { name, role } },
     });
 
-    if (error) return showToast(error.message, "error");
+    if (error) {
+      showToast(error.message, "error");
+      setLoading(false);
+      return;
+    }
 
     if (data.user) {
-      await supabase.from('users').insert({
-        id: data.user.id, name, email, phone, role: "retailer",
-      });
+      await supabase.from('users').insert({ id: data.user.id, name, email, role });
     }
 
     showToast("تم إنشاء الحساب بنجاح!", "success");
@@ -49,11 +52,15 @@ export default function RegisterPage() {
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-3xl font-extrabold text-center mb-6">إنشاء حساب جديد</h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
             <Input name="name" placeholder="الاسم الكامل" required className="h-12" />
             <Input name="email" type="email" placeholder="البريد الإلكتروني" required className="h-12" />
-            <Input name="phone" type="tel" placeholder="رقم الهاتف (مثال: 9647XXXXXXXXX)" required className="h-12" />
             <Input name="password" type="password" placeholder="كلمة المرور" required className="h-12" />
+            <Select name="role" defaultValue="retailer" className="h-12">
+              <option value="retailer">تاجر تجزئة</option>
+              <option value="wholesaler">تاجر جملة</option>
+              <option value="delivery">مندوب توصيل</option>
+            </Select>
             <Button type="submit" disabled={loading} size="lg" className="w-full">
               {loading ? "جارٍ التسجيل..." : "إنشاء الحساب"}
             </Button>

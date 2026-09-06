@@ -12,8 +12,7 @@ export default function WholesaleSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // هنا يتم إرسال الإعدادات إلى الـ API المخصص لاحقاً
-    showToast("تم حفظ الإعدادات بنجاح", "success");
+    showToast("تم حفظ إعدادات الجملة", "success");
     setLoading(false);
   };
 
@@ -25,10 +24,9 @@ export default function WholesaleSettingsPage() {
           <h1 className="text-2xl font-bold mb-6">إعدادات الجملة</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input name="companyName" placeholder="اسم الشركة" />
-            <Input name="commercialLicense" placeholder="رقم السجل التجاري" />
-            <Input name="phone" placeholder="رقم الهاتف (بالصيغة الدولية)" />
+            <Input name="phone" placeholder="رقم الهاتف" />
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+              {loading ? "جارٍ الحفظ..." : "حفظ"}
             </Button>
           </form>
         </div>
