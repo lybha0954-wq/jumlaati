@@ -1,5 +1,4 @@
 export const dynamic = "force-dynamic";
-export const dynamic = "force-dynamic";
 
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/Button";
