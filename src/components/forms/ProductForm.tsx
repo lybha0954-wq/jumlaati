@@ -53,12 +53,15 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: any; onS
     <form onSubmit={handleSubmit} className="space-y-4">
       <FileUpload onChange={handleImageUpload} />
       {imageUrl && <img src={imageUrl} alt="Product" className="h-20 w-20 object-cover rounded-lg" />}
+
       <Input name="name" placeholder="اسم المنتج" defaultValue={initialData?.name} required />
       <Textarea name="description" placeholder="وصف المنتج" defaultValue={initialData?.description} />
+      
       <div className="grid grid-cols-2 gap-4">
         <Input name="price" type="number" step="0.01" placeholder="سعر التجزئة" defaultValue={initialData?.price} required />
         <Input name="wholesalePrice" type="number" step="0.01" placeholder="سعر الجملة" defaultValue={initialData?.wholesalePrice} required />
       </div>
+      
       <div className="grid grid-cols-2 gap-4">
         <Input name="stock" type="number" placeholder="الكمية" defaultValue={initialData?.stock} required />
         <Select name="category" defaultValue={initialData?.category}>
@@ -68,6 +71,7 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: any; onS
           <option value="general">مواد عامة</option>
         </Select>
       </div>
+
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? "جارٍ الحفظ..." : initialData ? "حفظ التعديلات" : "إضافة المنتج"}
       </Button>
