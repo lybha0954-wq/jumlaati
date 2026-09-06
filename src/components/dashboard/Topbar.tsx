@@ -3,7 +3,7 @@ import { useEffect, useCallback } from "react";
 import { useUserStore } from "@/lib/stores/userStore";
 import { useNotificationStore } from "@/lib/stores/notificationStore";
 import { useRealtime } from "@/hooks/useRealtime";
-import { Package, Bell, UserCircle } from "lucide-react";
+import { Package, Bell, UserCircle, Search } from "lucide-react";
 
 export function Topbar() {
   const user = useUserStore((state) => state.user);
@@ -20,6 +20,13 @@ export function Topbar() {
         <Package className="h-6 w-6 text-[#f59e0b]" />
         <span className="text-xl font-black">جُمْلَتِي</span>
       </div>
+
+      {/* Search Bar */}
+      <div className="hidden md:flex items-center bg-white/10 rounded-full px-4 py-2 w-1/3">
+        <Search size={18} className="text-gray-300 ml-2" />
+        <input type="text" placeholder="ابحث..." className="bg-transparent outline-none text-sm w-full placeholder:text-gray-300" />
+      </div>
+
       <div className="flex items-center gap-4">
         <button className="relative p-2 rounded-full hover:bg-white/10 transition-colors">
           <Bell size={20} />
@@ -29,6 +36,7 @@ export function Topbar() {
             </span>
           )}
         </button>
+
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-[#f59e0b] text-gray-900 flex items-center justify-center font-bold">
             {user?.name?.charAt(0) || "ز"}

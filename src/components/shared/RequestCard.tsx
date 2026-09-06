@@ -5,18 +5,21 @@ import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/utils/currency";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Check, Eye } from "lucide-react";
 import { useState } from "react";
 
 export function RequestCard({ product }: { product: any }) {
   const addItem = useCartStore((state) => state.addItem);
   const { showToast } = useToast();
   const [isFav, setIsFav] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const image = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null;
 
   const handleAddToCart = () => {
     addItem({ productId: product.id, wholesalerId: product.owner_id || "default", name: product.name, price: product.price, quantity: 1, image: image || undefined });
-    showToast("تمت الإضافة إلى السلة بنجاح!", "success");
+    setIsAdded(true);
+    showToast("تمت الإضافة إلى السلة!", "success");
+    setTimeout(() => setIsAdded(false), 1500);
   };
 
   return (
@@ -40,8 +43,9 @@ export function RequestCard({ product }: { product: any }) {
       
       <div className="mt-auto">
         <span className="block font-extrabold text-primary text-xl mb-3">{formatCurrency(product.price)}</span>
-        <Button onClick={handleAddToCart} size="sm" className="w-full opacity-90 group-hover:opacity-100">
-          <ShoppingCart size={16} className="ml-1" /> أضف للسلة
+        <Button onClick={handleAddToCart} size="sm" className="w-full">
+          {isAdded ? <Check size={16} className="ml-1" /> : <ShoppingCart size={16} className="ml-1" />}
+          {isAdded ? "تمت الإضافة" : "أضف للسلة"}
         </Button>
       </div>
     </div>
