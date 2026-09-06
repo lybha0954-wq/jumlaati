@@ -1,29 +1,25 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/useToast";
-import { formatCurrency } from "@/lib/utils/currency";
 
 export default function DeliveryTasksPage() {
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState([]);
   const { showToast } = useToast();
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const res = await fetch("/api/delivery/tasks");
       if (res.ok) setTasks(await res.json());
     } catch (error) {
       showToast("خطأ في جلب المهام", "error");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  useEffect(() => { fetchTasks(); }, []);
+  useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
   const updateStatus = async (id: string, status: string) => {
     const res = await fetch("/api/delivery/tasks", {
@@ -42,16 +38,11 @@ export default function DeliveryTasksPage() {
   const columns = [
     { key: "id", header: "رقم الطلب" },
     { key: "address", header: "العنوان" },
-    { key: "total", header: "القيمة", render: (row: any) => formatCurrency(row.total) },
     { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
     { key: "actions", header: "إجراءات", render: (row: any) => (
         <div className="flex gap-2">
-            {row.status === 'processing' && (
-                <Button size="sm" onClick={() => updateStatus(row.id, 'shipped')}>بدء التسليم</Button>
-            )}
-            {row.status === 'shipped' && (
-                <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, 'delivered')}>تم التوصيل</Button>
-            )}
+          {row.status === "processing" && <Button size="sm" onClick={() => updateStatus(row.id, "shipped")}>بدء التسليم</Button>}
+          {row.status === "shipped" && <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, "delivered")}>تم التوصيل</Button>}
         </div>
     )},
   ];
@@ -63,10 +54,7 @@ export default function DeliveryTasksPage() {
         <h1 className="text-3xl font-bold mb-6">مهام التوصيل</h1>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           {tasks.length === 0 ? (
-            <div className="py-10 text-center text-gray-500">
-              <p className="text-xl font-bold">لا توجد مهام حاليًا.</p>
-              <p className="text-gray-400 mt-2">ستظهر الطلبات هنا عندما يقوم تجار الجملة بإسناد مهام التوصيل إليك.</p>
-            </div>
+            <p className="text-center text-gray-500 py-10">لا توجد مهام حالياً.</p>
           ) : (
             <DataTable data={tasks} columns={columns} />
           )}
