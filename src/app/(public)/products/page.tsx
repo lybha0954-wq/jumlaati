@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { RequestCard } from "@/components/shared/RequestCard";
 import { productService } from "@/lib/services/productService";
