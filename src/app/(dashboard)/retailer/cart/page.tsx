@@ -26,21 +26,31 @@ export default function RetailerCartPage() {
     if (!address.trim()) return showToast("يرجى إدخال عنوان التوصيل", "error");
     setLoading(true);
     try {
-      const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })), address })
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })),
+          address: address,
+        }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "خطأ");
+      if (!res.ok) throw new Error(data.error || "حدث خطأ");
       if (paymentMethod === "card") {
-        await fetch("/api/payments", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: data.orders[0].id, amount: total, gateway: "sindipay" })
+        await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: data.orders[0].id, amount: total, gateway: "sindipay" }),
         });
       }
       clearCart();
       showToast("تم إرسال الطلب بنجاح!", "success");
       router.push("/dashboard/retailer/orders");
-    } catch (error: any) { showToast(error.message, "error"); }
-    finally { setLoading(false); }
+    } catch (error: any) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) return (
@@ -68,7 +78,14 @@ export default function RetailerCartPage() {
                         <div className="flex-1">
                           <h4 className="font-bold">{item.name}</h4>
                           <p className="text-sm text-gray-500">{formatCurrency(item.price)}</p>
-                          <button onClick={() => removeItem(item.productId)} className="text-red-500 text-xs mt-2">حذف</button>
+                          <div className="flex justify-between items-center mt-2">
+                            <div className="flex items-center border rounded-full bg-gray-50">
+                              <button onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))} className="p-2"><Minus size={12} /></button>
+                              <span className="w-10 text-center font-bold text-sm">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="p-2"><Plus size={12} /></button>
+                            </div>
+                            <p className="text-lg font-extrabold text-primary">{formatCurrency(item.price * item.quantity)}</p>
+                          </div>
                         </div>
                       </div>
                     ))}
