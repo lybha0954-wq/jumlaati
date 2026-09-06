@@ -11,11 +11,7 @@ export async function POST(req: Request) {
     const { orderId, amount, gateway } = await req.json();
     if (!orderId || !amount) return NextResponse.json({ error: 'Missing data' }, { status: 400 });
 
-    // إنشاء سجل الدفع
     const payment = await paymentService.createPayment(orderId, amount, gateway || "cod");
-
-    // ملاحظة: هنا سنضيف منطق إنشاء رابط بوابة SindiPay لاحقاً عند توفر المفاتيح
-    // حالياً، نعيد success مع بيانات الدفع
     return NextResponse.json({ success: true, payment, gateway: gateway || "cod" }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Trash2, Plus, Minus, ArrowLeft, MapPin, Store, Tag } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowLeft, MapPin, Store, Wallet, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
 
@@ -15,167 +15,83 @@ export default function RetailerCartPage() {
   const { showToast } = useToast();
   const router = useRouter();
   const [address, setAddress] = useState("");
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [loading, setLoading] = useState(false);
 
   const groupedItems = getGroupedItems();
   const wholesalers = Object.keys(groupedItems);
   const total = getTotal();
-  const finalTotal = total - (total * appliedDiscount) / 100;
-
-  const handleApplyCoupon = async () => {
-    if (!couponCode) return;
-    const res = await fetch("/api/coupons/validate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: couponCode }),
-    });
-    const data = await res.json();
-    if (data.valid) {
-      setAppliedDiscount(data.discount_percent);
-      showToast(`تم تطبيق خصم ${data.discount_percent}%`, "success");
-    } else {
-      showToast(data.error || "كود غير صالح", "error");
-    }
-  };
 
   const handleCheckout = async () => {
-    if (!address.trim()) {
-      showToast("يرجى إدخال عنوان التوصيل", "error");
-      return;
-    }
+    if (!address.trim()) return showToast("يرجى إدخال عنوان التوصيل", "error");
     setLoading(true);
     try {
-      const orderRes = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })),
-          address: address,
-          coupon_code: couponCode,
-        }),
+      const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: items.map(i => ({ productId: i.productId, quantity: i.quantity, wholesalerId: i.wholesalerId, price: i.price })), address })
       });
-      const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.error || "خطأ");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "خطأ");
+      if (paymentMethod === "card") {
+        await fetch("/api/payments", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: data.orders[0].id, amount: total, gateway: "sindipay" })
+        });
+      }
       clearCart();
+      showToast("تم إرسال الطلب بنجاح!", "success");
       router.push("/dashboard/retailer/orders");
-    } catch (error: any) {
-      showToast(error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (error: any) { showToast(error.message, "error"); }
+    finally { setLoading(false); }
   };
 
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Topbar />
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="text-8xl mb-6">🛒</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">سلتك فارغة</h2>
-          <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات بعد.</p>
-          <Button onClick={() => router.push("/")}>تصفح المنتجات</Button>
-        </div>
-      </div>
-    );
-  }
+  if (items.length === 0) return (
+    <div className="min-h-screen bg-gray-50"><Topbar /><div className="flex flex-col items-center justify-center py-24"><div className="text-8xl mb-6">🛒</div><h2 className="text-2xl font-bold mb-2">سلتك فارغة</h2><Button onClick={() => router.push("/")}>تصفح المتجر</Button></div></div>
+  );
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <Topbar />
       <div className="max-w-6xl mx-auto">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-primary transition-colors">
-          <ArrowLeft size={16} /> متابعة التسوق
-        </button>
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-8">سلة المشتريات</h1>
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6"><ArrowLeft size={16} /> متابعة التسوق</button>
+        <h1 className="text-3xl font-extrabold mb-8">سلة المشتريات</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {wholesalers.map((wholesalerId) => {
               const wholesalerItems = groupedItems[wholesalerId];
               const wholesalerTotal = wholesalerItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
               return (
-                <div key={wholesalerId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="bg-gray-50 px-6 py-4 border-b flex items-center gap-3">
-                    <Store size={20} className="text-primary" />
-                    <h3 className="font-bold text-lg">طلب إلى تاجر الجملة</h3>
-                    <Badge variant="secondary">{wholesalerItems.length} منتج</Badge>
-                  </div>
+                <div key={wholesalerId} className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                  <div className="bg-gray-50 px-6 py-4 border-b flex items-center gap-3"><Store size={20} className="text-primary" /><h3 className="font-bold">طلب إلى تاجر الجملة</h3><Badge variant="secondary">{wholesalerItems.length} منتج</Badge></div>
                   <div className="p-4 space-y-4">
                     {wholesalerItems.map((item) => (
-                      <div key={item.productId} className="flex gap-4 bg-white rounded-xl p-3 border border-gray-100">
-                        <div className="h-20 w-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl shrink-0">📦</div>
-                        <div className="flex-1 flex flex-col justify-between py-1">
-                          <div className="flex justify-between items-start gap-4">
-                            <div>
-                              <h4 className="font-bold text-gray-800">{item.name}</h4>
-                              <p className="text-sm text-gray-500">{formatCurrency(item.price)}</p>
-                            </div>
-                            <button onClick={() => removeItem(item.productId)} className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors">
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                          <div className="flex justify-between items-center mt-2">
-                            <div className="flex items-center border border-gray-200 rounded-full bg-gray-50">
-                              <button onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))} className="p-2 hover:bg-gray-200 rounded-r-full transition-colors"><Minus size={12} /></button>
-                              <span className="w-10 text-center font-bold text-sm">{item.quantity}</span>
-                              <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="p-2 hover:bg-gray-200 rounded-l-full transition-colors"><Plus size={12} /></button>
-                            </div>
-                            <p className="text-lg font-extrabold text-primary">{formatCurrency(item.price * item.quantity)}</p>
-                          </div>
+                      <div key={item.productId} className="flex gap-4 rounded-xl p-3 border">
+                        <div className="h-20 w-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl">📦</div>
+                        <div className="flex-1">
+                          <h4 className="font-bold">{item.name}</h4>
+                          <p className="text-sm text-gray-500">{formatCurrency(item.price)}</p>
+                          <button onClick={() => removeItem(item.productId)} className="text-red-500 text-xs mt-2">حذف</button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
-                    <span className="font-bold">إجمالي الطلب من هذه الجملة</span>
-                    <span className="text-xl font-extrabold text-primary">{formatCurrency(wholesalerTotal)}</span>
-                  </div>
+                  <div className="bg-gray-50 px-6 py-4 border-t flex justify-between"><span className="font-bold">إجمالي الجملة</span><span className="text-xl font-extrabold text-primary">{formatCurrency(wholesalerTotal)}</span></div>
                 </div>
               );
             })}
           </div>
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
-               <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلبات</h2>
-               
-               <div className="mb-4 flex gap-2">
-                 <Input placeholder="كود الخصم" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
-                 <Button variant="outline" onClick={handleApplyCoupon}><Tag size={16} /></Button>
-               </div>
-
-               {appliedDiscount > 0 && (
-                 <div className="mb-4 bg-green-50 p-2 rounded text-green-700 text-center font-bold">
-                   خصم {appliedDiscount}% مفعل
-                 </div>
-               )}
-
-               <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-gray-600">
-                     <span>المجموع الفرعي</span>
-                     <span>{formatCurrency(total)}</span>
-                  </div>
-                  {appliedDiscount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>الخصم ({appliedDiscount}%)</span>
-                      <span>- {formatCurrency((total * appliedDiscount) / 100)}</span>
-                    </div>
-                  )}
-                  <div className="h-px bg-gray-200 my-4"></div>
-                  <div className="flex justify-between text-xl font-extrabold text-gray-900">
-                     <span>الإجمالي النهائي</span>
-                     <span className="text-primary">{formatCurrency(finalTotal)}</span>
-                  </div>
-               </div>
-               
-               <div className="mb-6">
-                  <label className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin size={16} /> عنوان التوصيل</label>
-                  <Input placeholder="بغداد - الكرادة - شارع 62" value={address} onChange={(e) => setAddress(e.target.value)} />
-               </div>
-
-               <Button onClick={handleCheckout} size="lg" disabled={loading} className="w-full justify-center gap-2 shadow-lg">
-                 {loading ? "جارٍ إرسال الطلبات..." : "إتمام الطلبات الآن"}
-               </Button>
+            <div className="bg-white rounded-2xl p-6 border shadow-sm sticky top-24">
+              <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلبات</h2>
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-gray-600"><span>المجموع</span><span>{formatCurrency(total)}</span></div>
+                <div className="h-px bg-gray-200 my-4"></div>
+                <div className="flex justify-between text-xl font-extrabold"><span>الإجمالي</span><span className="text-primary">{formatCurrency(total)}</span></div>
+              </div>
+              <div className="mb-4"><Input placeholder="العنوان" value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+              <div className="space-y-2 mb-6">
+                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${paymentMethod === "cod" ? "border-primary bg-primary/5" : "border-gray-200"}`}><input type="radio" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} className="accent-primary" /><Wallet size={18} /> الدفع عند الاستلام</label>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${paymentMethod === "card" ? "border-primary bg-primary/5" : "border-gray-200"}`}><input type="radio" checked={paymentMethod === "card"} onChange={() => setPaymentMethod("card")} className="accent-primary" /><CreditCard size={18} /> بطاقة إلكترونية</label>
+              </div>
+              <Button onClick={handleCheckout} size="lg" disabled={loading} className="w-full">{loading ? "جارٍ الإرسال..." : "إتمام الطلب"}</Button>
             </div>
           </div>
         </div>

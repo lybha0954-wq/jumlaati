@@ -97,7 +97,7 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-24">
               <h2 className="text-xl font-bold mb-6 border-b pb-4">ملخص الطلب</h2>
               <div className="flex justify-between items-center mb-6"><span className="text-lg font-bold">الإجمالي</span><span className="text-2xl font-extrabold text-primary">{formatCurrency(getTotal())}</span></div>
-              <Button type="submit" size="lg" disabled={loading} className="w-full justify-center gap-2"><Lock size={18} /> {loading ? "جارٍ التأكيد..." : "تأكيد الطلب"}</Button>
+              <Button type="submit" size="lg" disabled={loading} className="w-full"><Lock size={18} /> {loading ? "جارٍ التأكيد..." : "تأكيد الطلب"}</Button>
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-400"><ShieldCheck size={14} className="text-emerald-500" /> بياناتك محمية</div>
             </div>
           </div>
