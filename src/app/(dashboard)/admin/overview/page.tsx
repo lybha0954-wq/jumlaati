@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { BarChart } from "@/components/charts/BarChart";
