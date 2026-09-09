@@ -4,10 +4,12 @@ import { paymentConfig } from "@/config/payment";
 import type { Commission } from "@/types/commission";
 
 export const commissionService = {
+  // حساب نسبة العمولة
   calculateCommission(orderTotal: number): number {
     return orderTotal * paymentConfig.commissionRate;
   },
 
+  // إنشاء عمولة تلقائياً عند إتمام طلب
   async createCommission(orderId: string, retailerId: string, orderTotal: number) {
     const supabase = await createClient();
     const amount = this.calculateCommission(orderTotal);
@@ -30,6 +32,7 @@ export const commissionService = {
     return data as Commission;
   },
 
+  // جلب عمولاتي (بصفتي تاجر تجزئة)
   async getMyCommissions(): Promise<Commission[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
