@@ -1,34 +1,20 @@
 "use client";
-import { useState } from "react";
-import { Topbar } from "@/components/dashboard/Topbar";
+import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { useToast } from "@/hooks/useToast";
+import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function DeliverySettingsPage() {
-  const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    showToast("تم حفظ إعدادات التوصيل", "success");
-    setLoading(false);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       <Topbar />
-      <div className="p-6">
-        <div className="bg-white p-6 rounded-lg shadow max-w-lg">
-          <h1 className="text-2xl font-bold mb-6">إعدادات التوصيل</h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input name="vehicle" placeholder="نوع المركبة" />
-            <Input name="area" placeholder="منطقة التغطية" />
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "جارٍ الحفظ..." : "حفظ"}
-            </Button>
-          </form>
+      <div className="bg-white p-6 rounded-lg shadow max-w-lg">
+        <h1 className="text-2xl font-bold mb-6">إعدادات مندوب التوصيل</h1>
+        <div className="space-y-4">
+          <Input name="vehicle" placeholder="نوع المركبة (دراجة، سيارة...)" />
+          <Input name="area" placeholder="منطقة التغطية" />
+          <Button onClick={() => showToast("تم حفظ إعدادات التوصيل", "success")}>حفظ</Button>
         </div>
       </div>
     </div>

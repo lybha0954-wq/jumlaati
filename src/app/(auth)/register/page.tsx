@@ -1,74 +1,144 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Topbar } from "@/components/dashboard/Topbar";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { useToast } from "@/hooks/useToast";
-import { createClient } from "@/lib/supabase/client";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+
+const ROLES = [
+  { value: 'retailer', label: 'تاجر تجزئة' },
+  { value: 'wholesaler', label: 'تاجر جملة' },
+  { value: 'delivery', label: 'موصل' },
+];
 
 export default function RegisterPage() {
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { showToast } = useToast();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('retailer');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
 
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const role = formData.get("role") as string;
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name, role } },
+      });
 
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, role } },
-    });
+      if (authError) {
+        setError(authError.message || 'فشل إنشاء الحساب');
+        return;
+      }
 
-    if (error) {
-      showToast(error.message, "error");
+      router.push('/login');
+    } catch {
+      setError('حدث خطأ غير متوقع');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (data.user) {
-      await supabase.from('users').insert({ id: data.user.id, name, email, role });
-    }
-
-    showToast("تم إنشاء الحساب بنجاح!", "success");
-    router.push("/login");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Topbar />
-      <div className="flex items-center justify-center p-4 pt-20">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-extrabold text-center mb-6">إنشاء حساب جديد</h1>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <Input name="name" placeholder="الاسم الكامل" required className="h-12" />
-            <Input name="email" type="email" placeholder="البريد الإلكتروني" required className="h-12" />
-            <Input name="password" type="password" placeholder="كلمة المرور" required className="h-12" />
-            <Select name="role" defaultValue="retailer" className="h-12">
-              <option value="retailer">تاجر تجزئة</option>
-              <option value="wholesaler">تاجر جملة</option>
-              <option value="delivery">مندوب توصيل</option>
-            </Select>
-            <Button type="submit" disabled={loading} size="lg" className="w-full">
-              {loading ? "جارٍ التسجيل..." : "إنشاء الحساب"}
-            </Button>
-          </form>
-          <div className="text-center mt-6 text-sm text-gray-500">
-            لديك حساب؟ <Link href="/login" className="text-primary font-semibold">تسجيل الدخول</Link>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4" dir="rtl">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
+          <p className="text-gray-500 mt-2 text-sm">أدخل بياناتك لإنشاء حسابك</p>
         </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              الاسم الكامل
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="محمد أحمد"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              البريد الإلكتروني
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="example@email.com"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              كلمة المرور
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+              نوع الحساب
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {ROLES.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors text-sm"
+          >
+            {loading ? 'جارٍ إنشاء الحساب...' : 'إنشاء الحساب'}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          لديك حساب بالفعل؟{' '}
+          <Link href="/login" className="text-blue-600 hover:underline font-medium">
+            تسجيل الدخول
+          </Link>
+        </p>
       </div>
     </div>
   );
