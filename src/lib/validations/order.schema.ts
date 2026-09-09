@@ -8,5 +8,4 @@ export const createOrderSchema = z.object({
     price: z.number().positive(),
   })).min(1, "السلة فارغة"),
   address: z.string().min(5, "العنوان مفصل جداً"),
-  coupon_code: z.string().optional(),
 });

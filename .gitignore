@@ -1,7 +1,3 @@
 node_modules
 .next
-out
-.env*.local
-.DS_Store
-*.pem
-npm-debug.log*
+.env.local
