@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const parsed = reviewSchema.parse(body);
-    const data = await reviewService.createReview(parsed);
+    const data = await reviewService.createReview({ ...parsed, comment: parsed.comment || "" });
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });

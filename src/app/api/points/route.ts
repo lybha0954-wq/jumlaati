@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { walletService } from '@/lib/services/walletService';
+import { pointsService } from '@/lib/services/pointsService';
 
 export async function GET() {
   try {
-    const data = await walletService.getMyPoints();
+    const data = await pointsService.getMyPoints();
     return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

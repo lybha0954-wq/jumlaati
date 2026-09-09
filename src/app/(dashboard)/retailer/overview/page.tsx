@@ -1,56 +1,44 @@
+export const dynamic = "force-dynamic";
+
 import { Topbar } from "@/components/dashboard/Topbar";
-import { RetailerStats } from "@/app/(dashboard)/retailer/components/RetailerStats";
+import { StatsCard } from "@/components/shared/StatsCard";
 import { retailerService } from "@/lib/services/retailerService";
-import { BarChart } from "@/components/charts/BarChart";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export default async function RetailerOverviewPage() {
   let orders: any[] = [];
   try {
-    orders = await retailerService.getMyOrders();
-  } catch {
-    orders = [];
+    orders = await retailerService.getMyOrders() || [];
+  } catch (error) {
+    console.error("Error fetching orders:", error);
   }
 
-  const totalSales = orders?.reduce((sum, order) => sum + (order?.total ?? 0), 0);
-  const pendingOrders = orders?.filter(o => o?.status === "pending")?.length ?? 0;
-  const deliveredOrders = orders?.filter(o => o?.status === "delivered")?.length ?? 0;
-
-  const chartData = orders?.slice(0, 4)?.map((order, index) => ({
-    name: `طلب #${index + 1}`,
-    value: order?.total
-  }));
+  const totalSales = orders.reduce((sum, order) => sum + (order?.total || 0), 0);
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <Topbar />
-      <h1 className="text-3xl font-bold mb-6">نظرة عامة للتاجر</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <RetailerStats title="إجمالي المبيعات" value={`${totalSales?.toLocaleString()} د.ع`} icon="💰" trend="+12%" trendUp={true} />
-        <RetailerStats title="طلبات قيد الانتظار" value={pendingOrders?.toString()} icon="⏳" trend="" trendUp={false} />
-        <RetailerStats title="طلبات مكتملة" value={deliveredOrders?.toString()} icon="✅" trend="" trendUp={false} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">قيمة الطلبات الأخيرة</h2>
-          {chartData?.length > 0 ? (
-             <BarChart data={chartData} />
-          ) : (
-             <p className="text-gray-500">لا توجد طلبات بعد.</p>
-          )}
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">نظرة عامة للتاجر</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatsCard title="إجمالي المبيعات" value={formatCurrency(totalSales)} icon="💰" />
+          <StatsCard title="طلبات قيد الانتظار" value={orders.filter(o => o.status === "pending").length.toString()} icon="⏳" />
+          <StatsCard title="طلبات مكتملة" value={orders.filter(o => o.status === "delivered").length.toString()} icon="✅" />
         </div>
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">آخر نشاط</h2>
-          <ul className="space-y-3">
-            {orders?.slice(0, 5)?.map((order) => (
-              <li key={order?.id} className="flex justify-between border-b pb-2">
-                 <span className="font-medium">طلب #{order?.id}</span>
-                 <span className="text-primary font-bold">{order?.total?.toLocaleString()} د.ع</span>
-              </li>
-            ))}
-            {orders?.length === 0 && <li className="text-gray-500">لا يوجد نشاط بعد.</li>}
-          </ul>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-xl font-semibold mb-4">آخر الطلبات</h2>
+          {orders.length === 0 ? (
+            <p className="text-center text-gray-400 py-10">لا توجد طلبات بعد.</p>
+          ) : (
+            <div className="space-y-4">
+              {orders.slice(0, 5).map((order) => (
+                <div key={order.id} className="flex justify-between items-center border-b pb-3">
+                  <p className="font-medium">طلب #{order.id.slice(0, 6)}</p>
+                  <span className="font-bold text-primary">{formatCurrency(order.total)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,17 +1,30 @@
 "use client";
+import { useEffect, useCallback } from "react";
 import { useUserStore } from "@/lib/stores/userStore";
-import { useNotificationStore } from "@/hooks/useNotification";
-import { Package, Bell } from "lucide-react";
+import { useNotificationStore } from "@/lib/stores/notificationStore";
+import { useRealtime } from "@/hooks/useRealtime";
+import { Package, Bell, UserCircle, Search } from "lucide-react";
 
 export function Topbar() {
-  const user = useUserStore((state) => state?.user);
-  const unreadCount = useNotificationStore((state) => state?.unreadCount);
+  const user = useUserStore((state) => state.user);
+  const { unreadCount, fetchNotifications } = useNotificationStore();
+
+  const refresh = useCallback(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  useRealtime("notifications", () => { refresh(); });
+  useEffect(() => { refresh(); }, [refresh]);
 
   return (
     <header className="h-16 sticky top-0 z-40 flex items-center justify-between bg-[#0F172A] px-6 text-white shadow-lg">
       <div className="flex items-center gap-3">
         <Package className="h-6 w-6 text-[#f59e0b]" />
         <span className="text-xl font-black">جُمْلَتِي</span>
+      </div>
+
+      {/* Search Bar */}
+      <div className="hidden md:flex items-center bg-white/10 rounded-full px-4 py-2 w-1/3">
+        <Search size={18} className="text-gray-300 ml-2" />
+        <input type="text" placeholder="ابحث..." className="bg-transparent outline-none text-sm w-full placeholder:text-gray-300" />
       </div>
 
       <div className="flex items-center gap-4">

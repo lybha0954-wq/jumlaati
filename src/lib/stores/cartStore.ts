@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 interface CartItem {
   productId: string;
-  wholesalerId: string; // المفتاح الجديد لتقسيم السلة
+  wholesalerId: string;
   name: string;
   price: number;
   quantity: number;
@@ -17,7 +17,6 @@ interface CartState {
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
-  // دالة جديدة لتجميع السلة حسب الجملة
   getGroupedItems: () => { [wholesalerId: string]: CartItem[] };
 }
 
@@ -53,8 +52,6 @@ export const useCartStore = create<CartState>()(
         })),
       clearCart: () => set({ items: [] }),
       getTotal: () => get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      
-      // الدالة الجديدة: تقوم بتجميع المنتجات حسب تاجر الجملة
       getGroupedItems: () => {
         const groups: { [wholesalerId: string]: CartItem[] } = {};
         get().items.forEach((item) => {

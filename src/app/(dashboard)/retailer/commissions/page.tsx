@@ -1,42 +1,53 @@
+"use client";
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
+import { DataTable } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
 
 export default function RetailerCommissionsPage() {
-  const commissions = [
-    { id: "C1", order: "ORD-301", amount: 3000, date: "2026-08-02", status: "مدفوعة" },
-    { id: "C2", order: "ORD-302", amount: 4500, date: "2026-08-08", status: "معلقة" },
-    { id: "C3", order: "ORD-303", amount: 2800, date: "2026-08-14", status: "مدفوعة" },
+  const [commissions, setCommissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const fetchCommissions = async () => {
+      try {
+        // ملاحظة: يجب أن يكون الـ API الخاص بالعمولات يدعم جلب عمولات المستخدم الحالي
+        const res = await fetch("/api/commissions", { method: "GET" });
+        if (res.ok) setCommissions(await res.json());
+      } catch (error) {
+        showToast("خطأ في جلب العمولات", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCommissions();
+  }, []);
+
+  const columns = [
+    { key: "order_id", header: "رقم الطلب" },
+    { key: "amount", header: "المبلغ", render: (row: any) => formatCurrency(row.amount) },
+    { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleDateString('ar-IQ') },
+    { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
   ];
 
+  if (loading) return <LoadingSpinner />;
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <Topbar />
-      <h1 className="text-3xl font-bold mb-6">العمولات</h1>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-4 py-3 text-right font-medium text-gray-600">رقم الطلب</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-600">المبلغ</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-600">التاريخ</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-600">الحالة</th>
-            </tr>
-          </thead>
-          <tbody>
-            {commissions?.map((c) => (
-              <tr key={c?.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3">{c?.order}</td>
-                <td className="px-4 py-3">{formatCurrency(c?.amount)}</td>
-                <td className="px-4 py-3">{c?.date}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${c?.status === "مدفوعة" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                    {c?.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">العمولات المستحقة</h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {commissions.length === 0 ? (
+            <div className="py-10 text-center text-gray-500">لا توجد عمولات حالياً.</div>
+          ) : (
+            <DataTable data={commissions} columns={columns} />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Order } from "@/types/order";
 
 export const deliveryService = {
-  // جلب المهام المتاحة أو المسندة إلي
+  // جلب الطلبات المسندة إلى المندوب أو المتاحة له
   async getMyTasks(): Promise<Order[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -12,7 +12,8 @@ export const deliveryService = {
       .from("orders")
       .select("*")
       .eq("delivery_id", user.id)
-      .or("status.eq.shipped,status.eq.pending");
+      .or("status.eq.processing,status.eq.shipped")
+      .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
     return data as Order[];
@@ -27,5 +28,6 @@ export const deliveryService = {
       .eq("id", orderId);
 
     if (error) throw new Error(error.message);
+    return { success: true };
   }
 };

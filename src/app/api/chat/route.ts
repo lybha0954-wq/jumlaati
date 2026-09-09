@@ -1,14 +1,31 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { chatService } from '@/lib/services/chatService';
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const otherUserId = searchParams.get('userId');
-  if (!otherUserId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-
   try {
-    const data = await chatService.getConversation(otherUserId);
-    return NextResponse.json(data);
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+
+    // إذا تم تمرير userId، نجلب المحادثة بين الطرفين
+    if (userId) {
+      const messages = await chatService.getConversation(userId);
+      return NextResponse.json(messages);
+    }
+
+    // إذا لم يتم تمرير userId، نجلب قائمة جهات الاتصال المحتملة
+    const { data: contacts, error } = await supabase
+      .from('users')
+      .select('id, name, role')
+      .neq('id', user.id)
+      .order('name', { ascending: true });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(contacts);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -17,8 +34,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const { receiverId, message } = await req.json();
-    const data = await chatService.sendMessage(receiverId, message);
-    return NextResponse.json(data, { status: 201 });
+    const chat = await chatService.sendMessage(receiverId, message);
+    return NextResponse.json(chat, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
