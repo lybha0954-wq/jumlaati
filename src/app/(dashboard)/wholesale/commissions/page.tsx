@@ -1,10 +1,11 @@
-import { Topbar } from "@/components/dashboard/Topbar";
+import { Topbar } from "@/components/shared/Topbar";
 import { formatCurrency } from "@/lib/utils/currency";
 
 export default function WholesaleCommissionsPage() {
   const commissions = [
-    { id: "W-C1", order: "ORD-101", amount: 5000, date: "2026-08-03", status: "معلقة" },
-    { id: "W-C2", order: "ORD-102", amount: 7500, date: "2026-08-09", status: "مدفوعة" },
+    { id: "C1", order: "ORD-201", amount: 15000, date: "2026-08-01", status: "مدفوعة" },
+    { id: "C2", order: "ORD-202", amount: 22000, date: "2026-08-06", status: "معلقة" },
+    { id: "C3", order: "ORD-203", amount: 18000, date: "2026-08-12", status: "مدفوعة" },
   ];
 
   return (

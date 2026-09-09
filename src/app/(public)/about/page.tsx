@@ -1,4 +1,4 @@
-import { Topbar } from "@/components/dashboard/Topbar";
+import { Topbar } from "@/components/shared/Topbar";
 
 export default function AboutPage() {
   return (

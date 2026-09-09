@@ -1,6 +1,5 @@
-"use client";
 import { RequestCard } from "@/components/shared/RequestCard";
-import { Topbar } from "@/components/dashboard/Topbar";
+import { Topbar } from "@/components/shared/Topbar";
 
 export default function RetailerFavoritesPage() {
   // سيتم جلب المفضلة من قاعدة البيانات لاحقاً

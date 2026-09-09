@@ -1,7 +1,7 @@
 "use client";
-import { Topbar } from "@/components/dashboard/Topbar";
 import { ProductForm } from "@/components/forms/ProductForm";
-import { Button } from "@/components/ui/Button";
+import { Topbar } from "@/components/shared/Topbar";
+
 import { Input } from "@/components/ui/Input";
 
 export default function WholesaleProductsPage() {

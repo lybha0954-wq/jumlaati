@@ -1,4 +1,4 @@
-import { Topbar } from "@/components/dashboard/Topbar";
+import { Topbar } from "@/components/shared/Topbar";
 import { formatCurrency } from "@/lib/utils/currency";
 
 export default function RetailerCommissionsPage() {

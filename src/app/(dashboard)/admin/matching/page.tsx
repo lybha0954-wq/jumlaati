@@ -1,7 +1,7 @@
 "use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
-import { Topbar } from "@/components/dashboard/Topbar";
+import { Topbar } from "@/components/shared/Topbar";
 
 export default function AdminMatchingPage() {
   const matches = [
@@ -14,7 +14,7 @@ export default function AdminMatchingPage() {
     { key: "retailer", header: "تاجر التجزئة" },
     { key: "wholesaler", header: "تاجر الجملة" },
     { key: "status", header: "الحالة" },
-    { key: "actions", header: "إجراءات", render: () => (
+    { key: "actions", header: "إجراءات", render: (r: any) => (
         <div className="flex gap-2">
             <Button size="sm" variant="outline">قبول</Button>
             <Button size="sm" variant="destructive">رفض</Button>

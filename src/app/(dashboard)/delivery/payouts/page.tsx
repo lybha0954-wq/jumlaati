@@ -1,7 +1,7 @@
 "use client";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
-import { Topbar } from "@/components/dashboard/Topbar";
+import { Topbar } from "@/components/shared/Topbar";
 
 export default function DeliveryPayoutsPage() {
   const payouts = [
