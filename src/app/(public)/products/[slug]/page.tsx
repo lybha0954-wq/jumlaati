@@ -1,51 +1,82 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useCartStore } from "@/lib/stores/cartStore";
-import { useToast } from "@/hooks/useToast";
-import { Button } from "@/components/ui/Button";
-import { formatCurrency } from "@/lib/utils/currency";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+export const dynamic = "force-dynamic";
+
 import { Topbar } from "@/components/dashboard/Topbar";
+import { productService } from "@/lib/services/productService";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { AddToCartButton } from "./AddToCartButton";
+import { formatCurrency } from "@/lib/utils/currency";
 
-export default function ProductPage() {
-  const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const [quantity, setQuantity] = useState(1);
-  const addItem = useCartStore((state) => state.addItem);
-  const { showToast } = useToast();
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-  const product = {
-    id: slug || "unknown",
-    wholesalerId: "demo-wholesaler",
-    name: "ساعة ذكية فاخرة",
-    price: 85000,
-    description: "ساعة ذكية بمزايا متطورة.",
-  };
+  let product: any = null;
+  try {
+    const all = await productService.getAllProducts();
+    product =
+      all.find(
+        (p: any) => p.id === slug || p.slug === slug
+      ) || null;
+  } catch (e) {
+    console.error("Product fetch error:", e);
+  }
 
-  const handleAddToCart = () => {
-    addItem({ productId: product.id, wholesalerId: product.wholesalerId, name: product.name, price: product.price, quantity });
-    showToast("تمت الإضافة إلى السلة!", "success");
-  };
+  if (!product) return notFound();
+
+  const image =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images[0]
+      : typeof product.images === "string" && product.images.length > 0
+      ? product.images
+      : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Topbar />
-      <div className="max-w-4xl mx-auto pt-10 pb-20 px-4">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-10 p-8">
-          <div className="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center text-9xl">⌚</div>
+      <div className="max-w-4xl mx-auto pt-6 pb-20 px-4">
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-6"
+        >
+          <ArrowRight size={18} />
+          <span>العودة للمنتجات</span>
+        </Link>
+
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+          <div className="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center text-9xl overflow-hidden relative">
+            {image ? (
+              <Image
+                src={image}
+                alt={product.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <span>📦</span>
+            )}
+          </div>
+
           <div className="flex flex-col justify-center">
             <h1 className="text-3xl font-extrabold mb-4">{product.name}</h1>
-            <p className="text-gray-600 mb-6">{product.description}</p>
-            <div className="text-4xl font-black text-primary mb-8">{formatCurrency(product.price)}</div>
-            <div className="flex items-center gap-6 mb-8">
-              <div className="flex items-center border-2 border-gray-200 rounded-full">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3"><Minus size={16} /></button>
-                <span className="w-12 text-center font-bold">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="p-3"><Plus size={16} /></button>
-              </div>
+            <p className="text-gray-600 mb-6">
+              {product.description || "لا يوجد وصف."}
+            </p>
+            <div className="text-4xl font-black text-primary mb-8">
+              {formatCurrency(product.price)}
             </div>
-            <Button onClick={handleAddToCart} size="lg" className="gap-2"><ShoppingCart size={20} /> أضف إلى السلة</Button>
+            <AddToCartButton
+              productId={product.id}
+              wholesalerId={product.owner_id || product.ownerId || "default"}
+              name={product.name}
+              price={product.price}
+              image={image}
+            />
           </div>
         </div>
       </div>

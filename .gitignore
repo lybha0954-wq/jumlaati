@@ -5,3 +5,13 @@ out
 .DS_Store
 *.pem
 npm-debug.log*
+
+# ENV files - ALL variants
+.env
+.env.*
+!.env.example
+
+# ENV files - ALL variants
+.env
+.env.*
+!.env.example

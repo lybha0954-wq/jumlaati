@@ -31,10 +31,10 @@ export default function LoginPage() {
     const { data: { user } } = await supabase.auth.getUser();
     const role = user?.user_metadata?.role || "retailer";
 
-    let dashboardPath = "/dashboard/retailer/overview";
-    if (role === "admin") dashboardPath = "/dashboard/admin/overview";
-    else if (role === "wholesaler") dashboardPath = "/dashboard/wholesale/overview";
-    else if (role === "delivery") dashboardPath = "/dashboard/delivery/overview";
+    let dashboardPath = "/retailer/overview";
+if (role === "admin") dashboardPath = "/admin/overview";
+else if (role === "wholesaler") dashboardPath = "/wholesale/overview";
+else if (role === "delivery") dashboardPath = "/delivery/overview";
 
     showToast("تم تسجيل الدخول بنجاح!", "success");
     router.push(dashboardPath);
