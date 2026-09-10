@@ -15,3 +15,17 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+
+# Local backups
+.backup_*/
+
+# Nested copy (to be deleted)
+jumlaati/
+
+# Android build artifacts (Capacitor)
+android/app/build/
+android/build/
+android/.gradle/
+
+# Capacitor native project (regenerated via npx cap add android)
+/android/
