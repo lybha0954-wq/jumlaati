@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 const AUTH_PAGES = ['/login', '/register'];
@@ -17,6 +17,12 @@ const ROLE_PREFIX: Record<string, string> = {
   '/delivery': 'delivery',
 };
 
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+};
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -25,9 +31,13 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
@@ -37,7 +47,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const pathname = request.nextUrl.pathname;
   const isAuthPage = AUTH_PAGES.includes(pathname);
 
@@ -50,7 +63,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected route detection
-  const matchedPrefix = Object.keys(ROLE_PREFIX).find(p => pathname.startsWith(p));
+  const matchedPrefix = Object.keys(ROLE_PREFIX).find((p) =>
+    pathname.startsWith(p)
+  );
 
   // Guest trying to access protected area → login
   if (!user && matchedPrefix) {
