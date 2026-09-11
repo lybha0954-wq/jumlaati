@@ -3,60 +3,56 @@ module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   darkMode: 'class',
   safelist: [
-    // RoleSelector dynamic colors
     'border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/30', 'dark:border-emerald-500',
-    'hover:border-emerald-300', 'dark:hover:border-emerald-700', 'text-emerald-600', 'dark:text-emerald-400',
     'border-blue-500', 'bg-blue-50', 'dark:bg-blue-950/30', 'dark:border-blue-500',
-    'hover:border-blue-300', 'dark:hover:border-blue-700', 'text-blue-600', 'dark:text-blue-400',
     'border-purple-500', 'bg-purple-50', 'dark:bg-purple-950/30', 'dark:border-purple-500',
-    'hover:border-purple-300', 'dark:hover:border-purple-700', 'text-purple-600', 'dark:text-purple-400',
-    // Topbar role badge colors
-    'bg-purple-100', 'text-purple-700', 'dark:bg-purple-900/40', 'dark:text-purple-300',
-    'bg-blue-100', 'text-blue-700', 'dark:bg-blue-900/40', 'dark:text-blue-300',
-    'bg-emerald-100', 'text-emerald-700', 'dark:bg-emerald-900/40', 'dark:text-emerald-300',
-    // SignupForm supplier warning
-    'bg-amber-50', 'border-amber-200', 'text-amber-700',
+    'text-emerald-600', 'text-blue-600', 'text-purple-600',
+    'text-emerald-700', 'text-blue-700', 'text-purple-700',
   ],
   theme: {
     container: { center: true, padding: '1rem' },
     extend: {
       colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
         primary: {
-          DEFAULT: 'var(--primary)',
-          foreground: 'var(--primary-foreground)',
+          DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+          foreground: 'rgb(var(--primary-foreground) / <alpha-value>)',
         },
         secondary: {
-          DEFAULT: 'var(--secondary)',
-          foreground: 'var(--secondary-foreground)',
+          DEFAULT: 'rgb(var(--secondary) / <alpha-value>)',
+          foreground: 'rgb(var(--secondary-foreground) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: 'var(--accent)',
-          foreground: 'var(--accent-foreground)',
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          foreground: 'rgb(var(--accent-foreground) / <alpha-value>)',
         },
         muted: {
-          DEFAULT: 'var(--muted)',
-          foreground: 'var(--muted-foreground)',
+          DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
+          foreground: 'rgb(var(--muted-foreground) / <alpha-value>)',
         },
         card: {
-          DEFAULT: 'var(--card)',
-          foreground: 'var(--card-foreground)',
+          DEFAULT: 'rgb(var(--card) / <alpha-value>)',
+          foreground: 'rgb(var(--card-foreground) / <alpha-value>)',
         },
-        border: 'var(--border)',
-        input: 'var(--input)',
-        ring: 'var(--ring)',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        input: 'rgb(var(--input) / <alpha-value>)',
+        ring: 'rgb(var(--ring) / <alpha-value>)',
         warning: {
-          DEFAULT: 'var(--warning)',
-          foreground: 'var(--warning-foreground)',
+          DEFAULT: 'rgb(var(--warning) / <alpha-value>)',
+          foreground: 'rgb(var(--warning-foreground) / <alpha-value>)',
         },
         danger: {
-          DEFAULT: 'var(--danger)',
-          foreground: 'var(--danger-foreground)',
+          DEFAULT: 'rgb(var(--danger) / <alpha-value>)',
+          foreground: 'rgb(var(--danger-foreground) / <alpha-value>)',
+        },
+        destructive: {
+          DEFAULT: 'rgb(var(--danger) / <alpha-value>)',
+          foreground: 'rgb(var(--danger-foreground) / <alpha-value>)',
         },
         success: {
-          DEFAULT: 'var(--success)',
-          foreground: 'var(--success-foreground)',
+          DEFAULT: 'rgb(var(--success) / <alpha-value>)',
+          foreground: 'rgb(var(--success-foreground) / <alpha-value>)',
         },
       },
       borderRadius: {
