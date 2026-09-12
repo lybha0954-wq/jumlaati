@@ -9,7 +9,7 @@ export const orchestrationService = {
     try {
       const order = await retailerService.createOrder(orderData);
       await commissionService.createCommission(order.id, orderData.retailerId, orderData.total);
-      await notificationService.notify({
+      await notificationService.sendInApp({
         userId: orderData.wholesalerId,
         type: "order",
         title: "طلب جديد من تاجر تجزئة!",

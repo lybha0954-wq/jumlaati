@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       });
 
       await commissionService.createCommission(order.id, retailerId, total);
-      await notificationService.notify({
+      await notificationService.sendInApp({
         userId: wholesalerId,
         type: "order",
         title: "طلب جديد من تاجر تجزئة!",
