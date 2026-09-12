@@ -18,20 +18,20 @@
     --primary-foreground: 255 255 255;
     
     /* الثانوي: رمادي ناعم */
-    --secondary: 241 245 249;        /* #F1F5F9 — slate-100 */
+    --secondary: 245 245 244;        /* #F1F5F9 — slate-100 */
     --secondary-foreground: 51 65 85; /* #334155 */
     
     /* النصوص المخففة */
-    --muted: 248 250 252;
-    --muted-foreground: 100 116 139;  /* #64748B — slate-500 */
+    --muted: 250 250 249;
+    --muted-foreground: 120 113 108;  /* #64748B — slate-500 */
     
     /* البطاقات */
     --card: 255 255 255;
     --card-foreground: 30 41 59;
     
     /* الحدود */
-    --border: 226 232 240;           /* #E2E8F0 — slate-200 */
-    --input: 226 232 240;
+    --border: 245 245 244;           /* #E2E8F0 — slate-200 */
+    --input: 245 245 244;
     --ring: 251 146 60;
     
     /* الحالات */
