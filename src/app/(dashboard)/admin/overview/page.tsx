@@ -9,24 +9,22 @@ export const dynamic = "force-dynamic";
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
 
-  // جلب كل الإحصائيات بالتوازي
   const [
     { count: usersCount },
     { count: ordersCount },
-    { data: paidPayments },
+    { data: payments },
   ] = await Promise.all([
     supabase.from("users").select("*", { count: "exact", head: true }),
     supabase.from("orders").select("*", { count: "exact", head: true }),
-    supabase.from("payments").select("amount").eq("status", "completed"),
+    supabase.from("payments").select("amount, status"),
   ]);
 
-  const totalRevenue = (paidPayments || []).reduce(
-    (sum, p) => sum + (Number(p.amount) || 0),
-    0
-  );
+  const totalRevenue = (payments || [])
+    .filter((p) => p.status === "completed")
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <Topbar />
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-6">نظرة عامة للمنصة</h1>
@@ -56,8 +54,8 @@ export default async function AdminOverviewPage() {
           />
         </div>
 
-        <div className="mt-6 p-6 bg-white rounded-2xl shadow-sm">
-          <p className="text-center text-gray-600">
+        <div className="mt-6 p-6 bg-card rounded-2xl shadow-soft">
+          <p className="text-center text-muted-foreground">
             مرحباً بك في لوحة تحكم الإدارة.
           </p>
         </div>

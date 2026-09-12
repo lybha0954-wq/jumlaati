@@ -47,27 +47,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
   const isAuthPage = AUTH_PAGES.includes(pathname);
-
-  // Logged-in user on auth page → redirect to their dashboard
-  if (user && isAuthPage) {
-    const role = (user.user_metadata?.role as string) || 'retailer';
-    const url = request.nextUrl.clone();
-    url.pathname = ROLE_TO_HOME[role] || ROLE_TO_HOME.retailer;
-    return NextResponse.redirect(url);
-  }
-
-  // Protected route detection
   const matchedPrefix = Object.keys(ROLE_PREFIX).find((p) =>
     pathname.startsWith(p)
   );
 
-  // Guest trying to access protected area → login
+  // 1. Guest trying to access protected route → login
   if (!user && matchedPrefix) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -75,13 +63,38 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Role-based access control
-  if (user && matchedPrefix) {
-    const role = (user.user_metadata?.role as string) || 'retailer';
+  // If no user and not protected route → allow
+  if (!user) return response;
+
+  // 2. Determine role — try user_metadata first, fallback to DB
+  let userRole: string = (user.user_metadata?.role as string) || '';
+
+  if (!userRole) {
+    try {
+      const { data } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      userRole = data?.role || 'retailer';
+    } catch {
+      userRole = 'retailer';
+    }
+  }
+
+  // 3. Logged-in on auth page → redirect to home
+  if (isAuthPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = ROLE_TO_HOME[userRole] || ROLE_TO_HOME.retailer;
+    return NextResponse.redirect(url);
+  }
+
+  // 4. Logged-in accessing protected route → verify role
+  if (matchedPrefix) {
     const requiredRole = ROLE_PREFIX[matchedPrefix];
-    if (role !== requiredRole) {
+    if (userRole !== requiredRole) {
       const url = request.nextUrl.clone();
-      url.pathname = ROLE_TO_HOME[role] || '/login';
+      url.pathname = ROLE_TO_HOME[userRole] || '/login';
       return NextResponse.redirect(url);
     }
   }
