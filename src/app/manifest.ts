@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "جُمْلَتِي",
     short_name: "جُمْلَتِي",
-    description: "منصة عراقية متكاملة للبيع بالجملة والتجزئة والتوصيل.",
+    description: "تطبيق عراقي متكامل للبيع بالجملة والتجزئة والتوصيل.",
     start_url: "/",
     display: "standalone",
     background_color: "#0F172A",

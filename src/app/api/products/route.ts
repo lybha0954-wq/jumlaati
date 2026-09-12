@@ -1,26 +1,37 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { wholesaleService } from '@/lib/services/wholesaleService';
+import { requireUser, requireRole } from '@/lib/api/auth';
 
 export async function GET() {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    
+    if (!user) {
+      // للزوار: عرض كل المنتجات النشطة
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      return NextResponse.json(data || []);
+    }
     const products = await wholesaleService.getMyProducts();
     return NextResponse.json(products);
-  } catch (error) {
-    return NextResponse.json({ error: 'خطأ في جلب المنتجات' }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
+  const { user, error } = await requireRole(['wholesaler', 'admin']);
+  if (error) return error;
+
   try {
     const body = await req.json();
     const product = await wholesaleService.createProduct(body);
     return NextResponse.json(product, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'خطأ في إنشاء المنتج' }, { status: 400 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }

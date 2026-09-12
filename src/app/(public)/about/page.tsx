@@ -8,7 +8,7 @@ export default function AboutPage() {
       <div className="container mx-auto px-4 py-16 max-w-3xl text-center">
         <h1 className="text-4xl font-bold mb-6">عن جُمْلَتِي</h1>
         <p className="text-lg text-gray-600 leading-relaxed mb-10">
-          جُمْلَتِي هي منصة عراقية متكاملة تهدف إلى ربط تجار التجزئة مع تجار الجملة والموردين المحليين بطريقة سهلة وآمنة.
+          جُمْلَتِي هي تطبيق عراقي متكامل تهدف إلى ربط تجار التجزئة مع تجار الجملة والموردين المحليين بطريقة سهلة وآمنة.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">

@@ -1,34 +1,15 @@
-"use client";
-import { useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { useToast } from "@/hooks/useToast";
+import { ProfileForm } from "@/components/settings/ProfileForm";
 
-export default function DeliverySettingsPage() {
-  const [loading, setLoading] = useState(false);
-  const { showToast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    showToast("تم حفظ إعدادات التوصيل", "success");
-    setLoading(false);
-  };
-
+export default function SettingsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <Topbar />
       <div className="p-6">
-        <div className="bg-white p-6 rounded-lg shadow max-w-lg">
-          <h1 className="text-2xl font-bold mb-6">إعدادات التوصيل</h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input name="vehicle" placeholder="نوع المركبة" />
-            <Input name="area" placeholder="منطقة التغطية" />
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "جارٍ الحفظ..." : "حفظ"}
-            </Button>
-          </form>
+        <h1 className="text-3xl font-bold mb-6">الإعدادات</h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm max-w-2xl">
+          <h2 className="text-xl font-semibold mb-4">معلومات الحساب</h2>
+          <ProfileForm />
         </div>
       </div>
     </div>

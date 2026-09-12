@@ -1,18 +1,25 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireUser } from '@/lib/api/auth';
 
 export async function GET(req: Request) {
+  const { user, error } = await requireUser();
+  if (error || !user) return error!;
+
   try {
-    const supabase = await createClient(); // تعديل
+    const supabase = await createClient();
     const { searchParams } = new URL(req.url);
     const role = searchParams.get('role');
+    if (!role) return NextResponse.json({ error: 'Role required' }, { status: 400 });
 
-    if (!role) return NextResponse.json({ error: 'Role is required' }, { status: 400 });
+    const { data, error: dbError } = await supabase
+      .from('users')
+      .select('id, name, email, phone, role')
+      .eq('role', role);
 
-    const { data, error } = await supabase.from('users').select('*').eq('role', role);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

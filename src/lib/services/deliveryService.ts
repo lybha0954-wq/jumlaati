@@ -12,7 +12,7 @@ export const deliveryService = {
       .from("orders")
       .select("*")
       .eq("delivery_id", user.id)
-      .or("status.eq.processing,status.eq.shipped")
+      .or("status.eq.accepted,status.eq.shipped")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);

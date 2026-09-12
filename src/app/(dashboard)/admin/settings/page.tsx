@@ -1,44 +1,15 @@
-"use client";
-import { useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { useToast } from "@/hooks/useToast";
+import { ProfileForm } from "@/components/settings/ProfileForm";
 
-export default function AdminSettingsPage() {
-  const [loading, setLoading] = useState(false);
-  const { showToast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    showToast("تم حفظ إعدادات المنصة بنجاح", "success");
-    setLoading(false);
-  };
-
+export default function SettingsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <Topbar />
       <div className="p-6">
-        <div className="bg-white p-6 rounded-lg shadow max-w-lg">
-          <h1 className="text-2xl font-bold mb-6">إعدادات المنصة</h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">نسبة العمولة العامة</label>
-              <Input type="number" defaultValue="5" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">طرق الدفع المتاحة</label>
-              <Select defaultValue="card">
-                <option value="card">بطاقة ائتمان</option>
-                <option value="cod">الدفع عند الاستلام</option>
-              </Select>
-            </div>
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "جارٍ الحفظ..." : "حفظ التغييرات"}
-            </Button>
-          </form>
+        <h1 className="text-3xl font-bold mb-6">الإعدادات</h1>
+        <div className="bg-white p-6 rounded-2xl shadow-sm max-w-2xl">
+          <h2 className="text-xl font-semibold mb-4">معلومات الحساب</h2>
+          <ProfileForm />
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ export default async function Home() {
       <section className="bg-[#0F172A] text-white py-24 text-center px-4">
         <h1 className="text-5xl font-black mb-6">جملتي</h1>
         <p className="text-lg text-gray-300 mb-10">
-          منصة عراقية متكاملة للبيع بالجملة والتجزئة والتوصيل.
+          تطبيق عراقي متكامل للبيع بالجملة والتجزئة والتوصيل.
         </p>
         <div className="flex justify-center gap-4">
           <Link href="/products">

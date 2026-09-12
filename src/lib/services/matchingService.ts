@@ -21,7 +21,7 @@ export const matchingService = {
     const supabase = await createClient();
     const { error } = await supabase
       .from("matches")
-      .update({ status: "approved" })
+      .update({ status: "accepted" })
       .eq("id", matchId);
       
     if (error) throw new Error(error.message);

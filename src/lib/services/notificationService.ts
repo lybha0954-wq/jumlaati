@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/utils/email";
 import { sendSMS } from "@/lib/utils/sms";
 import { logger } from "@/lib/utils/logger";
@@ -13,38 +14,38 @@ interface NotificationPayload {
 }
 
 export const notificationService = {
-  // إرسال إشعار داخل التطبيق (سيتم حفظه في قاعدة البيانات لاحقاً)
   async sendInApp(payload: NotificationPayload): Promise<void> {
-    logger.info(`[Notification] Sending in-app to user ${payload.userId}: ${payload.title}`);
-    // يمكن استدعاء Supabase هنا لحفظ الإشعار في جدول notifications
-    // await supabase.from('notifications').insert({...})
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase.from("notifications").insert({
+        user_id: payload.userId,
+        title: payload.title,
+        message: payload.message,
+      });
+      if (error) throw new Error(error.message);
+      logger.info(`[Notification] Sent to ${payload.userId}: ${payload.title}`);
+    } catch (err) {
+      logger.error("Failed to send in-app notification", err);
+      throw err;
+    }
   },
 
-  // إرسال إشعار عبر البريد الإلكتروني
   async sendEmail(payload: NotificationPayload): Promise<void> {
     if (!payload.email) return;
     const html = `<h1>${payload.title}</h1><p>${payload.message}</p>`;
     try {
       await sendEmail(payload.email, payload.title, html);
-    } catch (error) {
-      logger.error("Failed to send notification email", error);
+    } catch (err) {
+      logger.error("Failed to send notification email", err);
     }
   },
 
-  // إرسال إشعار عبر رسالة نصية SMS
   async sendSMS(payload: NotificationPayload): Promise<void> {
     if (!payload.phone) return;
     try {
       await sendSMS(payload.phone, `${payload.title}: ${payload.message}`);
-    } catch (error) {
-      logger.error("Failed to send notification SMS", error);
+    } catch (err) {
+      logger.error("Failed to send notification SMS", err);
     }
   },
-
-  // إرسال إشعار متعدد القنوات (كل الوسائل المتاحة)
-  async notify(payload: NotificationPayload): Promise<void> {
-    await this.sendInApp(payload);
-    await this.sendEmail(payload);
-    await this.sendSMS(payload);
-  }
 };
