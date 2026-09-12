@@ -29,3 +29,14 @@ android/.gradle/
 
 # Capacitor native project (regenerated via npx cap add android)
 /android/
+
+# Backups
+.backup_*/
+
+# Local scripts
+create-users.mjs
+
+# Reports
+report*.txt
+duplicates_report.txt
+project_full_scan.txt

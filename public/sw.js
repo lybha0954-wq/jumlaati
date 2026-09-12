@@ -1,8 +1,13 @@
-const CACHE_NAME = 'jumlati-v1';
-const urlsToCache = ['/', '/products', '/login', '/register'];
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)));
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      await self.registration.unregister();
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach(c => 'navigate' in c && c.navigate(c.url));
+    })()
+  );
 });
-self.addEventListener('fetch', (event) => {
-  event.respondWith(caches.match(event.request).then((response) => response || fetch(event.request)));
-});
+self.addEventListener('fetch', () => {});
