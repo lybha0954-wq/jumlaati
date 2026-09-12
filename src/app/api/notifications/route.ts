@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    await notificationService.notify(body);
+    await notificationService.sendInApp(body);
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'فشل إرسال الإشعار' }, { status: 400 });
