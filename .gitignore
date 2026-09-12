@@ -40,3 +40,5 @@ create-users.mjs
 report*.txt
 duplicates_report.txt
 project_full_scan.txt
+.env.local
+.env.*.local
