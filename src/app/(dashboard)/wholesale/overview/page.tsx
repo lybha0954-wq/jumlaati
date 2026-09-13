@@ -1,72 +1,186 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
-import { StatsCard } from "@/components/shared/StatsCard";
-import { BarChart } from "@/components/charts/BarChart";
-import { wholesaleService } from "@/lib/services/wholesaleService";
+import { Card, CardContent } from "@/components/ui/Card";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
+import { WholesaleStats } from "../components/WholesaleStats";
 import { formatCurrency } from "@/lib/utils/currency";
+import { Package } from "lucide-react";
 
-export default async function WholesaleOverviewPage() {
-  let products: any[] = [];
-  let orders: any[] = [];
-  let totalRevenue = 0;
+interface Order {
+  id: string;
+  total: number;
+  status: string;
+  created_at: string;
+}
 
-  try {
-    products = await wholesaleService.getMyProducts() || [];
-    orders = await wholesaleService.getMyOrders?.() || [];
-    totalRevenue = orders.reduce((sum, order) => sum + (order?.total || 0), 0);
-  } catch (error) {
-    console.error("Error fetching wholesale data:", error);
+export default function WholesaleOverviewPage() {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    products: 0,
+    orders: 0,
+    revenue: 0,
+    pendingOrders: 0,
+  });
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const { showToast } = useToast();
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [productsRes, ordersRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/orders"),
+      ]);
+
+      const products = productsRes.ok ? await productsRes.json() : [];
+      const orders: Order[] = ordersRes.ok ? await ordersRes.json() : [];
+
+      const totalRevenue = orders.reduce(
+        (sum, o) => sum + (Number(o.total) || 0),
+        0
+      );
+      const pending = orders.filter((o) => o.status === "pending").length;
+
+      setStats({
+        products: Array.isArray(products) ? products.length : 0,
+        orders: orders.length,
+        revenue: totalRevenue,
+        pendingOrders: pending,
+      });
+
+      setRecentOrders(orders.slice(0, 5));
+    } catch (err) {
+      console.error(err);
+      showToast("فشل تحميل البيانات", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <Topbar />
+        <div className="flex items-center justify-center py-32">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
   }
 
-  // بيانات الرسم البياني
-  const chartData = orders.slice(0, 7).map((order, index) => ({
-    name: `طلب #${index + 1}`,
-    value: order.total
-  }));
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background pb-20">
       <Topbar />
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">نظرة عامة للجملة</h1>
+
+      <div className="container mx-auto py-6 sm:py-8 px-4 max-w-6xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight">
+            نظرة عامة للجملة
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            ملخص نشاطك التجاري في وقت واحد
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <StatsCard title="إجمالي الإيرادات" value={formatCurrency(totalRevenue)} icon="💰" trend="+12%" trendUp={true} />
-          <StatsCard title="عدد الطلبات" value={orders.length.toString()} icon="📦" trend="+5%" trendUp={true} />
-          <StatsCard title="المنتجات النشطة" value={products.length.toString()} icon="🛍️" />
+        <div className="mb-8">
+          <WholesaleStats stats={stats} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-xl font-semibold mb-4">اتجاه الإيرادات</h2>
-            {chartData.length > 0 ? (
-              <BarChart data={chartData} />
-            ) : (
-              <div className="h-64 flex items-center justify-center text-gray-400">لا توجد بيانات للإيرادات بعد</div>
-            )}
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-xl font-semibold mb-4">أحدث الطلبات</h2>
-            {orders.length > 0 ? (
-              <div className="space-y-4">
-                {orders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="flex justify-between items-center border-b pb-3">
-                    <div>
-                      <p className="font-medium text-gray-800">طلب #{order.id.slice(0, 6)}</p>
-                      <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('ar-IQ')}</p>
+          <Card className="transition-all duration-500 hover:shadow-lg">
+            <CardContent className="p-5 sm:p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" />
+                أحدث الطلبات
+              </h2>
+              {recentOrders.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground text-sm">
+                  لا توجد طلبات واردة بعد
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex justify-between items-center p-3 rounded-xl border border-gray-100 hover:border-primary/30 hover:bg-amber-50/30 transition-all duration-200"
+                    >
+                      <div>
+                        <p className="font-bold text-sm text-foreground">
+                          طلب #{order.id.slice(0, 6)}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(order.created_at).toLocaleDateString(
+                            "ar-IQ"
+                          )}
+                        </p>
+                      </div>
+                      <span className="font-extrabold text-primary text-sm sm:text-base">
+                        {formatCurrency(order.total)}
+                      </span>
                     </div>
-                    <span className="font-bold text-primary">{formatCurrency(order.total)}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="transition-all duration-500 hover:shadow-lg">
+            <CardContent className="p-5 sm:p-6">
+              <h2 className="text-xl font-bold mb-4">وصول سريع</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <QuickLink
+                  href="/wholesale/products"
+                  label="المنتجات"
+                  emoji="📦"
+                />
+                <QuickLink
+                  href="/wholesale/orders"
+                  label="الطلبات"
+                  emoji="🛒"
+                />
+                <QuickLink
+                  href="/wholesale/inventory"
+                  label="المخزون"
+                  emoji="📊"
+                />
+                <QuickLink
+                  href="/wholesale/payouts"
+                  label="المدفوعات"
+                  emoji="💵"
+                />
               </div>
-            ) : (
-              <div className="py-10 text-center text-gray-400">لا توجد طلبات واردة بعد</div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
+  );
+}
+
+function QuickLink({
+  href,
+  label,
+  emoji,
+}: {
+  href: string;
+  label: string;
+  emoji: string;
+}) {
+  return (
+    <a
+      href={href}
+      className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-primary/30 hover:bg-amber-50/50 active:scale-95 transition-all duration-200 group"
+    >
+      <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+        {emoji}
+      </span>
+      <span className="font-semibold text-sm">{label}</span>
+    </a>
   );
 }
