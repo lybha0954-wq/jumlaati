@@ -1,24 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
-import { formatCurrency } from "@/lib/utils/currency";
-import {
-  Users,
-  DollarSign,
-  Clock,
-  Wallet,
-  Check,
-  X,
-  AlertCircle,
-  BarChart3,
-} from "lucide-react";
+import { AdminStats } from "../components/AdminStats";
+import { PayoutCard } from "../components/PayoutCard";
+import { QuickActions } from "../components/QuickActions";
+import { Check, ArrowLeft } from "lucide-react";
 
 interface Payout {
   id: string;
@@ -46,7 +38,7 @@ export default function AdminOverviewPage() {
   const [pendingPayouts, setPendingPayouts] = useState<Payout[]>([]);
   const { showToast } = useToast();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [usersRes, payoutsRes, paymentsRes] = await Promise.all([
         fetch("/api/admin/users"),
@@ -81,11 +73,11 @@ export default function AdminOverviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleAction = async (id: string, status: "approved" | "rejected") => {
     if (processing) return;
@@ -122,74 +114,64 @@ export default function AdminOverviewPage() {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <Topbar />
+        <div className="flex items-center justify-center py-32">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <Topbar />
 
-      <div className="container mx-auto py-8 px-4 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">مركز الموافقات</h1>
-          <p className="text-muted-foreground">
+      <div className="container mx-auto py-6 sm:py-8 px-4 max-w-6xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight">
+            مركز الموافقات
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             كل ما يحتاج قرارك اليوم في مكان واحد
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            icon={<Users className="w-5 h-5" />}
-            label="المستخدمون"
-            value={String(stats.users)}
-            color="blue"
-          />
-          <StatCard
-            icon={<DollarSign className="w-5 h-5" />}
-            label="الإيرادات"
-            value={formatCurrency(stats.revenue)}
-            color="emerald"
-          />
-          <StatCard
-            icon={<Clock className="w-5 h-5" />}
-            label="سحوبات معلقة"
-            value={String(stats.pendingPayouts)}
-            color="amber"
-            highlight={stats.pendingPayouts > 0}
-          />
-          <StatCard
-            icon={<Wallet className="w-5 h-5" />}
-            label="مبالغ معلقة"
-            value={formatCurrency(stats.pendingAmount)}
-            color="purple"
-            highlight={stats.pendingAmount > 0}
-          />
+        <div className="mb-8">
+          <AdminStats stats={stats} />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold">طلبات السحب</h2>
+              <h2 className="text-xl sm:text-2xl font-bold">طلبات السحب</h2>
               {stats.pendingPayouts > 0 && (
-                <Badge variant="destructive">{stats.pendingPayouts}</Badge>
+                <Badge variant="destructive" className="text-xs">
+                  {stats.pendingPayouts}
+                </Badge>
               )}
             </div>
             <Link
               href="/admin/payouts"
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-primary hover:underline inline-flex items-center gap-1 font-medium transition-all duration-200 hover:gap-2"
             >
-              عرض الكل ←
+              عرض الكل
+              <ArrowLeft size={14} />
             </Link>
           </div>
 
           {pendingPayouts.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/10 mb-4">
-                  <Check className="w-8 h-8 text-success" />
+            <Card className="transition-all duration-500">
+              <CardContent className="py-12 sm:py-16 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 mb-4 transition-transform duration-500 hover:scale-110">
+                  <Check
+                    className="w-8 h-8 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
                 </div>
-                <h3 className="text-lg font-semibold mb-1">
-                  لا توجد طلبات معلقة
-                </h3>
+                <h3 className="text-lg font-bold mb-1">لا توجد طلبات معلقة</h3>
                 <p className="text-sm text-muted-foreground">
                   كل الطلبات تمت معالجتها. عمل رائع!
                 </p>
@@ -211,126 +193,10 @@ export default function AdminOverviewPage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-bold mb-4">وصول سريع</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <QuickLink
-              href="/admin/users"
-              icon={<Users />}
-              label="المستخدمون"
-            />
-            <QuickLink
-              href="/admin/payments"
-              icon={<DollarSign />}
-              label="المدفوعات"
-            />
-            <QuickLink
-              href="/admin/refunds"
-              icon={<AlertCircle />}
-              label="المرتجعات"
-            />
-            <QuickLink
-              href="/admin/analytics"
-              icon={<BarChart3 />}
-              label="التحليلات"
-            />
-          </div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">وصول سريع</h2>
+          <QuickActions />
         </div>
       </div>
     </div>
-  );
-}
-
-function StatCard({ icon, label, value, color, highlight }: any) {
-  const colors: any = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    purple: "bg-purple-50 text-purple-600",
-  };
-
-  return (
-    <Card className={highlight ? "ring-2 ring-amber-200" : ""}>
-      <CardContent className="p-5">
-        <div
-          className={`inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3 ${colors[color]}`}
-        >
-          {icon}
-        </div>
-        <p className="text-sm text-muted-foreground mb-1">{label}</p>
-        <p className="text-2xl font-bold">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function PayoutCard({ payout, onApprove, onReject, processing }: any) {
-  const user = payout.users;
-  return (
-    <Card className="hover:shadow-medium transition-shadow">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
-              {user?.name?.charAt(0) || "؟"}
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-semibold text-foreground truncate">
-                {user?.name || "غير معروف"}
-              </h3>
-              <p className="text-sm text-muted-foreground truncate">
-                {user?.email}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {new Date(payout.created_at).toLocaleDateString("ar-IQ")}
-              </p>
-            </div>
-          </div>
-
-          <div className="text-left">
-            <p className="text-xs text-muted-foreground mb-1">المبلغ</p>
-            <p className="text-xl font-bold text-primary">
-              {formatCurrency(payout.amount)}
-            </p>
-          </div>
-
-          <div className="flex gap-2 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onReject}
-              disabled={processing}
-              className="text-destructive border-destructive hover:bg-destructive hover:text-white"
-            >
-              <X size={16} className="ml-1" />
-              رفض
-            </Button>
-            <Button
-              size="sm"
-              onClick={onApprove}
-              disabled={processing}
-              className="bg-success hover:bg-success/90"
-            >
-              <Check size={16} className="ml-1" />
-              موافقة
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function QuickLink({ href, icon, label }: any) {
-  return (
-    <Link href={href}>
-      <Card className="hover:shadow-medium transition-all hover:-translate-y-0.5 cursor-pointer">
-        <CardContent className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            {icon}
-          </div>
-          <span className="font-medium text-sm">{label}</span>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
