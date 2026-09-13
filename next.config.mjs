@@ -8,10 +8,6 @@ const nextConfig = {
     "localhost",
     "localhost:3000",
   ],
-  // Cache buster: 2026-09-13
-  generateBuildId: async () => {
-    return `build-${Date.now()}`;
-  },
 };
 
 export default nextConfig;
