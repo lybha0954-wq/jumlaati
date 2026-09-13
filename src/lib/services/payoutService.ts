@@ -1,5 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 
+// helper داخلي: اقرأ الدور من public.users لا من JWT
+async function getUserRole(supabase: any, userId: string): Promise<string> {
+  const { data } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return data?.role || "retailer";
+}
+
 export const payoutService = {
   // ═══════════════════════════════════════════════════
   // للتاجر/المندوب: عرض سحوباته الشخصية
@@ -27,7 +37,7 @@ export const payoutService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const role = (user.user_metadata?.role as string) || "retailer";
+    const role = await getUserRole(supabase, user.id);
     if (role !== "admin") throw new Error("Forbidden");
 
     const { data, error } = await supabase
@@ -54,7 +64,7 @@ export const payoutService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const role = (user.user_metadata?.role as string) || "retailer";
+    const role = await getUserRole(supabase, user.id);
     if (role !== "admin") throw new Error("Forbidden");
 
     const { data, error } = await supabase
@@ -82,7 +92,7 @@ export const payoutService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const role = (user.user_metadata?.role as string) || "retailer";
+    const role = await getUserRole(supabase, user.id);
     if (role !== "admin") throw new Error("Forbidden");
 
     const validStatuses = ["pending", "approved", "paid", "rejected", "cancelled"];
