@@ -1,3 +1,4 @@
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -13,36 +14,11 @@ import {
 
 const actions = [
   { href: "/admin/users", icon: Users, label: "المستخدمون", color: "blue" },
-  {
-    href: "/admin/payments",
-    icon: DollarSign,
-    label: "المدفوعات",
-    color: "emerald",
-  },
-  {
-    href: "/admin/refunds",
-    icon: AlertCircle,
-    label: "المرتجعات",
-    color: "rose",
-  },
-  {
-    href: "/admin/analytics",
-    icon: BarChart3,
-    label: "التحليلات",
-    color: "purple",
-  },
-  {
-    href: "/admin/coupons",
-    icon: Ticket,
-    label: "الكوبونات",
-    color: "amber",
-  },
-  {
-    href: "/admin/commissions",
-    icon: Package,
-    label: "العمولات",
-    color: "blue",
-  },
+  { href: "/admin/payments", icon: DollarSign, label: "المدفوعات", color: "emerald" },
+  { href: "/admin/refunds", icon: AlertCircle, label: "المرتجعات", color: "rose" },
+  { href: "/admin/analytics", icon: BarChart3, label: "التحليلات", color: "purple" },
+  { href: "/admin/coupons", icon: Ticket, label: "الكوبونات", color: "amber" },
+  { href: "/admin/commissions", icon: Package, label: "العمولات", color: "blue" },
 ];
 
 const colorMap: Record<string, { bg: string; text: string }> = {
@@ -72,9 +48,7 @@ export function QuickActions() {
               className={`group cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:border-primary/30 active:scale-95 ${
                 mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
               }`}
-              style={{
-                transitionDelay: mounted ? `${index * 50}ms` : "0ms",
-              }}
+              style={{ transitionDelay: mounted ? `${index * 50}ms` : "0ms" }}
             >
               <CardContent className="p-4 flex flex-col items-center gap-3 text-center">
                 <div
