@@ -1,10 +1,6 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { BottomNavBar } from "@/components/shared/BottomNavBar";
 
-// إجبار كل صفحات dashboard على العرض الديناميكي (لا pre-render ثابت)
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export default function DashboardLayout({
   children,
 }: {
