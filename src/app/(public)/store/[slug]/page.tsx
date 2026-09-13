@@ -1,25 +1,55 @@
 import { createClient } from "@/lib/supabase/server";
-import { RequestCard } from '@/components/shared/RequestCard';
+import { RequestCard } from "@/components/shared/RequestCard";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { notFound } from "next/navigation";
 
-export default async function StorePage({ params }: { params: Promise<{ slug: string }> }) {
+export const dynamic = "force-dynamic";
+
+export default async function StorePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
-  const supabase = await createClient(); // تعديل مهم جداً
-  const { data: store } = await supabase.from("stores").select("*").eq("slug", slug).single();
+  const supabase = await createClient();
 
-  if (!store) notFound();
+  // slug هنا هو owner_id (معرّف تاجر الجملة)
+  const { data: wholesaler } = await supabase
+    .from("users")
+    .select("id, name, email, role")
+    .eq("id", slug)
+    .eq("role", "wholesaler")
+    .single();
 
-  const { data: products } = await supabase.from("products").select("*").eq("store_id", store.id);
+  if (!wholesaler) notFound();
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("*")
+    .eq("owner_id", wholesaler.id)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
   return (
-    <div className="container mx-auto py-12">
+    <div className="min-h-screen bg-background pb-20">
       <Topbar />
-      <h1 className="text-3xl font-bold mb-8">{store.name}</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products?.map((product) => (
-          <RequestCard key={product.id} product={product} />
-        ))}
+      <div className="container mx-auto py-12 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{wholesaler.name}</h1>
+          <p className="text-muted-foreground">{wholesaler.email}</p>
+        </div>
+
+        {(products || []).length === 0 ? (
+          <div className="bg-card p-10 text-center text-muted-foreground rounded-2xl border border-dashed border-border">
+            لا توجد منتجات في هذا المتجر بعد.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products!.map((p: any) => (
+              <RequestCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
