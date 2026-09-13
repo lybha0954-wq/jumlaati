@@ -1,4 +1,4 @@
-// BUILD_MARKER_2026_09_13_V4
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -16,9 +16,7 @@ import {
   Wallet,
   Check,
   X,
-  TrendingUp,
   AlertCircle,
-  FileText,
   BarChart3,
 } from "lucide-react";
 
@@ -110,7 +108,8 @@ export default function AdminOverviewPage() {
         setStats((prev) => ({
           ...prev,
           pendingPayouts: prev.pendingPayouts - 1,
-          pendingAmount: prev.pendingAmount - (payout ? Number(payout.amount) : 0),
+          pendingAmount:
+            prev.pendingAmount - (payout ? Number(payout.amount) : 0),
         }));
       } else {
         const data = await res.json();
@@ -130,7 +129,6 @@ export default function AdminOverviewPage() {
       <Topbar />
 
       <div className="container mx-auto py-8 px-4 max-w-6xl">
-        {/* Hero */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">مركز الموافقات</h1>
           <p className="text-muted-foreground">
@@ -138,7 +136,6 @@ export default function AdminOverviewPage() {
           </p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={<Users className="w-5 h-5" />}
@@ -168,7 +165,6 @@ export default function AdminOverviewPage() {
           />
         </div>
 
-        {/* Pending Payouts */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -214,7 +210,6 @@ export default function AdminOverviewPage() {
           )}
         </div>
 
-        {/* Quick Links */}
         <div>
           <h2 className="text-xl font-bold mb-4">وصول سريع</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
