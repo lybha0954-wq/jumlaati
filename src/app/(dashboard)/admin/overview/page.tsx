@@ -1,4 +1,4 @@
-"use client";
+// BUILD_MARKER_2026_09_13_V4
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
