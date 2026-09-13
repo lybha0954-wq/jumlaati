@@ -1,3 +1,4 @@
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
@@ -9,21 +10,11 @@ import { WholesaleStats } from "../components/WholesaleStats";
 import { WholesaleOrderCard } from "../components/WholesaleOrderCard";
 import { Package } from "lucide-react";
 
-interface Order {
-  id: string;
-  user_id: string;
-  wholesaler_id?: string;
-  total: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  address?: string;
-  created_at: string;
-  users?: { name?: string; email?: string } | null;
+interface Order { id: string; user_id: string; wholesaler_id?: string; total: number; status: "pending" | "processing" | "shipped" | "delivered" | 
+  "cancelled"; address?: string; created_at: string; users?: { name?: string; email?: string } | null;
 }
-
-export default function WholesaleOverviewPage() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    products: 0, orders: 0, revenue: 0, pendingOrders: 0,
+export default function WholesaleOverviewPage() { const [loading, setLoading] = useState(true); const [stats, setStats] = useState({ products: 0, 
+    orders: 0, revenue: 0, pendingOrders: 0,
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]); const { showToast } = useToast(); const fetchData = useCallback(async () => { try 
     {
