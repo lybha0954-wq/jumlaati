@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/hooks/useToast";
 import { createClient } from "@/lib/supabase/client";
+import { getDashboardPath } from "@/config/routes";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,10 @@ export default function LoginPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
       showToast(error.message, "error");
@@ -28,7 +33,9 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const { data: profile } = await supabase
       .from("users")
@@ -37,11 +44,7 @@ export default function LoginPage() {
       .single();
 
     const role = profile?.role || "retailer";
-
-    let dashboardPath = "/retailer/overview";
-    if (role === "admin") dashboardPath = "/admin/home";
-    else if (role === "wholesaler") dashboardPath = "/wholesale/overview";
-    else if (role === "delivery") dashboardPath = "/delivery/overview";
+    const dashboardPath = getDashboardPath(role);
 
     showToast("تم تسجيل الدخول بنجاح!", "success");
     router.push(dashboardPath);
@@ -52,16 +55,40 @@ export default function LoginPage() {
       <Topbar />
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-extrabold text-center mb-6">مرحباً بعودتك 👋</h1>
+          <h1 className="text-3xl font-extrabold text-center mb-6">
+            مرحباً بعودتك 👋
+          </h1>
           <form onSubmit={handleLogin} className="space-y-4">
-            <Input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12" />
-            <Input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12" />
-            <Button type="submit" disabled={loading} size="lg" className="w-full">
+            <Input
+              type="email"
+              placeholder="البريد الإلكتروني"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-12"
+            />
+            <Input
+              type="password"
+              placeholder="كلمة المرور"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="h-12"
+            />
+            <Button
+              type="submit"
+              disabled={loading}
+              size="lg"
+              className="w-full"
+            >
               {loading ? "جارٍ الدخول..." : "تسجيل الدخول"}
             </Button>
           </form>
           <div className="text-center mt-6 text-sm text-gray-500">
-            ليس لديك حساب؟ <Link href="/register" className="text-primary font-semibold">إنشاء حساب جديد</Link>
+            ليس لديك حساب؟{" "}
+            <Link href="/register" className="text-primary font-semibold">
+              إنشاء حساب جديد
+            </Link>
           </div>
         </div>
       </div>
