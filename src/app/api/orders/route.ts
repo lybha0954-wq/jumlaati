@@ -12,7 +12,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json([], { status: 401 });
 
-    // اقرأ الدور من public.users — لا من JWT (قد يكون قديمًا)
+    // ✅ اقرأ الدور من public.users — لا من JWT
     const { data: profile } = await supabase
       .from('users')
       .select('role')
@@ -33,7 +33,6 @@ export async function GET() {
     } else if (role === 'delivery') {
       query = query.eq('delivery_id', user.id);
     }
-    // admin: يرى الكل بدون فلتر
 
     const { data, error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
