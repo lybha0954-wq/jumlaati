@@ -1,4 +1,3 @@
-cd ~/jumlaati && cat > package.json << 'EOF'
 {
   "name": "jumlaati",
   "version": "0.1.0",
@@ -30,4 +29,3 @@ cd ~/jumlaati && cat > package.json << 'EOF'
     "typescript": "^5"
   }
 }
-EOF
