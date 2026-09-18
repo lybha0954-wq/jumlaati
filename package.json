@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start"
   },
-  "dependencies": {
+ "overrides": {
+  "react": "19.2.0",
+  "react-dom": "19.2.0"
+},
+ "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
     "lucide-react": "^0.468.0",
     "next": "15.5.18",
@@ -27,5 +31,8 @@
     "postcss": "8.4.8",
     "tailwindcss": "3.4.6",
     "typescript": "^5"
+  "overrides": {
+  "@heroicons/react": {
+    "react": "$react"
   }
-}
+}, 
