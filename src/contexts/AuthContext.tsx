@@ -58,22 +58,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRole(session.user.id);
+    supabase.auth.getSession().then((res: any) => {
+      const currentSession = res?.data?.session ?? null;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      if (currentSession?.user) {
+        fetchRole(currentSession.user.id);
       }
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRole(session.user.id);
+    } = supabase.auth.onAuthStateChange((_event: any, currentSession: any) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      if (currentSession?.user) {
+        fetchRole(currentSession.user.id);
       } else {
         setRole(null);
       }
@@ -129,9 +130,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getCurrentUser = async () => {
     if (!supabase) return user;
-    const { data: { user: u }, error } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
     if (error) throw error;
-    return u;
+    return data.user;
   };
 
   const isEmailVerified = () => {

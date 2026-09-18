@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev -p 4028",
@@ -29,7 +29,7 @@
     "sonner": "^1.7.0"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
     "autoprefixer": "10.4.2",
