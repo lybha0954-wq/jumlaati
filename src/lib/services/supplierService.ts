@@ -1,5 +1,7 @@
 'use client';
-import { createClient } from '@/lib/supabase/client';
+
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 export interface Supplier {
   id: string;
@@ -15,42 +17,32 @@ export interface Supplier {
   creditStatus: 'good' | 'warning' | 'overdue';
 }
 
-function toSupplier(row: any): Supplier {
-  return {
-    id: row.id,
-    name: row.name,
-    region: row.region ?? '',
-    rating: row.rating ?? 4.5,
-    phone: row.phone ?? '',
-    isActive: row.is_active ?? true,
-    creditLimit: row.credit_limit ?? 0,
-    creditUsed: row.credit_used ?? 0,
-    pendingDebt: row.pending_debt ?? 0,
-    dueDays: row.due_days ?? 0,
-    creditStatus: row.credit_status ?? 'good',
-  };
-}
-
-function isSchemaError(error: any): boolean {
-  if (!error) return false;
-  if (error.code && typeof error.code === 'string') {
-    const cls = error.code.substring(0, 2);
-    if (cls === '42' || cls === '08') return true;
-    if (cls === '23') return false;
-  }
-  return false;
-}
-
 export const supplierService = {
   async getAll(): Promise<Supplier[]> {
-    const supabase = createClient();
     try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('name', { ascending: true });
-      if (error) { if (isSchemaError(error)) throw error; return []; }
-      return (data ?? []).map(toSupplier);
-    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
+      const colRef = collection(db, 'users');
+      const q = query(colRef, where('role', '==', 'supplier'));
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          name: data.businessName || data.fullName || 'مورد جُمْلَتِي',
+          region: data.city || 'بغداد',
+          rating: Number(data.rating || 4.8),
+          phone: data.phone || '',
+          isActive: true,
+          creditLimit: Number(data.creditLimit || 5000000),
+          creditUsed: Number(data.creditUsed || 0),
+          pendingDebt: Number(data.pendingDebt || 0),
+          dueDays: Number(data.dueDays || 30),
+          creditStatus: 'good',
+        };
+      });
+    } catch (e: any) {
+      console.error('[supplierService.getAll] Error:', e);
+      return [];
+    }
   },
 };

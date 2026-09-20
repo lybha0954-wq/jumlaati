@@ -1,22 +1,24 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-export async function GET(req: Request) {
-  const auth = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { data: { user } } = await sb.auth.getUser(auth);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { data, error } = await sb.from('orders').select('*').or(`retailer_profile_id.eq.${user.id},supplier_profile_id.eq.${user.id},delivery_profile_id.eq.${user.id}`).order('created_at', { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+import { orderService } from '@/lib/services/orderService';
+
+export async function GET() {
+  try {
+    const orders = await orderService.getAll();
+    return NextResponse.json(orders);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
+
 export async function POST(req: Request) {
-  const auth = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { data: { user } } = await sb.auth.getUser(auth);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const body = await req.json();
-  const { data, error } = await sb.from('orders').insert({ ...body, retailer_profile_id: user.id }).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json(data, { status: 201 });
+  try {
+    const body = await req.json();
+    const created = await orderService.create(body);
+    if (!created) {
+      return NextResponse.json({ error: 'Failed to create order' }, { status: 400 });
+    }
+    return NextResponse.json(created, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

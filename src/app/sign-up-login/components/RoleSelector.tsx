@@ -1,41 +1,40 @@
 'use client';
 import React from 'react';
-import { ShoppingBag, Truck, Shield, CheckCircle } from 'lucide-react';
+import { Store, Truck, ShoppingBag, Shield, CheckCircle } from 'lucide-react';
 import type { UserRole } from './AuthContent';
 
 interface RoleSelectorProps {
   role: UserRole;
   onRoleChange: (r: UserRole) => void;
-  showAdmin: boolean;
+  showAdmin?: boolean;
 }
 
-const baseRoles: { id: UserRole; label: string; sublabel: string; icon: React.ElementType; desc: string; color: string }[] = [
+const operationalRoles: { id: UserRole; label: string; sublabel: string; icon: React.ElementType; desc: string; color: string }[] = [
   {
     id: 'retailer',
-    label: 'محل / فرع',
-    sublabel: 'صاحب المحل',
-    icon: ShoppingBag,
-    desc: 'اطلب بضاعتك من الموردين بسهولة',
+    label: 'سوبرماركت ومحل',
+    sublabel: 'طلب البضاعة',
+    icon: Store,
+    desc: 'اطلب بضاعتك من محلات الجملة مباشرة وبأفضل الأسعار',
     color: 'emerald',
   },
   {
     id: 'supplier',
-    label: 'تجار الجملة',
-    sublabel: 'المورد / الموزع',
+    label: 'تاجر جملة',
+    sublabel: 'محل ومستودع جملة',
     icon: Truck,
-    desc: 'أدر طلباتك ومخزونك بكفاءة',
+    desc: 'اعرض بضاعتك وأدر مبيعاتك وطلبات المحلات',
     color: 'blue',
   },
+  {
+    id: 'delivery',
+    label: 'مندوب توصيل',
+    sublabel: 'شحن وتوصيل',
+    icon: ShoppingBag,
+    desc: 'استلم طلبيات البضاعة ووصلها للمحلات وزوّد أرباحك',
+    color: 'amber',
+  },
 ];
-
-const adminRole: { id: UserRole; label: string; sublabel: string; icon: React.ElementType; desc: string; color: string } = {
-  id: 'admin',
-  label: 'مدير النظام',
-  sublabel: 'Admin',
-  icon: Shield,
-  desc: 'راقب وأدر منصة جُمْلَتِي',
-  color: 'purple',
-};
 
 const colorMap: Record<string, { active: string; hover: string; icon: string }> = {
   emerald: {
@@ -48,24 +47,22 @@ const colorMap: Record<string, { active: string; hover: string; icon: string }> 
     hover: 'hover:border-blue-300 dark:hover:border-blue-700',
     icon: 'text-blue-600 dark:text-blue-400',
   },
-  purple: {
-    active: 'border-purple-500 bg-purple-50 dark:bg-purple-950/30 dark:border-purple-500',
-    hover: 'hover:border-purple-300 dark:hover:border-purple-700',
-    icon: 'text-purple-600 dark:text-purple-400',
+  amber: {
+    active: 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-500',
+    hover: 'hover:border-amber-300 dark:hover:border-amber-700',
+    icon: 'text-amber-600 dark:text-amber-400',
   },
 };
 
-export default function RoleSelector({ role, onRoleChange, showAdmin }: RoleSelectorProps) {
-  const visibleRoles = showAdmin ? [...baseRoles, adminRole] : baseRoles;
-
+export default function RoleSelector({ role, onRoleChange }: RoleSelectorProps) {
   return (
     <div className="mb-5">
       <label className="block text-xs font-bold text-foreground font-arabic mb-3 flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-        اختر نوع حسابك
+        اختر نوع حسابك (الأدوار التجارية الثلاثة)
       </label>
-      <div className={`grid gap-2.5 ${showAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
-        {visibleRoles.map((r) => {
+      <div className="grid grid-cols-3 gap-2.5">
+        {operationalRoles.map((r) => {
           const RoleIcon = r.icon;
           const active = role === r.id;
           const colors = colorMap[r.color];
@@ -92,12 +89,18 @@ export default function RoleSelector({ role, onRoleChange, showAdmin }: RoleSele
           );
         })}
       </div>
-      {showAdmin && (
-        <p className="mt-2 text-[10px] text-muted-foreground font-arabic text-center flex items-center justify-center gap-1">
-          <Shield size={10} />
-          خيار مدير النظام متاح بعد تسجيل الخروج الكامل
-        </p>
-      )}
+      <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-xs font-arabic text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <Shield size={13} className="text-primary/70" />
+          كادر الإدارة والتشغيل؟
+        </span>
+        <a
+          href="/admin/login"
+          className="text-primary hover:underline font-semibold flex items-center gap-1 transition-colors"
+        >
+          بوابة الإدارة المستقلة ←
+        </a>
+      </div>
     </div>
   );
 }

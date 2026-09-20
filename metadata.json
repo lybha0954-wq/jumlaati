@@ -1,6 +1,6 @@
 {
   "name": "جُمْلَتِي",
-  "description": "منصة توريد البقالة بالجملة في العراق لربط المحلات بالموردين والمندوبين",
+  "description": "تطبيق جملتي الأول في العراق لخدمة التجارة — يربط أصحاب السوبرماركت ومحلات الجملة ومندوبي التوصيل في منصة واحدة متكاملة",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

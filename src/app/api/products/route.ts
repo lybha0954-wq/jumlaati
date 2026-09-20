@@ -1,18 +1,24 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { productService } from '@/lib/services/productService';
+
 export async function GET() {
-  const { data, error } = await sb.from('products').select('*').order('created_at', { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  try {
+    const products = await productService.getAll();
+    return NextResponse.json(products);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
+
 export async function POST(req: Request) {
-  const auth = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { data: { user } } = await sb.auth.getUser(auth);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const body = await req.json();
-  const { data, error } = await sb.from('products').insert(body).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json(data, { status: 201 });
+  try {
+    const body = await req.json();
+    const created = await productService.create(body);
+    if (!created) {
+      return NextResponse.json({ error: 'Failed to create product' }, { status: 400 });
+    }
+    return NextResponse.json(created, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

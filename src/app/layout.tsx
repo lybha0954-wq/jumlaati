@@ -5,6 +5,7 @@ import '@/styles/tailwind.css';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { CartProvider } from '@/contexts/CartContext';
 import { ToastProvider } from '@/components/ui/Toast';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -20,8 +21,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'جُمْلَتِي — منصة توريد البقالة بالجملة في العراق',
-  description: 'جُمْلَتِي تربط أصحاب المحلات بالموردين بالجملة في العراق لطلب البضاعة بسهولة وبدون مكالمات.',
+  title: 'جُمْلَتِي — تطبيق التوريد والتجارة الأول في العراق',
+  description: 'تطبيق جملتي الأول في العراق لخدمة التجارة — يربط أصحاب السوبرماركت ومحلات الجملة ومندوبي التوصيل في منصة واحدة متكاملة.',
   icons: {
     icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
   },
@@ -35,9 +36,11 @@ export default function RootLayout({
       <body className={`${plusJakartaSans.className} font-arabic`}>
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>
-            {children}
-          </ToastProvider>
+            <CartProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
         <Toaster

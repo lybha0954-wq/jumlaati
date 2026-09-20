@@ -1,5 +1,15 @@
 'use client';
-import { createClient } from '@/lib/supabase/client';
+
+import {
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 export interface CommissionEntry {
   id: string;
@@ -26,117 +36,102 @@ export interface LedgerEntry {
   status: 'completed' | 'pending' | 'overdue';
 }
 
-function isSchemaError(error: any): boolean {
-  if (!error) return false;
-  if (error.code && typeof error.code === 'string') {
-    const cls = error.code.substring(0, 2);
-    if (cls === '42' || cls === '08') return true;
-    if (cls === '23') return false;
-  }
-  return false;
-}
-
-function toCommission(row: any): CommissionEntry {
-  return {
-    id: row.id,
-    orderId: row.order_id,
-    orderDate: row.order_date,
-    retailerName: row.retailer_name,
-    orderTotal: row.order_total,
-    commission: row.commission,
-    createdAt: row.created_at,
-  };
-}
-
-function toLedger(row: any): LedgerEntry {
-  return {
-    id: row.id,
-    entryDate: row.entry_date,
-    supplierId: row.supplier_id,
-    supplierName: row.supplier_name,
-    entryType: row.entry_type,
-    description: row.description,
-    amount: row.amount,
-    direction: row.direction,
-    balance: row.balance ?? 0,
-    orderId: row.order_id ?? '',
-    paymentMethod: row.payment_method ?? 'cash',
-    status: row.status,
-  };
-}
-
 export const financialService = {
   async getCommissions(): Promise<CommissionEntry[]> {
-    const supabase = createClient();
     try {
-      const { data, error } = await supabase
-        .from('commissions')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) { if (isSchemaError(error)) throw error; return []; }
-      return (data ?? []).map(toCommission);
-    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
-  },
-
-  async addCommission(entry: Omit<CommissionEntry, 'id' | 'createdAt'>): Promise<boolean> {
-    const supabase = createClient();
-    try {
-      const { error } = await supabase.from('commissions').insert({
-        order_id: entry.orderId,
-        order_date: entry.orderDate,
-        retailer_name: entry.retailerName,
-        order_total: entry.orderTotal,
-        commission: entry.commission,
+      const ordersRef = collection(db, 'orders');
+      const snapshot = await getDocs(ordersRef);
+      return snapshot.docs.map((d) => {
+        const data = d.data();
+        const total = Number(data.total || 0);
+        const commission = Number(data.commission || total * 0.025);
+        return {
+          id: d.id,
+          orderId: data.orderNumber || d.id,
+          orderDate: data.createdAt || new Date().toISOString(),
+          retailerName: data.buyer?.name || data.customer?.name || 'محل تجاري',
+          orderTotal: total,
+          commission,
+          createdAt: data.createdAt || new Date().toISOString(),
+        };
       });
-      if (error) { if (isSchemaError(error)) throw error; return false; }
-      return true;
-    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
+    } catch (err) {
+      console.error('[financialService.getCommissions] Error:', err);
+      return [];
+    }
   },
 
-  async getLedgerEntries(): Promise<LedgerEntry[]> {
-    const supabase = createClient();
+  async getLedgerEntries(retailerId?: string): Promise<LedgerEntry[]> {
     try {
-      const { data, error } = await supabase
-        .from('ledger_entries')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) { if (isSchemaError(error)) throw error; return []; }
-      return (data ?? []).map(toLedger);
-    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
-  },
+      const ordersRef = collection(db, 'orders');
+      let q = query(ordersRef);
+      if (retailerId) {
+        q = query(ordersRef, where('retailerId', '==', retailerId));
+      }
+      const snapshot = await getDocs(q);
+      let runningBalance = 0;
 
-  async addLedgerEntry(entry: Omit<LedgerEntry, 'id'>): Promise<boolean> {
-    const supabase = createClient();
-    try {
-      const { error } = await supabase.from('ledger_entries').insert({
-        entry_date: entry.entryDate,
-        supplier_id: entry.supplierId,
-        supplier_name: entry.supplierName,
-        entry_type: entry.entryType,
-        description: entry.description,
-        amount: entry.amount,
-        direction: entry.direction,
-        balance: entry.balance ?? 0,
-        order_id: entry.orderId ?? '',
-        payment_method: entry.paymentMethod ?? 'cash',
-        status: entry.status,
+      return snapshot.docs.map((d) => {
+        const data = d.data();
+        const total = Number(data.total || 0);
+        runningBalance += total;
+        return {
+          id: d.id,
+          entryDate: data.createdAt || new Date().toISOString(),
+          supplierId: data.supplierId || '',
+          supplierName: data.supplierName || 'مورد جُمْلَتِي',
+          entryType: 'order',
+          description: `طلب بضاعة رقم ${data.orderNumber || d.id.slice(0, 6)}`,
+          amount: total,
+          direction: 'debit',
+          balance: runningBalance,
+          orderId: d.id,
+          paymentMethod: data.paymentStatus === 'paid' ? 'نقدي' : 'آجل',
+          status: data.paymentStatus || 'pending',
+        };
       });
-      if (error) { if (isSchemaError(error)) throw error; return false; }
+    } catch (err) {
+      console.error('[financialService.getLedgerEntries] Error:', err);
+      return [];
+    }
+  },
+
+  async recordPayment(entry: Partial<LedgerEntry>): Promise<boolean> {
+    try {
+      const ledgerRef = collection(db, 'ledger');
+      await addDoc(ledgerRef, {
+        ...entry,
+        createdAt: new Date().toISOString(),
+      });
       return true;
-    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
+    } catch (err) {
+      console.error('[financialService.recordPayment] Error:', err);
+      return false;
+    }
   },
 
   async getTotals(): Promise<{ totalCommission: number; totalSales: number; totalOrders: number }> {
-    const supabase = createClient();
     try {
-      const { data, error } = await supabase.from('commissions').select('order_total, commission');
-      if (error) { if (isSchemaError(error)) throw error; return { totalCommission: 0, totalSales: 0, totalOrders: 0 }; }
-      const rows = data ?? [];
+      const ordersRef = collection(db, 'orders');
+      const snapshot = await getDocs(ordersRef);
+      let totalSales = 0;
+      let totalCommission = 0;
+
+      snapshot.docs.forEach((docSnap) => {
+        const d = docSnap.data();
+        const t = Number(d.total || 0);
+        totalSales += t;
+        totalCommission += Number(d.commission || t * 0.025);
+      });
+
       return {
-        totalCommission: rows.reduce((s: number, r: any) => s + (r.commission ?? 0), 0),
-        totalSales: rows.reduce((s: number, r: any) => s + (r.order_total ?? 0), 0),
-        totalOrders: rows.length,
+        totalSales,
+        totalCommission,
+        totalOrders: snapshot.docs.length,
       };
-    } catch (e: any) { if (isSchemaError(e)) throw e; return { totalCommission: 0, totalSales: 0, totalOrders: 0 }; }
+    } catch (err) {
+      console.error('[financialService.getTotals] Error:', err);
+      return { totalCommission: 0, totalSales: 0, totalOrders: 0 };
+    }
   },
 };

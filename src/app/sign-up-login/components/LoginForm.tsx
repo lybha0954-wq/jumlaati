@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
@@ -17,8 +18,6 @@ interface LoginValues {
   password: string;
 }
 
-const ADMIN_LOGGED_OUT_KEY = 'jumlaati_admin_was_logged_out';
-
 export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormProps) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,7 +29,6 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm<LoginValues>({
     defaultValues: { email: '', password: '' },
   });
@@ -40,40 +38,41 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
     setLoading(true);
     try {
       const data = await signIn(values.email, values.password);
-      const userRole = data?.user?.user_metadata?.role || selectedRole || 'retailer';
-      if (userRole === 'admin') {
-        localStorage.removeItem(ADMIN_LOGGED_OUT_KEY);
-      }
+      const userRole = data?.role || data?.user?.user_metadata?.role || selectedRole || 'retailer';
+      
       toast.success('تم تسجيل الدخول بنجاح!', { description: 'مرحباً بك في جُمْلَتِي' });
-      if (userRole === 'supplier') {
-        router.push('/');
-      } else if (userRole === 'retailer') {
-        router.push('/retailer-shop');
+      if (userRole === 'admin') {
+        router.push('/admin-hub');
+      } else if (userRole === 'supplier') {
+        router.push('/supplier/dashboard');
+      } else if (userRole === 'delivery') {
+        router.push('/delivery/tasks');
       } else {
-        router.push('/admin-dashboard');
+        router.push('/retailer/home');
       }
     } catch (error: any) {
+      const code = error?.code || '';
       const msg = error?.message || '';
-      if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
+      if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/user-not-found' ||
+        code === 'auth/wrong-password' ||
+        msg.includes('invalid-credential') ||
+        msg.includes('user-not-found')
+      ) {
         setAuthError('بيانات الدخول غير صحيحة — تحقق من البريد الإلكتروني وكلمة المرور');
-      } else if (msg.includes('Email not confirmed')) {
-        setAuthError('البريد الإلكتروني غير مؤكد — تحقق من بريدك الوارد');
+      } else if (code === 'auth/too-many-requests') {
+        setAuthError('تم حظر المحاولات مؤقتاً بسبب تكرار المحاولات الخاطئة. يرجى الانتظار والمحاولة لاحقاً');
+      } else if (code === 'auth/invalid-email') {
+        setAuthError('صيغة البريد الإلكتروني غير صحيحة');
+      } else if (code === 'auth/network-request-failed') {
+        setAuthError('فشل الاتصال بالخادم، يرجى التحقق من اتصال الإنترنت');
       } else {
         setAuthError(msg || 'حدث خطأ أثناء تسجيل الدخول، حاول مجدداً');
       }
     } finally {
       setLoading(false);
     }
-  };
-
-  const autofillDemo = (role: 'retailer' | 'supplier' | 'admin') => {
-    const demos = {
-      retailer: { email: 'hassan.albaqali@jumlaati.iq', password: 'Retailer@2026' },
-      supplier: { email: 'ahmed.aljabouri@jumlaati.iq', password: 'Supplier@2026' },
-      admin: { email: 'admin@jumlaati.iq', password: 'Admin@2026!' },
-    };
-    setValue('email', demos[role].email);
-    setValue('password', demos[role].password);
   };
 
   return (
@@ -85,7 +84,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
       )}
       <div>
         <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
-          البريد الإلكتروني
+          البريد الإلكتروني <span className="text-danger">*</span>
         </label>
         <div className="relative">
           <Mail size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -95,7 +94,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
               required: 'البريد الإلكتروني مطلوب',
               pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'صيغة البريد غير صحيحة' },
             })}
-            placeholder="example@jumlaati.iq"
+            placeholder="name@business.iq"
             autoComplete="email"
             className="w-full bg-background border border-border rounded-xl pr-9 pl-4 py-2.5 text-sm font-arabic text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all"
             dir="ltr"
@@ -107,7 +106,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
       </div>
       <div>
         <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
-          كلمة المرور
+          كلمة المرور <span className="text-danger">*</span>
         </label>
         <div className="relative">
           <Lock size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -148,21 +147,19 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
           'تسجيل الدخول'
         )}
       </button>
-      <div className="border border-dashed border-border rounded-xl p-3 space-y-2">
-        <p className="font-arabic text-xs text-muted-foreground text-center">تعبئة سريعة بحساب تجريبي</p>
-        <div className="grid grid-cols-3 gap-2">
-          {(['retailer', 'supplier', 'admin'] as const).map((r) => (
-            <button
-              key={`demo-${r}`}
-              type="button"
-              onClick={() => autofillDemo(r)}
-              className="py-1.5 text-xs font-arabic text-muted-foreground border border-border rounded-lg hover:border-primary/40 hover:text-primary transition-all"
-            >
-              {r === 'retailer' ? 'صاحب محل' : r === 'supplier' ? 'مورد' : 'مدير'}
-            </button>
-          ))}
-        </div>
-      </div>
+
+      {onSwitchToSignup && (
+        <p className="text-center text-xs font-arabic text-muted-foreground mt-4">
+          ليس لديك حساب بعد؟{' '}
+          <button
+            type="button"
+            onClick={onSwitchToSignup}
+            className="text-primary font-bold hover:underline"
+          >
+            إنشاء حساب جديد
+          </button>
+        </p>
+      )}
     </form>
   );
 }

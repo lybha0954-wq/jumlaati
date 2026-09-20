@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, ShieldCheck, Users, UserCircle, Home, Grid3X3, ClipboardList, Wallet, Settings, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ShieldCheck, Users, UserCircle, Home, Grid3X3, ClipboardList, Wallet, Settings, CreditCard, Truck } from 'lucide-react';
 
 interface BottomNavItem {
   id: string;
@@ -33,9 +33,17 @@ const adminNav: BottomNavItem[] = [
   { id: 'a-settings',     label: 'الإعدادات', icon: Settings,    href: '/admin-settings' },
 ];
 
+const deliveryNav: BottomNavItem[] = [
+  { id: 'd-tasks',    label: 'المهام',   icon: Truck,         href: '/delivery/tasks', badge: 4 },
+  { id: 'd-earnings', label: 'الأرباح',  icon: Wallet,        href: '/delivery/earnings' },
+  { id: 'd-history',  label: 'السجل',    icon: ClipboardList, href: '/delivery/history' },
+  { id: 'd-profile',  label: 'حسابي',    icon: UserCircle,    href: '/delivery/profile' },
+];
+
 const navByRole: Record<string, BottomNavItem[]> = {
   retailer: retailerNav,
   supplier: supplierNav,
+  delivery: deliveryNav,
   admin:    adminNav,
 };
 
@@ -43,6 +51,7 @@ export default function BottomNavBar() {
   const pathname = usePathname();
   const role = pathname?.startsWith('/admin') ? 'admin'
     : pathname?.startsWith('/supplier') ? 'supplier'
+    : pathname?.startsWith('/delivery') ? 'delivery'
     : 'retailer';
   const items = navByRole[role] || retailerNav;
 
