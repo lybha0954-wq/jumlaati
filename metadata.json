@@ -1,0 +1,6 @@
+{
+  "name": "جُمْلَتِي",
+  "description": "منصة توريد البقالة بالجملة في العراق لربط المحلات بالموردين والمندوبين",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
