@@ -1,34 +1,20 @@
 import { NextResponse } from 'next/server';
-import { orderService } from '@/lib/services/orderService';
-
-export async function GET() {
-  try {
-    const orders = await orderService.getAll();
-    const tasks = orders
-      .filter((o) => o.status === 'delivering' || o.status === 'pending')
-      .map((o) => ({
-        id: `task-${o.id}`,
-        orderId: o.id,
-        orderNumber: o.orderNumber,
-        buyer: o.buyer,
-        delivery: o.delivery,
-        total: o.total,
-        status: o.status,
-      }));
-    return NextResponse.json(tasks);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+import { createClient } from '@supabase/supabase-js';
+const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+export async function GET(req: Request) {
+  const auth = req.headers.get('authorization')?.replace('Bearer ', '');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await sb.auth.getUser(auth);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data, error } = await sb.from('delivery_tasks').select('*').or(`delivery_profile_id.eq.${user.id},delivery_profile_id.is.null`).order('created_at', { ascending: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
-
 export async function PATCH(req: Request) {
-  try {
-    const { orderId, status } = await req.json();
-    if (orderId && status) {
-      await orderService.updateStatus(orderId, status);
-    }
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const body = await req.json();
+  const { id, ...updates } = body;
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  const { data, error } = await sb.from('delivery_tasks').update(updates).eq('id', id).select().single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json(data);
 }

@@ -54,36 +54,34 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
     try {
       await signUp(values.email, values.password, {
         full_name: values.ownerName,
-        fullName: values.ownerName,
         role,
         business_name: values.businessName,
-        businessName: values.businessName,
         phone: values.phone,
         city: values.city,
         registration_number: values.registrationNumber || '',
-        registrationNumber: values.registrationNumber || '',
       });
+
+      try {
+        await signIn(values.email, values.password);
+      } catch {
+        toast.success('تم إنشاء حسابك بنجاح!', { description: 'يمكنك تسجيل الدخول الآن' });
+        onSwitchToLogin();
+        return;
+      }
 
       toast.success('تم إنشاء حسابك بنجاح!', { description: 'مرحباً بك في جُمْلَتِي' });
 
       if (role === 'admin') {
-        router.push('/admin-hub');
+        router.push('/admin-dashboard');
       } else if (role === 'supplier') {
-        router.push('/supplier/dashboard');
-      } else if (role === 'delivery') {
-        router.push('/delivery/tasks');
+        router.push('/');
       } else {
-        router.push('/retailer/home');
+        router.push('/retailer-shop');
       }
     } catch (error: any) {
-      const code = error?.code || '';
       const msg = error?.message || '';
-      if (code === 'auth/email-already-in-use' || msg.includes('already registered') || msg.includes('email-already-in-use')) {
+      if (msg.includes('already registered') || msg.includes('User already registered')) {
         setSignupError('هذا البريد الإلكتروني مسجل مسبقاً — سجّل الدخول بدلاً من ذلك');
-      } else if (code === 'auth/weak-password' || msg.includes('weak-password')) {
-        setSignupError('كلمة المرور ضعيفة — يجب أن تكون 6 أحرف على الأقل');
-      } else if (code === 'auth/invalid-email') {
-        setSignupError('صيغة البريد الإلكتروني غير صحيحة');
       } else {
         setSignupError(msg || 'حدث خطأ أثناء إنشاء الحساب، حاول مجدداً');
       }
@@ -92,7 +90,7 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
     }
   };
 
-  const roleLabel = role === 'supplier' ? 'تاجر الجملة' : role === 'delivery' ? 'مندوب التوصيل' : 'السوبرماركت والمحل';
+  const roleLabel = role === 'supplier' ? 'المورد' : role === 'retailer' ? 'المحل' : 'المدير';
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
@@ -108,27 +106,20 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
         </h4>
         <div>
           <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
-            {role === 'retailer' ? 'اسم السوبرماركت / المحل' : role === 'supplier' ? 'اسم محل أو مستودع الجملة' : 'اسم مكتب التوصيل أو وسيلة النقل'} <span className="text-danger">*</span>
+            اسم {role === 'retailer' ? 'المحل / السوبرماركت' : 'الشركة / المستودع'} <span className="text-danger">*</span>
           </label>
           <div className="relative">
             <Building2 size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              {...register('businessName', { required: 'الاسم التعريفي مطلوب' })}
-              placeholder={role === 'retailer' ? 'سوبرماركت النخيل' : role === 'supplier' ? 'مستودع الجبوري للمواد الغذائية' : 'توصيل بغداد السريع / دراجة نارية'}
-              className="w-full bg-background border border-border rounded-xl pr-9 pl-4 py-2.5 text-sm font-arabic text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all"
-            />
+            <input type="text" {...register('businessName', { required: 'اسم النشاط التجاري مطلوب' })} placeholder={role === 'retailer' ? 'سوبرماركت النخيل' : 'مستودع الجبوري للمواد الغذائية'} className="w-full bg-background border border-border rounded-xl pr-9 pl-4 py-2.5 text-sm font-arabic text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all" />
           </div>
           {errors.businessName && (<p className="text-xs text-danger font-arabic mt-1">{errors.businessName.message}</p>)}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
-              {role === 'delivery' ? 'اسم المندوب الرباعي' : 'اسم صاحب النشاط'} <span className="text-danger">*</span>
-            </label>
+            <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">اسم صاحب النشاط <span className="text-danger">*</span></label>
             <div className="relative">
               <User size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <input type="text" {...register('ownerName', { required: 'الاسم مطلوب' })} placeholder={role === 'delivery' ? 'كرار علي حسين' : 'أحمد الجبوري'} className="w-full bg-background border border-border rounded-xl pr-9 pl-3 py-2.5 text-sm font-arabic text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all" />
+              <input type="text" {...register('ownerName', { required: 'الاسم مطلوب' })} placeholder="أحمد الجبوري" className="w-full bg-background border border-border rounded-xl pr-9 pl-3 py-2.5 text-sm font-arabic text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all" />
             </div>
             {errors.ownerName && (<p className="text-xs text-danger font-arabic mt-1">{errors.ownerName.message}</p>)}
           </div>
@@ -142,16 +133,16 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
             </div>
           </div>
         </div>
-        {role === 'supplier' && (
+        {(role === 'supplier' || role === 'admin') && (
           <div>
             <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
-              رقم السجل التجاري <span className="text-danger">*</span>
+              رقم السجل التجاري {role === 'supplier' && <span className="text-danger"> *</span>}
             </label>
             <div className="relative">
               <Hash size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <input type="text" {...register('registrationNumber', { required: 'رقم السجل التجاري مطلوب لمحلات الجملة' })} placeholder="IQ-2024-XXXXXX" className="w-full bg-background border border-border rounded-xl pr-9 pl-4 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all" dir="ltr" />
+              <input type="text" {...register('registrationNumber', { required: role === 'supplier' ? 'رقم السجل التجاري مطلوب للموردين' : false })} placeholder="IQ-2024-XXXXXX" className="w-full bg-background border border-border rounded-xl pr-9 pl-4 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all" dir="ltr" />
             </div>
-            <p className="text-xs text-muted-foreground font-arabic mt-1">رقم السجل التجاري أو هوية غرفة التجارة العراقية</p>
+            <p className="text-xs text-muted-foreground font-arabic mt-1">رقم السجل التجاري الصادر من وزارة التجارة العراقية</p>
             {errors.registrationNumber && (<p className="text-xs text-danger font-arabic mt-1">{errors.registrationNumber.message}</p>)}
           </div>
         )}

@@ -1,83 +1,56 @@
 'use client';
-
 import { useEffect, useRef } from 'react';
-import { db } from '@/lib/firebase/config';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
+
+type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 interface SubscriptionConfig {
-  table: string; // mapped to collection
+  table: string;
   schema?: string;
-  event?: string;
+  event?: RealtimeEvent;
   filter?: string;
   onData: (payload: any) => void;
 }
 
+let channelCounter = 0;
+
 export function useRealtimeSubscription(config: SubscriptionConfig) {
-  const { table, onData } = config;
+  const { table, schema = 'public', event = '*', filter, onData } = config;
   const onDataRef = useRef(onData);
   onDataRef.current = onData;
+  const channelIdRef = useRef<number | null>(null);
+  if (channelIdRef.current === null) { channelIdRef.current = ++channelCounter; }
 
   useEffect(() => {
-    if (!db || !table) return;
-
-    try {
-      const colRef = collection(db, table);
-      const unsubscribe = onSnapshot(
-        colRef,
-        (snapshot) => {
-          snapshot.docChanges().forEach((change) => {
-            onDataRef.current({
-              eventType: change.type.toUpperCase(),
-              new: { id: change.doc.id, ...change.doc.data() },
-              old: change.type === 'removed' ? { id: change.doc.id } : null,
-            });
-          });
-        },
-        (error) => {
-          console.warn(`Firestore real-time subscription error for [${table}]:`, error);
-        }
-      );
-
-      return () => unsubscribe();
-    } catch (e) {
-      console.warn('Realtime hook error:', e);
-    }
-  }, [table]);
+    if (!isSupabaseConfigured) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    const channelName = `rt-${table}-${channelIdRef.current}`;
+    const channel = supabase.channel(channelName);
+    channel.on('postgres_changes' as any, { event, schema, table, ...(filter ? { filter } : {}) }, (payload: any) => { onDataRef.current(payload); }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [table, schema, event, filter]);
 }
 
 export function useMultipleRealtimeSubscriptions(configs: SubscriptionConfig[]) {
   const onDataRefs = useRef<Array<(payload: any) => void>>([]);
   onDataRefs.current = configs.map((c) => c.onData);
+  const instanceIdRef = useRef<number | null>(null);
+  if (instanceIdRef.current === null) { instanceIdRef.current = ++channelCounter; }
+  const configKey = configs.map((c) => `${c.table}:${c.schema ?? 'public'}:${c.event ?? '*'}:${c.filter ?? ''}`).join('|');
 
   useEffect(() => {
-    if (!db) return;
-
-    const unsubs: Array<() => void> = [];
-
-    configs.forEach((cfg, idx) => {
-      try {
-        const colRef = collection(db, cfg.table);
-        const unsub = onSnapshot(
-          colRef,
-          (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-              onDataRefs.current[idx]?.({
-                eventType: change.type.toUpperCase(),
-                new: { id: change.doc.id, ...change.doc.data() },
-                old: change.type === 'removed' ? { id: change.doc.id } : null,
-              });
-            });
-          },
-          () => {}
-        );
-        unsubs.push(unsub);
-      } catch (e) {
-        console.warn('Error setting up multi-realtime:', e);
-      }
+    if (!isSupabaseConfigured) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    const channels = configs.map((cfg, idx) => {
+      const { table, schema = 'public', event = '*', filter } = cfg;
+      const channelName = `rt-${table}-${instanceIdRef.current}-${idx}`;
+      const ch = supabase.channel(channelName);
+      ch.on('postgres_changes' as any, { event, schema, table, ...(filter ? { filter } : {}) }, (payload: any) => { onDataRefs.current[idx]?.(payload); }).subscribe();
+      return ch;
     });
-
-    return () => {
-      unsubs.forEach((u) => u());
-    };
-  }, [configs]);
+    return () => { channels.forEach((ch) => supabase.removeChannel(ch)); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configKey]);
 }

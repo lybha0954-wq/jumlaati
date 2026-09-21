@@ -1,44 +1,21 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  updateProfile as firebaseUpdateProfile,
-  type User as FirebaseUser,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/config';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export type UserRole = 'owner' | 'admin' | 'supplier' | 'retailer' | 'delivery';
-
-export interface UserProfile {
-  uid: string;
-  email: string;
-  role: UserRole;
-  fullName: string;
-  businessName?: string;
-  phone?: string;
-  city?: string;
-  registrationNumber?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 interface AuthContextValue {
   user: any;
   session: any;
   loading: boolean;
   role: UserRole | null;
-  profile: UserProfile | null;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
   getCurrentUser: () => Promise<any>;
   isEmailVerified: () => boolean;
-  getUserProfile: () => Promise<UserProfile | null>;
+  getUserProfile: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextValue>({} as AuthContextValue);
@@ -51,144 +28,127 @@ export const useAuth = () => {
   return context;
 };
 
-function formatUser(firebaseUser: FirebaseUser, role: UserRole | null, profile?: UserProfile | null) {
-  const effectiveRole = role || profile?.role || 'retailer';
-  const fullName = profile?.fullName || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '';
-  
-  return Object.assign(firebaseUser, {
-    id: firebaseUser.uid,
-    user_metadata: {
-      full_name: fullName,
-      role: effectiveRole,
-      business_name: profile?.businessName || '',
-      phone: profile?.phone || '',
-      city: profile?.city || '',
-    },
-  });
-}
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<UserRole | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const fetchUserProfile = async (uid: string): Promise<UserProfile | null> => {
+  const supabase = isSupabaseConfigured ? createClient() : null;
+
+  const fetchRole = async (userId: string) => {
+    if (!supabase) return;
     try {
-      const userDocRef = doc(db, 'users', uid);
-      const snapshot = await getDoc(userDocRef);
-      if (snapshot.exists()) {
-        const data = snapshot.data() as UserProfile;
-        setProfile(data);
-        if (data.role) {
-          setRole(data.role);
-        }
-        return data;
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      if (!error && data?.role) {
+        setRole(data.role as UserRole);
       }
-    } catch (err) {
-      console.warn('[Firebase Auth] Failed to fetch profile from Firestore:', err);
+    } catch {
+      // silently ignore
     }
-    return null;
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentFirebaseUser) => {
-      if (currentFirebaseUser) {
-        const userProf = await fetchUserProfile(currentFirebaseUser.uid);
-        const userRole = userProf?.role || 'retailer';
-        const enriched = formatUser(currentFirebaseUser, userRole, userProf);
-        setUser(enriched);
-        setSession({ user: enriched });
-      } else {
-        setUser(null);
-        setSession(null);
-        setRole(null);
-        setProfile(null);
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then((res: any) => {
+      const currentSession = res?.data?.session ?? null;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      if (currentSession?.user) {
+        fetchRole(currentSession.user.id);
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event: any, currentSession: any) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      if (currentSession?.user) {
+        fetchRole(currentSession.user.id);
+      } else {
+        setRole(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const cleanEmail = email.trim().toLowerCase();
-    const cred = await signInWithEmailAndPassword(auth, cleanEmail, password);
-    const userProf = await fetchUserProfile(cred.user.uid);
-    const effectiveRole = userProf?.role || 'retailer';
-    setRole(effectiveRole);
-    const enriched = formatUser(cred.user, effectiveRole, userProf);
-    setUser(enriched);
-    setSession({ user: enriched });
-    return { user: enriched, role: effectiveRole };
+  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
+    if (!supabase) throw new Error('Supabase is not configured');
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: metadata.fullName || metadata.full_name || '',
+          role: metadata.role || 'retailer',
+          avatar_url: metadata.avatarUrl || '',
+          business_name: metadata.business_name || '',
+          phone: metadata.phone || '',
+          city: metadata.city || '',
+          registration_number: metadata.registration_number || '',
+        },
+      },
+    });
+    if (error) throw error;
+    return data;
   };
 
-  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
-    const cleanEmail = email.trim().toLowerCase();
-    const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-    
-    const chosenRole = (metadata.role || 'retailer') as UserRole;
-    const fullName = metadata.fullName || metadata.full_name || '';
-    const businessName = metadata.businessName || metadata.business_name || '';
-    const phone = metadata.phone || '';
-    const city = metadata.city || 'بغداد';
-    const registrationNumber = metadata.registrationNumber || metadata.registration_number || '';
+  const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase is not configured');
 
-    if (fullName) {
-      try {
-        await firebaseUpdateProfile(cred.user, { displayName: fullName });
-      } catch (e) {
-        console.warn('Could not update Firebase displayName:', e);
-      }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (data.user) {
+      await fetchRole(data.user.id);
     }
-
-    const newProfile: UserProfile = {
-      uid: cred.user.uid,
-      email: cleanEmail,
-      role: chosenRole,
-      fullName,
-      businessName,
-      phone,
-      city,
-      registrationNumber,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    try {
-      await setDoc(doc(db, 'users', cred.user.uid), newProfile);
-    } catch (e) {
-      console.warn('[Firebase Auth] Failed to save profile to Firestore:', e);
-    }
-
-    setRole(chosenRole);
-    setProfile(newProfile);
-    const enriched = formatUser(cred.user, chosenRole, newProfile);
-    setUser(enriched);
-    setSession({ user: enriched });
-    return { user: enriched, role: chosenRole };
+    return data;
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
-    setUser(null);
-    setSession(null);
+    if (!supabase) throw new Error('Supabase is not configured');
+
+    if (role === 'admin' && typeof window !== 'undefined') {
+      localStorage.setItem('jumlaati_admin_was_logged_out', 'true');
+    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     setRole(null);
-    setProfile(null);
   };
 
   const getCurrentUser = async () => {
-    return auth.currentUser ? formatUser(auth.currentUser, role, profile) : null;
+    if (!supabase) return user;
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data.user;
   };
 
   const isEmailVerified = () => {
-    return auth.currentUser?.emailVerified ?? false;
+    return user?.email_confirmed_at !== null;
   };
 
   const getUserProfile = async () => {
-    if (!auth.currentUser) return null;
-    return await fetchUserProfile(auth.currentUser.uid);
+    if (!user) return null;
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (error) throw error;
+    return data;
   };
 
   const value: AuthContextValue = {
@@ -196,7 +156,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     loading,
     role,
-    profile,
     signUp,
     signIn,
     signOut,

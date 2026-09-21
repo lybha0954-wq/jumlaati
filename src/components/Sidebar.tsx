@@ -17,7 +17,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: 'r-shop',     label: 'تسوق من محلات الجملة', icon: Store,         href: '/retailer-shop',     group: 'التسوق',    roles: ['retailer'] },
+  { id: 'r-shop',     label: 'تسوق من الموردين',    icon: Store,         href: '/retailer-shop',     group: 'التسوق',    roles: ['retailer'] },
   { id: 'r-browse',   label: 'تصفح المنتجات',       icon: Search,        href: '/product-browse',    group: 'التسوق',    roles: ['retailer'] },
   { id: 'r-cart',     label: 'سلة التسوق',          icon: ShoppingBag,   href: '/retailer-cart',     group: 'التسوق',    roles: ['retailer'] },
   { id: 'r-checkout', label: 'إتمام الطلب',         icon: ShoppingCart,  href: '/retailer-checkout', group: 'التسوق',    roles: ['retailer'] },
@@ -33,11 +33,6 @@ const navItems: NavItem[] = [
   { id: 's-delivery',  label: 'مناطق التوصيل',     icon: Truck,           href: '/delivery-zones',       group: 'العمليات',  roles: ['supplier'] },
   { id: 's-notif',     label: 'الإشعارات',         icon: Bell,            href: '/notifications',        group: 'أخرى',      roles: ['supplier'], badge: 5 },
   { id: 's-settings',  label: 'الدعم والإعدادات',  icon: Settings,        href: '/support-settings',     group: 'أخرى',      roles: ['supplier'] },
-  { id: 'd-tasks',    label: 'مهام وطلبات التوصيل', icon: Truck,          href: '/delivery/tasks',       group: 'التوصيل',   roles: ['delivery'], badge: 4 },
-  { id: 'd-earnings', label: 'الأرباح والعمولات',  icon: Wallet,          href: '/delivery/earnings',    group: 'المالية',   roles: ['delivery'] },
-  { id: 'd-history',  label: 'سجل التوصيل',        icon: ClipboardList,   href: '/delivery/history',     group: 'العمليات',  roles: ['delivery'] },
-  { id: 'd-zones',    label: 'مناطق التغطية',      icon: Search,          href: '/delivery/zones',       group: 'العمليات',  roles: ['delivery'] },
-  { id: 'd-profile',  label: 'بيانات المندوب',     icon: UserCircle,      href: '/delivery/profile',     group: 'الحساب',    roles: ['delivery'] },
   { id: 'a-dashboard', label: 'لوحة التحكم',       icon: ShieldCheck,   href: '/admin-dashboard',    group: 'الإدارة',   roles: ['admin'], badge: 9 },
   { id: 'a-users',     label: 'المستخدمون والمحلات', icon: Users,        href: '/stores-customers',   group: 'الإدارة',   roles: ['admin'] },
   { id: 'a-orders',    label: 'جميع الطلبات',      icon: ShoppingCart,  href: '/orders',             group: 'الإدارة',   roles: ['admin'] },
@@ -51,15 +46,13 @@ const navItems: NavItem[] = [
 const groupsByRole: Record<string, string[]> = {
   retailer: ['التسوق', 'الحساب'],
   supplier: ['رئيسي', 'المالية', 'العمليات', 'أخرى'],
-  delivery: ['التوصيل', 'المالية', 'العمليات', 'الحساب'],
   admin:    ['الإدارة', 'التقارير', 'النظام'],
 };
 
 const roleLabels: Record<string, string> = {
-  admin:    'كادر إدارة المنظومة',
-  supplier: 'تاجر جملة',
-  retailer: 'سوبرماركت ومحل',
-  delivery: 'مندوب توصيل',
+  admin:    'مدير النظام',
+  supplier: 'مورد موثق',
+  retailer: 'تاجر تجزئة',
 };
 
 interface SidebarProps {

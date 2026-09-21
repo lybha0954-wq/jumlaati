@@ -1,26 +1,16 @@
 import { NextResponse } from 'next/server';
-import { orderService } from '@/lib/services/orderService';
-
+import { createClient } from '@supabase/supabase-js';
+const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await params;
-    const order = await orderService.getById(id);
-    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-    return NextResponse.json(order);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const { id } = await params;
+  const { data, error } = await sb.from('orders').select('*').eq('id', id).single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+  return NextResponse.json(data);
 }
-
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await params;
-    const body = await req.json();
-    if (body.status) {
-      await orderService.updateStatus(id, body.status);
-    }
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const { id } = await params;
+  const body = await req.json();
+  const { data, error } = await sb.from('orders').update(body).eq('id', id).select().single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json(data);
 }

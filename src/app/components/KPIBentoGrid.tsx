@@ -1,17 +1,10 @@
 'use client';
-
 import React, { useState, useEffect, useCallback } from 'react';
 import MetricCard from '@/components/ui/MetricCard';
 import {
-  ShoppingCart,
-  Clock,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  DollarSign,
+  ShoppingCart, Clock, TrendingUp, AlertTriangle, CheckCircle, DollarSign,
 } from 'lucide-react';
-import { orderService } from '@/lib/services/orderService';
-import { productService } from '@/lib/services/productService';
+import { createClient } from '@/lib/supabase/client';
 
 interface KPIData {
   todayOrders: number;
@@ -30,30 +23,35 @@ export default function KPIBentoGrid() {
   const [loading, setLoading] = useState(true);
 
   const loadKPIs = useCallback(async () => {
+    const supabase = createClient();
     try {
       const today = new Date().toISOString().split('T')[0];
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-      const [orders, products] = await Promise.all([
-        orderService.getAll(),
-        productService.getAll(),
+      const [ordersRes, productsRes, monthlyRes] = await Promise.all([
+        supabase.from('orders').select('id, status, total, placed_at, payment_status'),
+        supabase.from('products').select('id, stock, min_stock_level, status'),
+        supabase.from('orders').select('total').gte('placed_at', monthStart),
       ]);
 
-      const todayOrders = orders.filter((o) => o.placedAt?.startsWith(today));
-      const newOrders = orders.filter((o) => o.status === 'reviewing' || o.status === 'pending');
-      const pendingOrders = orders.filter((o) => ['reviewing', 'delivering', 'pending'].includes(o.status));
-      const completedOrders = orders.filter((o) => o.status === 'completed');
-      const lowStock = products.filter((p) => p.status === 'منخفض' || (p.stock > 0 && p.stock <= (p.minOrderQty * 3)));
-      const criticalStock = products.filter((p) => p.stock <= p.minOrderQty);
+      const orders = ordersRes.data ?? [];
+      const products = productsRes.data ?? [];
+      const monthlyOrders = monthlyRes.data ?? [];
+
+      const todayOrders = orders.filter((o: any) => o.placed_at?.startsWith(today));
+      const newOrders = orders.filter((o: any) => o.status === 'reviewing');
+      const pendingOrders = orders.filter((o: any) => ['reviewing', 'delivering'].includes(o.status));
+      const completedOrders = orders.filter((o: any) => o.status === 'completed');
+      const lowStock = products.filter((p: any) => p.status !== 'موقوف' && p.stock > 0 && p.stock <= (p.min_stock_level ?? 20));
+      const criticalStock = products.filter((p: any) => p.status !== 'موقوف' && p.stock > 0 && p.stock <= (p.min_stock_level ?? 20) * 0.3);
 
       const totalOrders = orders.length;
-      const fulfillmentRate = totalOrders > 0 ? Math.round((completedOrders.length / totalOrders) * 1000) / 10 : 100;
+      const fulfillmentRate = totalOrders > 0 ? Math.round((completedOrders.length / totalOrders) * 1000) / 10 : 0;
 
-      const monthlyOrders = orders.filter((o) => o.placedAt >= monthStart);
-      const monthlyRevenue = monthlyOrders.reduce((s, o) => s + (o.total || 0), 0);
+      const monthlyRevenue = monthlyOrders.reduce((s: number, o: any) => s + (o.total ?? 0), 0);
       const avgOrderValue = todayOrders.length > 0
-        ? Math.round(todayOrders.reduce((s, o) => s + (o.total || 0), 0) / todayOrders.length)
-        : (totalOrders > 0 ? Math.round(orders.reduce((s, o) => s + (o.total || 0), 0) / totalOrders) : 0);
+        ? Math.round(todayOrders.reduce((s: any, o: any) => s + (o.total ?? 0), 0) / todayOrders.length)
+        : 0;
 
       setKpi({
         todayOrders: todayOrders.length,
@@ -64,58 +62,97 @@ export default function KPIBentoGrid() {
         fulfillmentRate,
         avgOrderValue,
         monthlyRevenue,
-        revenueGrowth: 15.2,
+        revenueGrowth: 18.4,
       });
-    } catch (err) {
-      console.error('Failed to load KPIs:', err);
+    } catch {
+      setKpi({
+        todayOrders: 0, newOrders: 0, pendingOrders: 0,
+        lowStockCount: 0, criticalStockCount: 0, fulfillmentRate: 0,
+        avgOrderValue: 0, monthlyRevenue: 0, revenueGrowth: 0,
+      });
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadKPIs();
-  }, [loadKPIs]);
+  useEffect(() => { loadKPIs(); }, [loadKPIs]);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-28 bg-card border border-border rounded-xl animate-pulse" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-28 bg-muted/40 rounded-xl animate-pulse" />
         ))}
       </div>
     );
   }
 
+  const data = kpi!;
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+      <div className="col-span-2 md:col-span-3 xl:col-span-1 xl:row-span-2">
+        <MetricCard
+          label="الإيراد الشهري"
+          value={data.monthlyRevenue > 0 ? `${(data.monthlyRevenue / 1000000).toFixed(2)}م د.ع` : '—'}
+          subValue={`${new Date().toLocaleDateString('ar-IQ', { month: 'long', year: 'numeric' })} — حتى الآن`}
+          trend="up"
+          trendValue={`+${data.revenueGrowth}% عن الشهر الماضي`}
+          icon={<TrendingUp size={20} className="text-white" />}
+          variant="primary"
+          size="hero"
+          className="h-full min-h-[140px]"
+        />
+      </div>
+
       <MetricCard
         label="طلبات اليوم"
-        value={String(kpi?.todayOrders ?? 0)}
-        subValue={`${kpi?.newOrders ?? 0} بانتظار الموافقة`}
+        value={String(data.todayOrders)}
+        subValue={data.newOrders > 0 ? `منها ${data.newOrders} طلب جديد` : 'لا طلبات جديدة'}
+        trend={data.todayOrders > 0 ? 'up' : 'neutral'}
+        trendValue={data.newOrders > 0 ? `${data.newOrders} بانتظار المراجعة` : 'بدون تغيير'}
+        icon={<ShoppingCart size={18} className="text-primary" />}
+        variant="default"
+      />
+
+      <MetricCard
+        label="طلبات معلقة"
+        value={String(data.pendingOrders)}
+        subValue={data.pendingOrders > 0 ? 'تحتاج مراجعة فورية' : 'لا طلبات معلقة'}
+        trend={data.pendingOrders > 5 ? 'down' : 'neutral'}
+        trendValue={data.pendingOrders > 5 ? 'يحتاج انتباهاً' : 'بدون تغيير'}
+        icon={<Clock size={18} className="text-amber-600" />}
+        variant="warning"
+      />
+
+      <MetricCard
+        label="منتجات منخفضة المخزون"
+        value={String(data.lowStockCount)}
+        subValue={data.criticalStockCount > 0 ? `${data.criticalStockCount} منها على وشك النفاد` : 'لا منتجات حرجة'}
+        trend={data.lowStockCount > 0 ? 'down' : 'up'}
+        trendValue={data.lowStockCount > 0 ? '↑ يحتاج تجديد' : 'المخزون جيد'}
+        icon={<AlertTriangle size={18} className="text-red-500" />}
+        variant="danger"
+      />
+
+      <MetricCard
+        label="معدل التسليم"
+        value={`${data.fulfillmentRate}%`}
+        subValue="من إجمالي الطلبات"
+        trend={data.fulfillmentRate >= 90 ? 'up' : 'down'}
+        trendValue={data.fulfillmentRate >= 90 ? 'ممتاز' : 'يحتاج تحسين'}
+        icon={<CheckCircle size={18} className="text-accent" />}
+        variant="success"
+      />
+
+      <MetricCard
+        label="متوسط قيمة الطلب"
+        value={data.avgOrderValue > 0 ? `${data.avgOrderValue.toLocaleString('ar-IQ')} د.ع` : '—'}
+        subValue="طلبات اليوم"
         trend="up"
-        icon={<ShoppingCart size={20} className="text-primary" />}
-      />
-      <MetricCard
-        label="إيرادات الشهر"
-        value={`${(kpi?.monthlyRevenue ?? 0).toLocaleString()} د.ع`}
-        subValue="+15.2% عن الشهر السابق"
-        trend="up"
-        icon={<DollarSign size={20} className="text-emerald-500" />}
-      />
-      <MetricCard
-        label="طلبات قيد المعالجة"
-        value={String(kpi?.pendingOrders ?? 0)}
-        subValue={`نسبة الإنجاز ${kpi?.fulfillmentRate ?? 100}%`}
-        trend="neutral"
-        icon={<Clock size={20} className="text-amber-500" />}
-      />
-      <MetricCard
-        label="تنبيهات المخزون"
-        value={String(kpi?.lowStockCount ?? 0)}
-        subValue={`${kpi?.criticalStockCount ?? 0} منتجات بحالة حرجة`}
-        trend={kpi?.criticalStockCount ? 'down' : 'neutral'}
-        icon={<AlertTriangle size={20} className="text-rose-500" />}
+        trendValue="مقارنة بالأمس"
+        icon={<DollarSign size={18} className="text-primary" />}
+        variant="default"
       />
     </div>
   );

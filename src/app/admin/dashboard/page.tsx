@@ -1,13 +1,7 @@
-'use client';
-
-import React from 'react';
-import AppLayout from '@/components/AppLayout';
-import AdminHubContent from '@/app/admin-hub/components/AdminHubContent';
-
 export default function AdminDashboardPage() {
   return (
-    <AppLayout activeRoute="/admin-hub">
-      <AdminHubContent />
-    </AppLayout>
+    <main className="p-6">
+      <h1 className="text-2xl font-bold">لوحة الإدارة</h1>
+    </main>
   );
 }

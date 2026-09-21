@@ -1,7 +1,5 @@
 'use client';
-
-import { collection, doc, getDocs, query, where, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { createClient } from '@/lib/supabase/client';
 
 export interface Store {
   id: string;
@@ -16,45 +14,53 @@ export interface Store {
   creditLimit: number;
 }
 
+function toStore(row: any): Store {
+  return {
+    id: row.id,
+    name: row.name,
+    owner: row.owner ?? '',
+    phone: row.phone ?? '',
+    city: row.city ?? '',
+    status: row.status as Store['status'],
+    joinDate: row.join_date ?? '',
+    totalOrders: row.total_orders ?? 0,
+    totalSpent: row.total_spent ?? 0,
+    creditLimit: row.credit_limit ?? 0,
+  };
+}
+
+function isSchemaError(error: any): boolean {
+  if (!error) return false;
+  if (error.code && typeof error.code === 'string') {
+    const cls = error.code.substring(0, 2);
+    if (cls === '42' || cls === '08') return true;
+    if (cls === '23') return false;
+  }
+  return false;
+}
+
 export const storeService = {
   async getAll(): Promise<Store[]> {
+    const supabase = createClient();
     try {
-      const colRef = collection(db, 'users');
-      const q = query(colRef, where('role', '==', 'retailer'));
-      const snapshot = await getDocs(q);
-
-      return snapshot.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          name: data.businessName || 'محل تجاري',
-          owner: data.fullName || 'صاحب المحل',
-          phone: data.phone || '',
-          city: data.city || 'بغداد',
-          status: 'active',
-          joinDate: data.createdAt ? data.createdAt.substring(0, 10) : new Date().toISOString().substring(0, 10),
-          totalOrders: Number(data.totalOrders || 0),
-          totalSpent: Number(data.totalSpent || 0),
-          creditLimit: Number(data.creditLimit || 2000000),
-        };
-      });
-    } catch (e: any) {
-      console.error('[storeService.getAll] Error:', e);
-      return [];
-    }
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toStore);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
   async updateStatus(id: string, status: Store['status']): Promise<boolean> {
+    const supabase = createClient();
     try {
-      const docRef = doc(db, 'users', id);
-      await updateDoc(docRef, {
-        status,
-        updatedAt: new Date().toISOString(),
-      });
+      const { error } = await supabase
+        .from('stores')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) { if (isSchemaError(error)) throw error; return false; }
       return true;
-    } catch (e: any) {
-      console.error('[storeService.updateStatus] Error:', e);
-      return false;
-    }
+    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
   },
 };

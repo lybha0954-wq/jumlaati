@@ -1,29 +1,12 @@
 import Link from 'next/link';
-import { ShoppingBag, Truck, Store, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, Truck, Store, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 export default function HomePage() {
   const roles = [
-    {
-      icon: Store,
-      label: 'سوبرماركت ومحل',
-      desc: 'اطلب بضاعتك اليومية من محلات الجملة مباشرة وبأفضل الأسعار بدون تعب',
-      color: 'from-emerald-500 to-teal-500',
-      href: '/sign-up-login',
-    },
-    {
-      icon: Truck,
-      label: 'محل جملة',
-      desc: 'اعرض بضاعتك وأدر مبيعاتك وطلبات أصحاب المحلات بكفاءة وسرعة',
-      color: 'from-blue-500 to-indigo-500',
-      href: '/sign-up-login',
-    },
-    {
-      icon: ShoppingBag,
-      label: 'مندوب توصيل',
-      desc: 'استلم طلبيات البضاعة ووصلها للمحلات وزوّد أرباحك اليومية',
-      color: 'from-amber-500 to-orange-500',
-      href: '/sign-up-login',
-    },
+    { icon: Store, label: 'صاحب محل', desc: 'اطلب بضاعتك من الموردين بسهولة', color: 'from-emerald-500 to-teal-500', href: '/sign-up-login' },
+    { icon: Truck, label: 'تاجر جملة', desc: 'أدر طلباتك ومخزونك بكفاءة', color: 'from-blue-500 to-indigo-500', href: '/sign-up-login' },
+    { icon: ShieldCheck, label: 'مدير النظام', desc: 'راقب وأدر المنصة', color: 'from-violet-500 to-purple-500', href: '/sign-up-login' },
+    { icon: ShoppingBag, label: 'مندوب توصيل', desc: 'أدر مهامك اليومية', color: 'from-amber-500 to-orange-500', href: '/sign-up-login' },
   ];
 
   return (
@@ -37,26 +20,24 @@ export default function HomePage() {
             جُمْلَتِي
           </h1>
           <p className="text-lg text-muted-foreground font-arabic max-w-2xl mx-auto">
-            تطبيق جملتي الأول في العراق — خدمة تجارية متكاملة تجمع أصحاب السوبرماركت ومحلات الجملة ومندوبي التوصيل في منصة واحدة سهلة وسريعة
+            منصة التوريد بالجملة في العراق — تربط المحلات بالموردين والمندوبين في مكان واحد
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
           {roles.map((r) => {
             const RIcon = r.icon;
             return (
               <Link
                 key={r.label}
                 href={r.href}
-                className="group bg-card border border-border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                className="group bg-card border border-border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
-                <div>
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${r.color} flex items-center justify-center mb-4 shadow-md`}>
-                    <RIcon size={26} className="text-white" />
-                  </div>
-                  <h3 className="font-arabic font-bold text-lg text-foreground mb-1">{r.label}</h3>
-                  <p className="font-arabic text-sm text-muted-foreground leading-relaxed mb-4">{r.desc}</p>
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${r.color} flex items-center justify-center mb-4 shadow-md`}>
+                  <RIcon size={26} className="text-white" />
                 </div>
+                <h3 className="font-arabic font-bold text-lg text-foreground mb-1">{r.label}</h3>
+                <p className="font-arabic text-sm text-muted-foreground leading-relaxed mb-4">{r.desc}</p>
                 <div className="flex items-center gap-1 text-primary font-arabic font-semibold text-sm">
                   ابدأ الآن
                   <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
@@ -78,11 +59,10 @@ export default function HomePage() {
 
         <div className="mt-16 text-center">
           <p className="font-arabic text-sm text-muted-foreground">
-            © 2026 جُمْلَتِي — المنظومة التجارية المتكاملة في العراق
+            © 2026 جُمْلَتِي — جميع الحقوق محفوظة
           </p>
         </div>
       </div>
     </main>
   );
 }
-

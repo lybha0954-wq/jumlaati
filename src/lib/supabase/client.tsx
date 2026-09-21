@@ -1,5 +1,20 @@
-// Supabase has been migrated to Firebase Firestore and Authentication.
-export const isSupabaseConfigured = false;
-export function createClient(): any {
-  return null;
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const isSupabaseConfigured =
+  !!supabaseUrl &&
+  supabaseUrl !== 'your-supabase-url-here' &&
+  !!supabaseAnonKey &&
+  supabaseAnonKey !== 'your-supabase-anon-key-here';
+
+let _client: ReturnType<typeof createSupabaseClient> | null = null;
+
+export function createClient() {
+  if (!isSupabaseConfigured) return null as any;
+  if (!_client) {
+    _client = createSupabaseClient(supabaseUrl!, supabaseAnonKey!);
+  }
+  return _client;
 }

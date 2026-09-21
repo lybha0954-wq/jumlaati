@@ -1,7 +1,5 @@
 'use client';
-
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { createClient } from '@/lib/supabase/client';
 
 export interface Transaction {
   id: string;
@@ -23,79 +21,143 @@ export interface Transaction {
   updatedAt: string;
 }
 
-const TRANSACTIONS_COLLECTION = 'transactions';
+function isSchemaError(error: any): boolean {
+  if (!error) return false;
+  if (error.code && typeof error.code === 'string') {
+    const cls = error.code.substring(0, 2);
+    if (cls === '42' || cls === '08') return true;
+    if (cls === '23') return false;
+  }
+  if (error.message) {
+    return /relation.*does not exist|column.*does not exist|function.*does not exist|syntax error/i.test(error.message);
+  }
+  return false;
+}
 
-function docToTransaction(id: string, data: any): Transaction {
+function toTransaction(row: any): Transaction {
   return {
-    id,
-    transactionNumber: data.transactionNumber || `TRX-${id.slice(0, 6).toUpperCase()}`,
-    retailerId: data.retailerId,
-    supplierId: data.supplierId,
-    orderId: data.orderId,
-    invoiceId: data.invoiceId,
-    totalAmount: Number(data.totalAmount || 0),
-    paidAmount: Number(data.paidAmount || 0),
-    remainingAmount: Number(data.remainingAmount || 0),
-    currency: data.currency || 'IQD',
-    paymentStatus: data.paymentStatus || 'pending',
-    paymentMethod: data.paymentMethod || 'cash',
-    dueDate: data.dueDate,
-    paidAt: data.paidAt,
-    notes: data.notes || '',
-    createdAt: data.createdAt || new Date().toISOString(),
-    updatedAt: data.updatedAt || new Date().toISOString(),
+    id: row.id,
+    transactionNumber: row.transaction_number,
+    retailerId: row.retailer_id ?? undefined,
+    supplierId: row.supplier_id ?? undefined,
+    orderId: row.order_id ?? undefined,
+    invoiceId: row.invoice_id ?? undefined,
+    totalAmount: row.total_amount ?? 0,
+    paidAmount: row.paid_amount ?? 0,
+    remainingAmount: row.remaining_amount ?? 0,
+    currency: row.currency ?? 'IQD',
+    paymentStatus: row.payment_status as Transaction['paymentStatus'],
+    paymentMethod: row.payment_method as Transaction['paymentMethod'],
+    dueDate: row.due_date ?? undefined,
+    paidAt: row.paid_at ?? undefined,
+    notes: row.notes ?? '',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
 export const transactionService = {
   async getAll(): Promise<Transaction[]> {
+    const supabase = createClient();
     try {
-      const colRef = collection(db, TRANSACTIONS_COLLECTION);
-      const snapshot = await getDocs(colRef);
-      return snapshot.docs.map((d) => docToTransaction(d.id, d.data()));
-    } catch (e) {
-      console.error('[transactionService.getAll] Error:', e);
-      return [];
-    }
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toTransaction);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
   async getByRetailer(retailerId: string): Promise<Transaction[]> {
+    const supabase = createClient();
     try {
-      const colRef = collection(db, TRANSACTIONS_COLLECTION);
-      const q = query(colRef, where('retailerId', '==', retailerId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d) => docToTransaction(d.id, d.data()));
-    } catch (e) {
-      console.error('[transactionService.getByRetailer] Error:', e);
-      return [];
-    }
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('retailer_id', retailerId)
+        .order('created_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toTransaction);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
   async getBySupplier(supplierId: string): Promise<Transaction[]> {
+    const supabase = createClient();
     try {
-      const colRef = collection(db, TRANSACTIONS_COLLECTION);
-      const q = query(colRef, where('supplierId', '==', supplierId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d) => docToTransaction(d.id, d.data()));
-    } catch (e) {
-      console.error('[transactionService.getBySupplier] Error:', e);
-      return [];
-    }
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('supplier_id', supplierId)
+        .order('created_at', { ascending: false });
+      if (error) { if (isSchemaError(error)) throw error; return []; }
+      return (data ?? []).map(toTransaction);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return []; }
   },
 
-  async create(trx: Partial<Transaction>): Promise<Transaction | null> {
+  async create(tx: Omit<Transaction, 'id' | 'remainingAmount' | 'createdAt' | 'updatedAt'>): Promise<Transaction | null> {
+    const supabase = createClient();
     try {
-      const colRef = collection(db, TRANSACTIONS_COLLECTION);
-      const newDoc = {
-        ...trx,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert({
+          transaction_number: tx.transactionNumber,
+          retailer_id: tx.retailerId ?? null,
+          supplier_id: tx.supplierId ?? null,
+          order_id: tx.orderId ?? null,
+          invoice_id: tx.invoiceId ?? null,
+          total_amount: tx.totalAmount,
+          paid_amount: tx.paidAmount,
+          currency: tx.currency ?? 'IQD',
+          payment_status: tx.paymentStatus,
+          payment_method: tx.paymentMethod,
+          due_date: tx.dueDate ?? null,
+          paid_at: tx.paidAt ?? null,
+          notes: tx.notes ?? '',
+        })
+        .select()
+        .single();
+      if (error) { if (isSchemaError(error)) throw error; return null; }
+      return toTransaction(data);
+    } catch (e: any) { if (isSchemaError(e)) throw e; return null; }
+  },
+
+  async updatePayment(id: string, paidAmount: number, paymentStatus: Transaction['paymentStatus']): Promise<boolean> {
+    const supabase = createClient();
+    try {
+      const patch: any = {
+        paid_amount: paidAmount,
+        payment_status: paymentStatus,
+        updated_at: new Date().toISOString(),
       };
-      const docRef = await addDoc(colRef, newDoc);
-      return docToTransaction(docRef.id, newDoc);
-    } catch (e) {
-      console.error('[transactionService.create] Error:', e);
-      return null;
-    }
+      if (paymentStatus === 'paid') {
+        patch.paid_at = new Date().toISOString();
+      }
+      const { error } = await supabase
+        .from('transactions')
+        .update(patch)
+        .eq('id', id);
+      if (error) { if (isSchemaError(error)) throw error; return false; }
+      return true;
+    } catch (e: any) { if (isSchemaError(e)) throw e; return false; }
+  },
+
+  async getDebtSummary(userId: string): Promise<{ totalDebt: number; overdueDebt: number; pendingDebt: number }> {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('remaining_amount, payment_status')
+        .or(`retailer_id.eq.${userId},supplier_id.eq.${userId}`)
+        .neq('payment_status', 'paid')
+        .neq('payment_status', 'cancelled');
+      if (error) { if (isSchemaError(error)) throw error; return { totalDebt: 0, overdueDebt: 0, pendingDebt: 0 }; }
+      const rows = data ?? [];
+      return {
+        totalDebt: rows.reduce((s: number, r: any) => s + (r.remaining_amount ?? 0), 0),
+        overdueDebt: rows.filter((r: any) => r.payment_status === 'overdue').reduce((s: number, r: any) => s + (r.remaining_amount ?? 0), 0),
+        pendingDebt: rows.filter((r: any) => r.payment_status === 'pending' || r.payment_status === 'partial').reduce((s: number, r: any) => s + (r.remaining_amount ?? 0), 0),
+      };
+    } catch (e: any) { if (isSchemaError(e)) throw e; return { totalDebt: 0, overdueDebt: 0, pendingDebt: 0 }; }
   },
 };
