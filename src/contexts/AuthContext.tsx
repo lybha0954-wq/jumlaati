@@ -3,14 +3,18 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
-export type UserRole = 'owner' | 'admin' | 'supplier' | 'retailer' | 'delivery';
+export type UserRole = 'admin' | 'supplier' | 'retailer' | 'delivery';
 
 interface AuthContextValue {
   user: any;
   session: any;
   loading: boolean;
   role: UserRole | null;
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
+  signUp: (
+    email: string,
+    password: string,
+    metadata?: Record<string, any>
+  ) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
   getCurrentUser: () => Promise<any>;
@@ -84,7 +88,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata: Record<string, any> = {}
+  ) => {
     if (!supabase) throw new Error('Supabase is not configured');
 
     const { data, error } = await supabase.auth.signUp({
@@ -99,6 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           phone: metadata.phone || '',
           city: metadata.city || '',
           registration_number: metadata.registration_number || '',
+          vehicle_type: metadata.vehicle_type || '',
         },
       },
     });
@@ -109,7 +118,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     if (!supabase) throw new Error('Supabase is not configured');
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) throw error;
     if (data.user) {
       await fetchRole(data.user.id);
@@ -120,9 +132,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     if (!supabase) throw new Error('Supabase is not configured');
 
-    if (role === 'admin' && typeof window !== 'undefined') {
-      localStorage.setItem('jumlaati_admin_was_logged_out', 'true');
-    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setRole(null);
