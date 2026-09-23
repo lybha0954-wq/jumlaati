@@ -3,6 +3,7 @@ import '@/styles/tailwind.css';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { CartProvider } from '@/contexts/CartContext';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -11,8 +12,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'جُمْلَتِي — منصة توريد البقالة بالجملة في العراق',
-  description:
-    'جُمْلَتِي تربط أصحاب المحلات بتجار الجملة في العراق لطلب البضاعة بسهولة.',
+  description: 'جُمْلَتِي تربط أصحاب المحلات بتجار الجملة في العراق.',
   icons: { icon: [{ url: '/favicon.ico', type: 'image/x-icon' }] },
 };
 
@@ -22,8 +22,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-arabic">
         <ThemeProvider>
           <AuthProvider>
-            {children}
-            <Toaster position="bottom-left" toastOptions={{ style: { fontFamily: 'Tajawal, sans-serif', direction: 'rtl' } }} />
+            <CartProvider>
+              {children}
+              <Toaster
+                position="bottom-left"
+                toastOptions={{
+                  style: { fontFamily: 'Tajawal, sans-serif', direction: 'rtl' },
+                }}
+              />
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
