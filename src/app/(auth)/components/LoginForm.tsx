@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
@@ -17,8 +18,6 @@ interface LoginValues {
   password: string;
 }
 
-const ADMIN_LOGGED_OUT_KEY = 'jumlaati_admin_was_logged_out';
-
 export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormProps) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,7 +29,6 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm<LoginValues>({
     defaultValues: { email: '', password: '' },
   });
@@ -40,17 +38,21 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
     setLoading(true);
     try {
       const data = await signIn(values.email, values.password);
-      const userRole = data?.user?.user_metadata?.role || selectedRole || 'retailer';
+      const metaRole = data?.user?.user_metadata?.role;
+      const userRole: UserRole = (metaRole as UserRole) || selectedRole || 'retailer';
+
+      toast.success('تم تسجيل الدخول بنجاح!', {
+        description: 'مرحباً بك في جُمْلَتِي',
+      });
+
       if (userRole === 'admin') {
-        localStorage.removeItem(ADMIN_LOGGED_OUT_KEY);
-      }
-      toast.success('تم تسجيل الدخول بنجاح!', { description: 'مرحباً بك في جُمْلَتِي' });
-      if (userRole === 'supplier') {
-        router.push('/');
-      } else if (userRole === 'retailer') {
-        router.push('/retailer-shop');
-      } else {
         router.push('/admin/dashboard');
+      } else if (userRole === 'supplier') {
+        router.push('/supplier/dashboard');
+      } else if (userRole === 'delivery') {
+        router.push('/delivery/tasks');
+      } else {
+        router.push('/retailer/home');
       }
     } catch (error: any) {
       const msg = error?.message || '';
@@ -66,16 +68,6 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
     }
   };
 
-  const autofillDemo = (role: 'retailer' | 'supplier' | 'admin') => {
-    const demos = {
-      retailer: { email: 'hassan.albaqali@jumlaati.iq', password: 'Retailer@2026' },
-      supplier: { email: 'ahmed.aljabouri@jumlaati.iq', password: 'Supplier@2026' },
-      admin: { email: 'admin@jumlaati.iq', password: 'Admin@2026!' },
-    };
-    setValue('email', demos[role].email);
-    setValue('password', demos[role].password);
-  };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       {authError && (
@@ -83,6 +75,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
           <p className="font-arabic text-sm text-danger">{authError}</p>
         </div>
       )}
+
       <div>
         <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
           البريد الإلكتروني
@@ -105,6 +98,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
           <p className="text-xs text-danger font-arabic mt-1">{errors.email.message}</p>
         )}
       </div>
+
       <div>
         <label className="block text-xs font-semibold text-foreground font-arabic mb-1.5">
           كلمة المرور
@@ -126,6 +120,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
             type="button"
             onClick={() => setShowPass(!showPass)}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
           >
             {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -134,6 +129,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
           <p className="text-xs text-danger font-arabic mt-1">{errors.password.message}</p>
         )}
       </div>
+
       <button
         type="submit"
         disabled={loading}
@@ -148,21 +144,15 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
           'تسجيل الدخول'
         )}
       </button>
-      <div className="border border-dashed border-border rounded-xl p-3 space-y-2">
-        <p className="font-arabic text-xs text-muted-foreground text-center">تعبئة سريعة بحساب تجريبي</p>
-        <div className="grid grid-cols-3 gap-2">
-          {(['retailer', 'supplier', 'admin'] as const).map((r) => (
-            <button
-              key={`demo-${r}`}
-              type="button"
-              onClick={() => autofillDemo(r)}
-              className="py-1.5 text-xs font-arabic text-muted-foreground border border-border rounded-lg hover:border-primary/40 hover:text-primary transition-all"
-            >
-              {r === 'retailer' ? 'صاحب محل' : r === 'supplier' ? 'مورد' : 'مدير'}
-            </button>
-          ))}
-        </div>
-      </div>
+
+      {onSwitchToSignup && (
+        <p className="text-center text-xs font-arabic text-muted-foreground">
+          لا تملك حساباً؟{' '}
+          <button type="button" onClick={onSwitchToSignup} className="text-accent font-semibold hover:underline">
+            أنشئ حساباً جديداً
+          </button>
+        </p>
+      )}
     </form>
   );
 }
