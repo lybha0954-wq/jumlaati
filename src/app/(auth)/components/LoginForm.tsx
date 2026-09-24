@@ -8,11 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
-interface LoginFormProps {
-  onSwitchToSignup: () => void;
-}
-
-export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
+export default function LoginForm({ onSwitchToSignup }: { onSwitchToSignup: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,21 +23,20 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
 
     try {
       const data = await signIn(email, password);
-      const userRole = data?.user?.user_metadata?.role || 'retailer';
+      const metaRole = data?.user?.user_metadata?.role;
+      const finalRole = metaRole || 'retailer';
 
       toast.success('تم تسجيل الدخول بنجاح');
 
-      if (userRole === 'admin') router.push('/admin/dashboard');
-      else if (userRole === 'supplier') router.push('/supplier/dashboard');
-      else if (userRole === 'delivery') router.push('/delivery/tasks');
-      else router.push('/retailer/home');
+      switch (finalRole) {
+        case 'admin': router.push('/admin/dashboard'); break;
+        case 'supplier': router.push('/supplier/dashboard'); break;
+        case 'delivery': router.push('/delivery/tasks'); break;
+        default: router.push('/retailer/home'); break;
+      }
     } catch (err: any) {
       const msg = err?.message || '';
-      if (msg.includes('Invalid login credentials')) {
-        setError('بيانات الدخول غير صحيحة');
-      } else {
-        setError(msg || 'حدث خطأ أثناء تسجيل الدخول');
-      }
+      setError(msg.includes('Invalid login') ? 'بيانات الدخول غير صحيحة' : (msg || 'فشل تسجيل الدخول'));
     } finally {
       setLoading(false);
     }
@@ -55,27 +50,13 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         </div>
       )}
 
-      <Input
-        label="البريد الإلكتروني"
-        type="email"
-        value={email}
+      <Input label="البريد الإلكتروني" type="email" value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="example@jumlaati.iq"
-        icon={<Mail size={15} />}
-        dir="ltr"
-        required
-      />
+        placeholder="example@jumlaati.iq" icon={<Mail size={15} />} dir="ltr" required />
 
-      <Input
-        label="كلمة المرور"
-        type="password"
-        value={password}
+      <Input label="كلمة المرور" type="password" value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="••••••••"
-        icon={<Lock size={15} />}
-        dir="ltr"
-        required
-      />
+        placeholder="••••••••" icon={<Lock size={15} />} dir="ltr" required />
 
       <Button type="submit" variant="primary" fullWidth loading={loading}>
         تسجيل الدخول
@@ -83,11 +64,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
 
       <p className="text-center text-xs font-arabic text-muted-foreground">
         لا تملك حساباً؟{' '}
-        <button
-          type="button"
-          onClick={onSwitchToSignup}
-          className="text-accent font-semibold hover:underline"
-        >
+        <button type="button" onClick={onSwitchToSignup} className="text-accent font-semibold hover:underline">
           أنشئ حساباً جديداً
         </button>
       </p>

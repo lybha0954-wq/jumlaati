@@ -16,10 +16,27 @@ export default function RootPage() {
       return;
     }
 
-    if (role === 'admin') router.replace('/admin/dashboard');
-    else if (role === 'supplier') router.replace('/supplier/dashboard');
-    else if (role === 'delivery') router.replace('/delivery/tasks');
-    else router.replace('/retailer/home');
+    // أولوية: role من user_metadata (يُحفظ عند التسجيل)
+    const metaRole = user?.user_metadata?.role;
+    const finalRole = metaRole || role;
+
+    console.log('Redirecting user with role:', finalRole);
+
+    switch (finalRole) {
+      case 'admin':
+        router.replace('/admin/dashboard');
+        break;
+      case 'supplier':
+        router.replace('/supplier/dashboard');
+        break;
+      case 'delivery':
+        router.replace('/delivery/tasks');
+        break;
+      case 'retailer':
+      default:
+        router.replace('/retailer/home');
+        break;
+    }
   }, [user, role, loading, router]);
 
   return (
