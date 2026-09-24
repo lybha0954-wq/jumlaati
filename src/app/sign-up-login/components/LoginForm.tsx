@@ -50,7 +50,7 @@ export default function LoginForm({ onSwitchToSignup, selectedRole }: LoginFormP
       } else if (userRole === 'retailer') {
         router.push('/retailer-shop');
       } else {
-        router.push('/admin-dashboard');
+        router.push('/admin/dashboard');
       }
     } catch (error: any) {
       const msg = error?.message || '';

@@ -19,11 +19,10 @@ const notifications = [
 ];
 
 const routeTitles: Record<string, string> = {
-  '/admin-hub':                'لوحة التحكم',
   '/admin-users':              'إدارة الحسابات',
   '/admin-transactions':       'المعاملات والرقابة',
   '/admin-settings':           'الإعدادات والدعم',
-  '/admin-dashboard':          'لوحة المدير',
+  '/admin/dashboard':          'لوحة التحكم',
   '/supplier-dashboard':       'لوحة المورد',
   '/supplier-catalog':         'الكتالوج والمخزون',
   '/supplier-incoming-orders': 'الطلبات الواردة',

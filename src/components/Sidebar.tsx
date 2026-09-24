@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   { id: 's-delivery',  label: 'مناطق التوصيل',     icon: Truck,           href: '/delivery-zones',       group: 'العمليات',  roles: ['supplier'] },
   { id: 's-notif',     label: 'الإشعارات',         icon: Bell,            href: '/notifications',        group: 'أخرى',      roles: ['supplier'], badge: 5 },
   { id: 's-settings',  label: 'الدعم والإعدادات',  icon: Settings,        href: '/support-settings',     group: 'أخرى',      roles: ['supplier'] },
-  { id: 'a-dashboard', label: 'لوحة التحكم',       icon: ShieldCheck,   href: '/admin-dashboard',    group: 'الإدارة',   roles: ['admin'], badge: 9 },
+  { id: 'a-dashboard', label: 'لوحة التحكم',       icon: ShieldCheck,   href: '/admin/dashboard',    group: 'الإدارة',   roles: ['admin'], badge: 9 },
   { id: 'a-users',     label: 'المستخدمون والمحلات', icon: Users,        href: '/stores-customers',   group: 'الإدارة',   roles: ['admin'] },
   { id: 'a-orders',    label: 'جميع الطلبات',      icon: ShoppingCart,  href: '/orders',             group: 'الإدارة',   roles: ['admin'] },
   { id: 'a-reports',   label: 'التقارير المالية',  icon: BarChart2,     href: '/financials',         group: 'التقارير',  roles: ['admin'] },

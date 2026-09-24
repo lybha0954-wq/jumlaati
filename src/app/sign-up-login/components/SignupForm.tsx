@@ -72,7 +72,7 @@ export default function SignupForm({ role, onSwitchToLogin }: SignupFormProps) {
       toast.success('تم إنشاء حسابك بنجاح!', { description: 'مرحباً بك في جُمْلَتِي' });
 
       if (role === 'admin') {
-        router.push('/admin-dashboard');
+        router.push('/admin/dashboard');
       } else if (role === 'supplier') {
         router.push('/');
       } else {

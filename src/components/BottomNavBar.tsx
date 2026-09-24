@@ -27,7 +27,7 @@ const supplierNav: BottomNavItem[] = [
 ];
 
 const adminNav: BottomNavItem[] = [
-  { id: 'a-hub',          label: 'التحكم',    icon: ShieldCheck, href: '/admin-hub' },
+  { id: 'a-hub',          label: 'التحكم',    icon: ShieldCheck, href: '/admin/dashboard' },
   { id: 'a-users',        label: 'الحسابات',  icon: Users,       href: '/admin-users' },
   { id: 'a-transactions', label: 'المعاملات', icon: CreditCard,  href: '/admin-transactions' },
   { id: 'a-settings',     label: 'الإعدادات', icon: Settings,    href: '/admin-settings' },
