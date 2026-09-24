@@ -1,60 +1,21 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import { Users, Package, ShoppingCart, TrendingUp } from 'lucide-react';
-
-export default function AdminDashboardPage() {
-  const [stats, setStats] = useState({
-    totalSales: 0,
-    totalOrders: 0,
-    totalStores: 0,
-    totalSuppliers: 0,
-  });
-
-  useEffect(() => {
-    // سيتم الربط بـ RPC get_admin_dashboard_stats
-  }, []);
-
-  const cards = [
-    { label: 'إجمالي المبيعات', value: stats.totalSales, icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
-    { label: 'الطلبات', value: stats.totalOrders, icon: ShoppingCart, color: 'bg-blue-50 text-blue-600' },
-    { label: 'المحلات', value: stats.totalStores, icon: Users, color: 'bg-amber-50 text-amber-600' },
-    { label: 'تجار الجملة', value: stats.totalSuppliers, icon: Package, color: 'bg-violet-50 text-violet-600' },
+import { Card } from '@/components/ui/Card';
+import { Users, Store, Truck, ShoppingBag } from 'lucide-react';
+export default function AdminDashboard() {
+  const stats = [
+    { title: 'المستخدمون', value: '0', icon: Users, color: 'text-blue-500' },
+    { title: 'المتاجر', value: '0', icon: Store, color: 'text-emerald-500' },
+    { title: 'الموردون', value: '0', icon: ShoppingBag, color: 'text-amber-500' },
+    { title: 'المناديب', value: '0', icon: Truck, color: 'text-purple-500' },
   ];
-
   return (
-    <div className="space-y-5" dir="rtl">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground font-arabic">مرحباً بك 👋</h2>
-        <p className="text-sm text-muted-foreground font-arabic mt-1">
-          نظرة عامة على منصة جُمْلَتِي
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {cards.map((c) => {
-          const Icon = c.icon;
-          return (
-            <div key={c.label} className="bg-card border border-border rounded-2xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-muted-foreground font-arabic">{c.label}</p>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${c.color}`}>
-                  <Icon size={16} />
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-foreground tabular-nums font-arabic">
-                {c.value.toLocaleString('ar-IQ')}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="bg-card border border-border rounded-2xl p-8 text-center">
-        <p className="font-arabic text-muted-foreground text-sm">
-          لوحة التحكم قيد التطوير — ستُعرض الإحصائيات الحية هنا
-        </p>
-      </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {stats.map((s, i) => (
+        <Card key={i} className="p-4 flex items-center gap-4">
+          <div className={`p-3 rounded-xl bg-muted ${s.color}`}><s.icon size={24} /></div>
+          <div><p className="text-xs text-muted-foreground font-arabic">{s.title}</p><p className="text-lg font-bold font-arabic">{s.value}</p></div>
+        </Card>
+      ))}
     </div>
   );
 }
