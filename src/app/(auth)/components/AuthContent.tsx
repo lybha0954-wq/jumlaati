@@ -36,9 +36,10 @@ const roleFeatures: Record<UserRole, string[]> = {
   admin: ['وافق على الموردين والمحلات', 'راقب العمولات والمبيعات', 'أدر تذاكر الدعم الفني'],
 };
 
-export default function AuthContent() {
+interface AuthContentProps { initialMode?: AuthMode; }
+export default function AuthContent({ initialMode = 'login' }: AuthContentProps) {
   const [role, setRole] = useState<UserRole>('supplier');
-  const [mode, setMode] = useState<AuthMode>('login');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [showAdmin, setShowAdmin] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const RoleIcon = roleIcons[role];
