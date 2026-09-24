@@ -1,1 +1,3 @@
-// ReviewStars
+export default function ReviewStars() {
+  return null;
+}

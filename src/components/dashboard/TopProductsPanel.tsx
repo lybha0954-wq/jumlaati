@@ -1,1 +1,3 @@
-// TopProductsPanel
+export default function TopProductsPanel() {
+  return null;
+}
