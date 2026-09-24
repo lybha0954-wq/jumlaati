@@ -1,66 +1,52 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
 import RoleSelector from './RoleSelector';
 import AppLogo from '@/components/ui/AppLogo';
-import { ShoppingBag, Truck, Shield, Moon, Sun } from 'lucide-react';
+import { ShoppingBag, Truck, Shield, Navigation, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
-export type UserRole = 'retailer' | 'supplier' | 'admin';
+export type UserRole = 'retailer' | 'supplier' | 'admin' | 'delivery';
 export type AuthMode = 'login' | 'signup';
 
-const ADMIN_LOGGED_OUT_KEY = 'jumlaati_admin_was_logged_out';
-
 const roleLabels: Record<UserRole, string> = {
-  retailer: 'صاحب المحل / الفرع',
-  supplier: 'تاجر الجملة / المورد',
+  retailer: 'صاحب المحل / السوبرماركت',
+  supplier: 'تاجر الجملة',
   admin: 'مدير النظام',
+  delivery: 'مندوب التوصيل',
 };
 
 const roleIcons: Record<UserRole, React.ElementType> = {
   retailer: ShoppingBag,
   supplier: Truck,
   admin: Shield,
+  delivery: Navigation,
 };
 
 const roleDescriptions: Record<UserRole, string> = {
-  retailer: 'اطلب بضاعتك من الموردين بسهولة',
+  retailer: 'اطلب بضاعتك من تجار الجملة بسهولة',
   supplier: 'أدر طلباتك ومخزونك بكفاءة',
   admin: 'راقب وأدر منصة جُمْلَتِي',
+  delivery: 'أوصّل الطلبات وتابع مهامك اليومية',
 };
 
 const roleFeatures: Record<UserRole, string[]> = {
   supplier: ['استقبل الطلبات وأدرها بلحظة', 'راقب مخزونك وتنبيهات النفاد', 'تتبع إيراداتك اليومية والشهرية'],
-  retailer: ['قارن أسعار الموردين بضغطة', 'اطلب بضاعتك بدون مكالمات', 'ادفع كاش أو آجل حسب اتفاقك'],
-  admin: ['وافق على الموردين والمحلات', 'راقب العمولات والمبيعات', 'أدر تذاكر الدعم الفني'],
+  retailer: ['قارن أسعار تجار الجملة بضغطة', 'اطلب بضاعتك بدون مكالمات', 'ادفع كاش أو آجل حسب اتفاقك'],
+  admin: ['وافق على التجار والمحلات', 'راقب العمولات والمبيعات', 'أدر تذاكر الدعم الفني'],
+  delivery: ['استلم مهام التوصيل فوراً', 'تابع حالة كل طلبية', 'أكّد التسليم بضغطة واحدة'],
 };
 
-interface AuthContentProps { initialMode?: AuthMode; }
+interface AuthContentProps {
+  initialMode?: AuthMode;
+}
+
 export default function AuthContent({ initialMode = 'login' }: AuthContentProps) {
-  const [role, setRole] = useState<UserRole>('supplier');
+  const [role, setRole] = useState<UserRole>('retailer');
   const [mode, setMode] = useState<AuthMode>(initialMode);
-  const [showAdmin, setShowAdmin] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const RoleIcon = roleIcons[role];
-
-  useEffect(() => {
-    const checkAdminVisibility = () => {
-      try {
-        const mockSession = localStorage.getItem('jumlaati_mock_session');
-        const session = mockSession ? JSON.parse(mockSession) : null;
-        const isLoggedIn = !!session?.user;
-        if (isLoggedIn) { setShowAdmin(false); return; }
-        const adminLoggedOut = localStorage.getItem(ADMIN_LOGGED_OUT_KEY);
-        const mockUsers = localStorage.getItem('jumlaati_mock_users');
-        const hasUsers = mockUsers && Object.keys(JSON.parse(mockUsers)).length > 0;
-        if (!hasUsers) setShowAdmin(true);
-        else if (adminLoggedOut === 'true') setShowAdmin(true);
-        else setShowAdmin(false);
-      } catch { setShowAdmin(true); }
-    };
-    checkAdminVisibility();
-  }, []);
 
   return (
     <div className="min-h-screen bg-background flex" dir="rtl">
@@ -125,7 +111,7 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
               </button>
             </div>
           </div>
-          <RoleSelector role={role} onRoleChange={setRole} showAdmin={showAdmin} />
+          <RoleSelector role={role} onRoleChange={setRole} showAdmin={true} />
           <div className="flex bg-muted rounded-xl p-1 mb-6">
             <button onClick={() => setMode('login')} className={`flex-1 py-2 rounded-lg text-sm font-arabic font-semibold transition-all ${mode === 'login' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>تسجيل الدخول</button>
             <button onClick={() => setMode('signup')} className={`flex-1 py-2 rounded-lg text-sm font-arabic font-semibold transition-all ${mode === 'signup' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>إنشاء حساب</button>
