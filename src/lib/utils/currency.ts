@@ -1,1 +1,1 @@
-// currency
+export { formatCurrency, formatShortCurrency } from './format';
