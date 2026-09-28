@@ -164,3 +164,6 @@
  GET /register 200 in 619ms
  ✓ Compiled /manifest.webmanifest in 454ms (576 modules)
  GET /manifest.webmanifest 200 in 755ms
+ GET /login 200 in 1036ms
+ GET /register 200 in 411ms
+ ✓ Compiled in 2.8s (951 modules)

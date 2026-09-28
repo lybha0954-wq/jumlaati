@@ -10,13 +10,19 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import type { UserRole } from './RoleSelector';
 
-const CITIES = ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'النجف', 'كربلاء', 'كركوك', 'السليمانية', 'الحلة', 'الناصرية'];
+/** التطبيق حالياً مخصص لمحافظة كربلاء المقدسة */
+const DEFAULT_CITY = 'كربلاء المقدسة';
 const VEHICLES = ['دراجة نارية', 'سيارة صغيرة', 'سيارة حمل', 'شاحنة'];
 
 export default function SignupForm({ role, onSwitchToLogin }: { role: UserRole; onSwitchToLogin: () => void }) {
   const [form, setForm] = useState({
-    fullName: '', businessName: '', phone: '', email: '', password: '',
-    city: 'بغداد', vehicleType: 'دراجة نارية',
+    fullName: '',
+    businessName: '',
+    phone: '',
+    email: '',
+    password: '',
+    city: DEFAULT_CITY,
+    vehicleType: 'دراجة نارية',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +39,7 @@ export default function SignupForm({ role, onSwitchToLogin }: { role: UserRole; 
     try {
       await signUp(form.email, form.password, {
         full_name: role === 'delivery' ? form.businessName : form.fullName,
-        role: role,  // ← يُحفظ في user_metadata
+        role: role,
         business_name: form.businessName,
         phone: form.phone,
         city: form.city,
@@ -48,14 +54,8 @@ export default function SignupForm({ role, onSwitchToLogin }: { role: UserRole; 
         return;
       }
 
-      toast.success('مرحباً بك في جُمْلَتِي');
-
-      switch (role) {
-        case 'admin': router.push(getDashboardPath(role)); break;
-        case 'supplier': router.push(getDashboardPath(role)); break;
-        case 'delivery': router.push(getDashboardPath(role)); break;
-        default: router.push(getDashboardPath(role)); break;
-      }
+      toast.success('مرحباً بك في جُمْلَتِي 🌿');
+      router.push(getDashboardPath(role));
     } catch (err: any) {
       const msg = err?.message || '';
       setError(msg.includes('already') ? 'البريد مسجل مسبقاً' : (msg || 'فشل التسجيل'));
@@ -65,66 +65,118 @@ export default function SignupForm({ role, onSwitchToLogin }: { role: UserRole; 
   };
 
   const isDelivery = role === 'delivery';
-  const bizLabel = isDelivery ? 'الاسم الكامل'
-    : role === 'supplier' ? 'اسم الشركة / المستودع'
+  const bizLabel = isDelivery
+    ? 'الاسم الكامل'
+    : role === 'supplier'
+    ? 'اسم الشركة / المستودع'
     : 'اسم المحل / السوبرماركت';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <p className="font-arabic text-sm text-danger">{error}</p>
         </div>
       )}
 
-      <Input label={bizLabel} value={form.businessName}
+      <Input
+        label={bizLabel}
+        value={form.businessName}
         onChange={(e) => setField('businessName', e.target.value)}
         placeholder={isDelivery ? 'أحمد الجبوري' : 'اسم النشاط'}
-        icon={isDelivery ? <Navigation size={15} /> : <Building2 size={15} />} required />
+        icon={isDelivery ? <Navigation size={15} /> : <Building2 size={15} />}
+        required
+      />
 
       {!isDelivery && (
-        <Input label="اسم صاحب النشاط" value={form.fullName}
+        <Input
+          label="اسم صاحب النشاط"
+          value={form.fullName}
           onChange={(e) => setField('fullName', e.target.value)}
-          placeholder="أحمد الجبوري" icon={<User size={15} />} required />
+          placeholder="أحمد الجبوري"
+          icon={<User size={15} />}
+          required
+        />
       )}
 
       {isDelivery && (
         <div>
-          <label className="block text-xs font-semibold font-arabic mb-1.5">نوع المركبة</label>
-          <select value={form.vehicleType} onChange={(e) => setField('vehicleType', e.target.value)}
-            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-arabic">
-            {VEHICLES.map((v) => <option key={v} value={v}>{v}</option>)}
+          <label className="mb-1.5 block text-xs font-semibold font-arabic">
+            نوع المركبة
+          </label>
+          <select
+            value={form.vehicleType}
+            onChange={(e) => setField('vehicleType', e.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-arabic focus:border-[#2e8b73] focus:outline-none focus:ring-2 focus:ring-[#2e8b73]/20"
+          >
+            {VEHICLES.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
           </select>
         </div>
       )}
 
-      <Input label="رقم الهاتف" type="tel" value={form.phone}
+      <Input
+        label="رقم الهاتف"
+        type="tel"
+        value={form.phone}
         onChange={(e) => setField('phone', e.target.value)}
-        placeholder="07XXXXXXXXX" icon={<Phone size={15} />} dir="ltr" required />
+        placeholder="07XXXXXXXXX"
+        icon={<Phone size={15} />}
+        dir="ltr"
+        required
+      />
 
-      <Input label="البريد الإلكتروني" type="email" value={form.email}
+      <Input
+        label="البريد الإلكتروني"
+        type="email"
+        value={form.email}
         onChange={(e) => setField('email', e.target.value)}
-        placeholder="example@jumlaati.iq" icon={<Mail size={15} />} dir="ltr" required />
+        placeholder="example@jumlaati.iq"
+        icon={<Mail size={15} />}
+        dir="ltr"
+        required
+      />
 
-      <Input label="كلمة المرور" type="password" value={form.password}
+      <Input
+        label="كلمة المرور"
+        type="password"
+        value={form.password}
         onChange={(e) => setField('password', e.target.value)}
-        placeholder="••••••••" hint="8 أحرف على الأقل" icon={<Lock size={15} />} dir="ltr" required />
+        placeholder="••••••••"
+        hint="8 أحرف على الأقل"
+        icon={<Lock size={15} />}
+        dir="ltr"
+        required
+      />
 
+      {/* المدينة — مقروءة حالياً، مخصص لكربلاء */}
       <div>
-        <label className="block text-xs font-semibold font-arabic mb-1.5">المدينة</label>
-        <select value={form.city} onChange={(e) => setField('city', e.target.value)}
-          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-arabic">
-          {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <Input
+          label="المدينة"
+          value={form.city}
+          onChange={(e) => setField('city', e.target.value)}
+          icon={<MapPin size={15} />}
+          readOnly
+        />
+        <p className="mt-1 text-[11px] font-arabic text-muted-foreground">
+          التطبيق حالياً مخصص لمحافظة كربلاء المقدسة — قريباً محافظات أخرى 🌿
+        </p>
       </div>
 
-      <Button type="submit" variant="accent" fullWidth loading={loading}>
+      <Button type="submit" variant="primary" fullWidth loading={loading}>
         {role === 'supplier' ? 'إرسال طلب التسجيل' : 'إنشاء الحساب'}
       </Button>
 
-      <p className="text-center text-xs font-arabic text-muted-foreground">
+      <p className="pt-2 text-center text-xs font-arabic text-muted-foreground">
         لديك حساب؟{' '}
-        <button type="button" onClick={onSwitchToLogin} className="text-accent font-semibold hover:underline">
+        <button
+          type="button"
+          onClick={onSwitchToLogin}
+          className="font-semibold text-[#2e8b73] hover:underline"
+        >
           سجّل الدخول
         </button>
       </p>
