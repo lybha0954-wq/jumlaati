@@ -28,7 +28,7 @@ export async function GET() {
     // كل المنتجات (بدون فلترة)
     const { data: allProducts, error: prodErr } = await supabase
       .from("products")
-      .select("id, name, supplier_id, status, final_price, price")
+      .select("id, name, supplier_id, status, final_price")
       .order("created_at", { ascending: false });
 
     // منتجات المستخدم الحالي فقط

@@ -75,7 +75,7 @@ export default function WholesaleProductsPage() {
                   : stock < 10
                   ? { label: `منخفض (${stock})`, cls: "bg-amber-50 text-amber-700" }
                   : { label: `${stock} متوفر`, cls: "bg-[#e8f4f0] text-[#1e6b57]" };
-              const price = Number(p.final_price ?? p.price ?? 0);
+              const price = Number(p.final_price ?? 0);
 
               return (
                 <div key={p.id}
