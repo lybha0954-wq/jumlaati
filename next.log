@@ -7168,3 +7168,8 @@ Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home
 
 Import trace for requested module:
 ./src/app/(dashboard)/wholesale/overview/PageClient.tsx
+ ⨯ ./src/app/(dashboard)/wholesale/overview/PageClient.tsx
+Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/src/app/(dashboard)/wholesale/overview/PageClient.tsx'
+
+Import trace for requested module:
+./src/app/(dashboard)/wholesale/overview/PageClient.tsx
