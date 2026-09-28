@@ -16,7 +16,7 @@ export default function NearbyWholesalePage() {
   useEffect(() => {
     const fetchWholesalers = async () => {
       try {
-        const res = await fetch("/api/users?role=wholesaler");
+        const res = await fetch("/api/users?role=supplier");
         if (res.ok) setWholesalers(await res.json());
       } catch (error) {
         showToast("خطأ في جلب تجار الجملة", "error");
@@ -27,12 +27,12 @@ export default function NearbyWholesalePage() {
     fetchWholesalers();
   }, []);
 
-  const handleSendRequest = async (wholesalerId: string) => {
+  const handleSendRequest = async (supplierId: string) => {
     try {
       const res = await fetch("/api/relationships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wholesalerId }),
+        body: JSON.stringify({ supplierId }),
       });
       const data = await res.json();
       if (res.ok) {

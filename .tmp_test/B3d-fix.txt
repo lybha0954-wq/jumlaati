@@ -1,0 +1,19 @@
+═══ 1) تأكيد: walletService غير مستخدم ═══
+  ✅ لا أحد يستورده
+
+═══ 2) تأكيد: /api/wallet غير مستخدم ═══
+  ✅ لا أحد يستدعيه
+
+═══ 3) نسخ احتياطية + إعادة تسمية ═══
+✅ walletService → .DELETED
+✅ api/wallet → .DELETED
+
+═══ 4) تحقق نهائي ═══
+— walletService:
+walletService.ts.DELETED
+— api/wallet:
+wallet.DELETED
+
+═══ 5) تحديث AUDIT-LOG (المرحلة B) ═══
+✅ AUDIT-LOG محدّث
+✅ نُسخ

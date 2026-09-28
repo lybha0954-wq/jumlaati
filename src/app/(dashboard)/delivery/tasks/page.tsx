@@ -41,8 +41,8 @@ export default function DeliveryTasksPage() {
     { key: "status", header: "الحالة", render: (row: any) => <StatusBadge status={row.status} /> },
     { key: "actions", header: "إجراءات", render: (row: any) => (
         <div className="flex gap-2">
-          {row.status === "processing" && <Button size="sm" onClick={() => updateStatus(row.id, "shipped")}>بدء التسليم</Button>}
-          {row.status === "shipped" && <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, "delivered")}>تم التوصيل</Button>}
+          {row.status === "reviewing" && <Button size="sm" onClick={() => updateStatus(row.id, "delivering")}>بدء التسليم</Button>}
+          {row.status === "delivering" && <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, "completed")}>تم التوصيل</Button>}
         </div>
     )},
   ];

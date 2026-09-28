@@ -10,7 +10,7 @@ import { WholesaleStats } from "../components/WholesaleStats";
 import { WholesaleOrderCard } from "../components/WholesaleOrderCard";
 import { Package } from "lucide-react";
 
-interface Order { id: string; user_id: string; wholesaler_id?: string; total: number; status: "pending" | "processing" | "shipped" | "delivered" | 
+interface Order { id: string; retailer_profile_id: string; supplier_profile_id?: string; total: number; status: "reviewing" | "delivering" | "completed" | 
   "cancelled"; address?: string; created_at: string; users?: { name?: string; email?: string } | null;
 }
 export default function WholesaleOverviewPage() { const [loading, setLoading] = useState(true); const [stats, setStats] = useState({ products: 0, 
@@ -20,7 +20,7 @@ export default function WholesaleOverviewPage() { const [loading, setLoading] = 
     {
       const [productsRes, ordersRes] = await Promise.all([ fetch("/api/products"), fetch("/api/orders"), ]); const products = productsRes.ok ? 
       await productsRes.json() : []; const orders: Order[] = ordersRes.ok ? await ordersRes.json() : []; const totalRevenue = orders.reduce(
-        (sum, o) => sum + (Number(o.total) || 0), 0 ); const pending = orders.filter((o) => o.status === "pending").length; setStats({ products: 
+        (sum, o) => sum + (Number(o.total) || 0), 0 ); const pending = orders.filter((o) => o.status === "reviewing").length; setStats({ products: 
         Array.isArray(products) ? products.length : 0, orders: orders.length, revenue: totalRevenue, pendingOrders: pending,
       });
       setRecentOrders(orders.slice(0, 5));

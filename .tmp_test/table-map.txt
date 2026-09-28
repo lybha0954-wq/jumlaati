@@ -1,0 +1,55 @@
+═══════ خريطة الجداول في Supabase ═══════
+
+الجدول                   HTTP
+───────────────────────────── ────
+user_profiles                  401
+public.users                   404
+products                       200
+orders                         401
+order_items                    401
+profiles                       404
+relationships                  401
+wallets                        404
+matches                        404
+offers                         404
+commissions                    401
+notifications                  401
+announcements                  200
+platform_settings              401
+feature_flags                  401
+ledger                         404
+suppliers                      401
+retailers                      404
+deliveries                     404
+wholesale_orders               404
+wholesale_products             404
+cart                           404
+cart_items                     404
+favorites                      404
+addresses                      401
+stores                         200
+stores_products                404
+categories                     200
+reviews                        200
+disputes                       401
+refunds                        401
+payouts                        401
+coupons                        401
+coupon_usage                   401
+points                         404
+points_transactions            401
+audit_logs                     401
+tasks                          404
+delivery_tasks                 401
+messages                       404
+chats                          404
+chat_messages                  401
+shops                          404
+retailers_profiles             404
+suppliers_profiles             404
+deliveries_profiles            404
+
+═══════ ملخص التصنيف ═══════
+200 = موجود + مقروء عام
+401 = موجود لكن RLS يمنع anon (يحتاج auth)
+404 = غير موجود (يُرجع خطأ 'relation does not exist')

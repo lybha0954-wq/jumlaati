@@ -84,7 +84,7 @@ export function getDashboardPath(role: string): string {
   switch (role) {
     case "admin":
       return ROUTES.admin.home;
-    case "wholesaler":
+    case "supplier":
       return ROUTES.wholesale.overview;
     case "delivery":
       return ROUTES.delivery.overview;

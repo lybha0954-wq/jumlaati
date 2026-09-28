@@ -12,7 +12,7 @@ export async function GET() {
       const { data } = await supabase
         .from('products')
         .select('*')
-        .eq('is_active', true)
+        .eq('status', 'متوفر')
         .order('created_at', { ascending: false });
       return NextResponse.json(data || []);
     }
@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { user, error } = await requireRole(['wholesaler', 'admin']);
+  const { user, error } = await requireRole(['supplier', 'admin']);
   if (error) return error;
 
   try {

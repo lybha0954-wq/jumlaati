@@ -7,8 +7,8 @@ import type { NotificationType } from "@/config/notifications";
 interface NotificationPayload {
   userId: string;
   type: NotificationType;
-  title: string;
-  message: string;
+  title?: string;
+  message?: string;
   email?: string;
   phone?: string;
 }
@@ -19,11 +19,12 @@ export const notificationService = {
       const supabase = await createClient();
       const { error } = await supabase.from("notifications").insert({
         user_id: payload.userId,
-        title: payload.title,
-        message: payload.message,
+        type: payload.type,
+        title: payload.title ?? null,
+        message: payload.message ?? null,
       });
       if (error) throw new Error(error.message);
-      logger.info(`[Notification] Sent to ${payload.userId}: ${payload.title}`);
+      logger.info(`[Notification] Sent to ${payload.userId}: ${payload.title ?? payload.type}`);
     } catch (err) {
       logger.error("Failed to send in-app notification", err);
       throw err;
@@ -32,9 +33,9 @@ export const notificationService = {
 
   async sendEmail(payload: NotificationPayload): Promise<void> {
     if (!payload.email) return;
-    const html = `<h1>${payload.title}</h1><p>${payload.message}</p>`;
+    const html = `<h1>${payload.title ?? ""}</h1><p>${payload.message ?? ""}</p>`;
     try {
-      await sendEmail(payload.email, payload.title, html);
+      await sendEmail(payload.email, payload.title ?? "إشعار", html);
     } catch (err) {
       logger.error("Failed to send notification email", err);
     }
@@ -43,7 +44,7 @@ export const notificationService = {
   async sendSMS(payload: NotificationPayload): Promise<void> {
     if (!payload.phone) return;
     try {
-      await sendSMS(payload.phone, `${payload.title}: ${payload.message}`);
+      await sendSMS(payload.phone, `${payload.title ?? ""}: ${payload.message ?? ""}`);
     } catch (err) {
       logger.error("Failed to send notification SMS", err);
     }

@@ -32,8 +32,8 @@ export default function RetailerOverviewPage() {
     try {
       const res = await fetch("/api/orders");
       const orders: Order[] = res.ok ? await res.json() : [];
-      const pending = orders.filter((o) => o.status === "pending").length;
-      const delivered = orders.filter((o) => o.status === "delivered").length;
+      const pending = orders.filter((o) => o.status === "reviewing").length;
+      const delivered = orders.filter((o) => o.status === "completed").length;
       const totalSpent = orders.reduce(
         (sum, o) => sum + (Number(o.total) || 0),
         0

@@ -1,20 +1,27 @@
-import { User } from "./user";
-
-export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+export type OrderStatus = "reviewing" | "delivering" | "completed" | "cancelled";
+export type PaymentStatus = "paid" | "pending" | "overdue";
 
 export interface OrderItem {
-  productId: string;
+  id: string;
+  order_id: string;
+  product_id: string;
+  name: string;
+  unit_price: number;
   quantity: number;
-  price: number;
 }
 
 export interface Order {
   id: string;
-  userId: string;
-  items: OrderItem[];
+  order_number: string | null;
   status: OrderStatus;
+  payment_status: PaymentStatus;
   total: number;
-  address: string;
-  createdAt: string;
-  deliveryAgent?: User;
+  commission: number | null;
+  store_id: string | null;
+  buyer_name: string | null;
+  delivery_address: string | null;
+  retailer_profile_id: string | null;
+  supplier_profile_id: string | null;
+  delivery_profile_id: string | null;
+  created_at: string;
 }

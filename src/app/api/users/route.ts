@@ -13,8 +13,8 @@ export async function GET(req: Request) {
     if (!role) return NextResponse.json({ error: 'Role required' }, { status: 400 });
 
     const { data, error: dbError } = await supabase
-      .from('users')
-      .select('id, name, email, phone, role')
+      .from('user_profiles')
+      .select('id, full_name, email, phone, role')
       .eq('role', role);
 
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });

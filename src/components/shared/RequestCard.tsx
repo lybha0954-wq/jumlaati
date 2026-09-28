@@ -16,26 +16,46 @@ export function RequestCard({ product }: { product: any }) {
   const [isFav, setIsFav] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
 
+  // ─── توافق مع Supabase + Legacy ───
+  // السعر: final_price (Supabase) أو price (Legacy)
+  const price = Number(product.final_price ?? product.price ?? 0);
+
+  // الصورة: images[] (Legacy) أو image (مفرد) أو لا شيء
   const image =
     Array.isArray(product.images) && product.images.length > 0
       ? product.images[0]
+      : typeof product.image === "string" && product.image.length > 0
+      ? product.image
       : typeof product.images === "string" && product.images.length > 0
       ? product.images
       : null;
 
-  const isWholesale =
-    product.is_wholesale ?? product.isWholesale ?? false;
+  // المورد: supplier_id (Supabase) أو owner_id (Legacy)
+  const supplierId = product.supplier_id || product.owner_id || product.ownerId || "default";
 
+  // الرابط: slug (Legacy) أو id (Supabase)
   const productUrl = `/products/${product.slug || product.id}`;
+
+  // الحالة: هل هو جملة؟ (من stock, min_order_qty)
+  const isWholesale = product.is_wholesale ?? product.isWholesale ?? true;
+
+  // حالة المخزون من product_status enum العربي
+  const status = product.status || "متوفر";
+  const isLowStock = status === "منخفض";
+  const isOutOfStock = status === "نفد";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) {
+      showToast("هذا المنتج غير متوفر حالياً", "error");
+      return;
+    }
     addItem({
       productId: product.id,
-      wholesalerId: product.owner_id || product.ownerId || "default",
+      wholesalerId: supplierId,
       name: product.name,
-      price: product.price,
+      price: price,
       quantity: 1,
       image: image || undefined,
     });
@@ -88,23 +108,36 @@ export function RequestCard({ product }: { product: any }) {
           {product.name}
         </h3>
       </Link>
-      <p className="text-sm text-gray-500 mb-3">{product.category}</p>
+      <p className="text-sm text-gray-500 mb-3">{product.category || "منتج"}</p>
 
       <div className="mt-auto">
-        <span className="block font-extrabold text-primary text-xl mb-3">
-          {formatCurrency(product.price)}
-        </span>
+        <div className="flex items-center justify-between mb-3">
+          <span className="block font-extrabold text-primary text-xl">
+            {formatCurrency(price)}
+          </span>
+          {isLowStock && (
+            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+              كمية محدودة
+            </span>
+          )}
+          {isOutOfStock && (
+            <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">
+              نفد
+            </span>
+          )}
+        </div>
         <Button
           onClick={handleAddToCart}
           size="sm"
           className="w-full"
+          disabled={isOutOfStock}
         >
           {isAdded ? (
             <Check size={16} className="ml-1" />
           ) : (
             <ShoppingCart size={16} className="ml-1" />
           )}
-          {isAdded ? "تمت الإضافة" : "أضف للسلة"}
+          {isOutOfStock ? "غير متوفر" : isAdded ? "تمت الإضافة" : "أضف للسلة"}
         </Button>
       </div>
     </div>

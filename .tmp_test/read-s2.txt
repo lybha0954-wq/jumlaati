@@ -1,0 +1,112 @@
+═══════ 1) userStore.ts ═══════
+import { create } from "zustand";
+import type { User } from "@/types/user";
+
+interface UserState {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  logout: () => void;
+}
+
+export const useUserStore = create<UserState>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+  logout: () => set({ user: null }),
+}));
+
+═══════ 2) useToast.ts ═══════
+"use client";
+import { create } from "zustand";
+
+interface ToastState {
+  isOpen: boolean;
+  message: string;
+  type: "success" | "error" | "info";
+  showToast: (message: string, type?: "success" | "error" | "info") => void;
+  closeToast: () => void;
+}
+
+export const useToastStore = create<ToastState>((set) => ({
+  isOpen: false,
+  message: "",
+  type: "success",
+  showToast: (message, type = "success") => set({ isOpen: true, message, type }),
+  closeToast: () => set({ isOpen: false }),
+}));
+
+export function useToast() {
+  const { showToast, closeToast } = useToastStore();
+  return { showToast, closeToast };
+}
+
+═══════ 3) Toast.tsx ═══════
+
+═══════ 4) useNotification.ts ═══════
+"use client";
+import { create } from "zustand";
+
+interface NotificationState {
+  notifications: any[];
+  setNotifications: (notifications: any[]) => void;
+  addNotification: (notification: any) => void;
+  unreadCount: number;
+}
+
+export const useNotificationStore = create<NotificationState>((set) => ({
+  notifications: [],
+  unreadCount: 0,
+  setNotifications: (notifications) => set({ notifications }),
+  addNotification: (notification) => set((state) => ({ 
+    notifications: [notification, ...state.notifications],
+    unreadCount: state.unreadCount + 1 
+  })),
+}));
+
+═══════ 5) notificationStore.ts ═══════
+import { create } from "zustand";
+import { createClient } from "@/lib/supabase/client";
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+interface NotificationState {
+  notifications: Notification[];
+  unreadCount: number;
+  fetchNotifications: () => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+}
+
+export const useNotificationStore = create<NotificationState>((set, get) => ({
+  notifications: [],
+  unreadCount: 0,
+
+  fetchNotifications: async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      set({
+        notifications: data,
+        unreadCount: data.filter((n) => !n.is_read).length,
+      });
+    }
+  },
+
+  markAsRead: async (id: string) => {
+    const supabase = createClient();
+    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    get().fetchNotifications();
+  },
+}));

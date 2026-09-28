@@ -19,7 +19,7 @@ import {
 
 const ROLE_PREFIX: Record<string, string> = {
   admin: "/admin",
-  wholesaler: "/wholesale",
+  supplier: "/wholesale",
   retailer: "/retailer",
   delivery: "/delivery",
 };
@@ -31,12 +31,12 @@ export function Sidebar() {
 
   const links = [
     // Admin
-    { href: "/admin/overview", label: "نظرة عامة", icon: LayoutDashboard, roles: ["admin"] },
+    { href: "/admin/home", label: "نظرة عامة", icon: LayoutDashboard, roles: ["admin"] },
     { href: "/admin/users", label: "المستخدمون", icon: Users, roles: ["admin"] },
     // Wholesale
-    { href: "/wholesale/products", label: "منتجاتي", icon: Package, roles: ["wholesaler"] },
-    { href: "/wholesale/orders", label: "الطلبات", icon: ShoppingCart, roles: ["wholesaler"] },
-    { href: "/wholesale/nearby-requests", label: "طلبات قريبة", icon: MessageCircle, roles: ["wholesaler"] },
+    { href: "/wholesale/products", label: "منتجاتي", icon: Package, roles: ["supplier"] },
+    { href: "/wholesale/orders", label: "الطلبات", icon: ShoppingCart, roles: ["supplier"] },
+    { href: "/wholesale/nearby-requests", label: "طلبات قريبة", icon: MessageCircle, roles: ["supplier"] },
     // Retailer
     { href: "/retailer/cart", label: "السلة", icon: ShoppingCart, roles: ["retailer"] },
     { href: "/retailer/orders", label: "طلباتي", icon: FileText, roles: ["retailer"] },
@@ -46,8 +46,8 @@ export function Sidebar() {
     { href: "/delivery/tasks", label: "مهامي", icon: Truck, roles: ["delivery"] },
     { href: "/delivery/my-wholesalers", label: "تجاري", icon: Store, roles: ["delivery"] },
     // All
-    { href: "/messages", label: "الرسائل", icon: MessageCircle, roles: ["admin", "wholesaler", "retailer", "delivery"] },
-    { href: `${rolePrefix}/settings`, label: "الإعدادات", icon: Settings, roles: ["admin", "wholesaler", "retailer", "delivery"] },
+    { href: "/messages", label: "الرسائل", icon: MessageCircle, roles: ["admin", "supplier", "retailer", "delivery"] },
+    { href: `${rolePrefix}/settings`, label: "الإعدادات", icon: Settings, roles: ["admin", "supplier", "retailer", "delivery"] },
   ];
 
   const visibleLinks = links.filter((link) => link.roles.includes(role));

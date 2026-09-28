@@ -1,0 +1,93 @@
+═══ commissions ═══
+  ✅ id
+  ✅ order_id
+  ✅ commission
+
+═══ order_items ═══
+  ✅ id
+  ✅ order_id
+  ✅ product_id
+  ✅ name
+  ✅ unit_price
+
+═══ notifications ═══
+  ✅ id
+  ✅ user_id
+  ✅ type
+  ✅ is_read
+  ✅ created_at
+
+═══ disputes ═══
+  ✅ id
+  ✅ order_id
+  ✅ status
+  ✅ description
+  ✅ created_at
+  ✅ resolved_at
+
+═══ coupon_usage ═══
+  ✅ id
+  ✅ user_id
+  ✅ order_id
+
+═══ chat_messages ═══
+  ✅ id
+  ✅ order_id
+  ✅ sender_id
+  ✅ receiver_id
+  ✅ message
+  ✅ is_read
+  ✅ created_at
+
+═══ addresses ═══
+  ✅ id
+  ✅ user_id
+  ✅ label
+  ✅ street
+  ✅ governorate
+  ✅ district
+  ✅ is_default
+  ✅ created_at
+
+═══ points_transactions ═══
+  ✅ id
+  ✅ user_id
+  ✅ type
+  ✅ reason
+  ✅ created_at
+  ✅ points
+
+═══ refunds ═══
+  ✅ id
+  ✅ order_id
+  ✅ status
+  ✅ reason
+  ✅ amount
+  ✅ created_at
+  ✅ resolved_at
+
+═══ payouts ═══
+  ✅ id
+  ✅ user_id
+  ✅ status
+  ✅ notes
+  ✅ amount
+  ✅ created_at
+
+═══ coupons ═══
+  ✅ id
+  ✅ is_active
+  ✅ created_at
+  ✅ expires_at
+  ✅ code
+  ✅ max_uses
+  ✅ used_count
+  ✅ discount_percent
+
+═══ delivery_tasks ═══
+  ✅ id
+  ✅ order_id
+  ✅ delivery_profile_id
+  ✅ status
+  ✅ created_at
+

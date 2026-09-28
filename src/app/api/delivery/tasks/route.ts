@@ -10,7 +10,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .eq("delivery_id", user.id)
+      .eq("delivery_profile_id", user.id)
       .or("status.eq.accepted,status.eq.shipped")
       .order("created_at", { ascending: false });
 

@@ -1,14 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
 export const relationshipService = {
-  async sendRequest(data: { wholesalerId?: string; retailerId?: string; deliveryId?: string }) {
+  async sendRequest(data: { supplierId?: string; retailerId?: string }) {
     const supabase = await createClient();
     const { data: relationship, error } = await supabase
       .from('relationships')
       .insert({ 
-        wholesaler_id: data.wholesalerId || null, 
+        supplier_id: data.supplierId || null, 
         retailer_id: data.retailerId || null, 
-        delivery_id: data.deliveryId || null,
         status: 'pending' 
       })
       .select()
@@ -48,8 +47,8 @@ export const relationshipService = {
 
     const { data, error } = await supabase
       .from('relationships')
-      .select('*, retailer:retailer_id(id, name, email), wholesaler:wholesaler_id(id, name, email), delivery:delivery_id(id, name, email)')
-      .or(`wholesaler_id.eq.${user.id},retailer_id.eq.${user.id},delivery_id.eq.${user.id}`)
+      .select('*, retailer:retailer_id(id, full_name, email), supplier:supplier_id(id, full_name, email)')
+      .or(`supplier_id.eq.${user.id},retailer_id.eq.${user.id}`)
       .eq('status', 'pending');
 
     if (error) throw new Error(error.message);

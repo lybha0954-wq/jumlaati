@@ -1,0 +1,30 @@
+✅ نسخ 4 ملفات
+
+═══ 1) analyticsService — إصلاحان ═══
+10:      .eq("status", "completed");
+20:      .from("user_profiles")
+
+═══ 2) whatsappService — إصلاح واحد ═══
+6:    const { data, error } = await supabase.from("user_profiles").select("phone").eq("id", userId).single();
+
+═══ 3) payoutService — إصلاحات متعددة ═══
+— المتبقي (users/name):
+51:        user_profiles:user_id ( id, full_name, email, role )
+78:        user_profiles:user_id ( id, full_name, email, role )
+
+═══ 4) reviewService — إصلاح alias ═══
+9:      .select("*, user_profiles(full_name)")
+
+═══ تحقق نهائي ═══
+— analyticsService:
+0
+  0 ✅
+— payoutService:
+0
+  0 ✅
+— whatsappService:
+0
+  0 ✅
+— reviewService:
+0
+  0 ✅

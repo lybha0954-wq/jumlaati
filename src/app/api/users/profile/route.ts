@@ -14,8 +14,8 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { data, error } = await supabase
-      .from('users')
-      .select('id, name, email, phone, role, created_at')
+      .from('user_profiles')
+      .select('id, full_name, email, phone, role, created_at')
       .eq('id', user.id)
       .single();
 
@@ -36,10 +36,10 @@ export async function PATCH(req: Request) {
     const parsed = profileSchema.parse(body);
 
     const { data, error } = await supabase
-      .from('users')
+      .from('user_profiles')
       .update(parsed)
       .eq('id', user.id)
-      .select('id, name, email, phone, role')
+      .select('id, full_name, email, phone, role')
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

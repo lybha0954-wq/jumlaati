@@ -1,0 +1,45 @@
+═══════════════════════════════════════════════
+📊 مسح دقيق — بدون .before
+═══════════════════════════════════════════════
+
+═══ A) من يستخدم from('users') — بمحتوى السطر ═══
+  📄 src/app/api/admin/analytics/route.ts:
+     11:      .from('users')
+  📄 src/app/api/admin/audit-logs/route.ts:
+     11:    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+  📄 src/app/api/admin/payments/route.ts:
+     10:    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+  📄 src/app/api/admin/users/[id]/route.ts:
+     10:    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+  📄 src/app/api/chat/route.ts:
+     22:      .from('users')
+  📄 src/app/api/coupons/route.ts:
+     11:    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+  📄 src/app/api/refunds/[id]/route.ts:
+     10:    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+  📄 src/app/api/refunds/route.ts:
+     11:    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+  📄 src/app/api/users/profile/route.ts:
+     17:      .from('users')
+  📄 src/app/api/users/route.ts:
+     16:      .from('users')
+
+═══ B) من يستخدم .eq('delivery_id' (في orders) ═══
+  📄 src/app/api/delivery/tasks/route.ts: 13:      .eq("delivery_id", user.id)
+
+═══ C) من يستخدم .eq('user_id' (في orders — خارج notifications/payouts) ═══
+  📄 src/app/api/notifications/route.ts: 13:    .eq('user_id', user.id)
+  📄 src/app/api/payouts/route.ts: 20:    .eq("user_id", user!.id)
+  📄 src/app/api/wallet/route.ts: 13:      .eq("user_id", user.id)
+
+═══ D) من يستخدم users(name) في select ═══
+  📄 src/app/api/admin/audit-logs/route.ts: 16:      .select('*, users(name)')
+
+═══ E) من يستخدم from('wallets') ═══
+  📄 src/app/api/wallet/route.ts: 11:      .from("wallets")
+
+═══ F) من يستخدم owner_id / is_active في products ═══
+  📄 src/app/api/products/route.ts: 15:        .eq('is_active', true)
+
+═══ G) الإجمالي ═══
+  ملفات API حقيقية: 40

@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
             onChange={(e) => handleUpdate(row.id, { role: e.target.value })}
           >
             <option value="retailer">تاجر تجزئة</option>
-            <option value="wholesaler">تاجر جملة</option>
+            <option value="supplier">تاجر جملة</option>
             <option value="delivery">مندوب</option>
             <option value="admin">أدمن</option>
           </Select>

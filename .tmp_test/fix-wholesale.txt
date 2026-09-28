@@ -1,0 +1,12 @@
+═══ قبل الإصلاح ═══
+12:      .insert({ ...input, owner_id: user.id, is_active: true })
+28:      .eq("owner_id", user.id)
+65:      .eq("wholesaler_id", user.id)
+
+═══ بعد الإصلاح ═══
+12:      .insert({ ...input, supplier_id: user.id })
+28:      .eq("supplier_id", user.id)
+65:      .eq("supplier_profile_id", user.id)
+
+═══ تأكيد: لا شيء خاطئ باقٍ ═══
+  ✅ نظيف

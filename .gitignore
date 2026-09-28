@@ -42,3 +42,9 @@ duplicates_report.txt
 project_full_scan.txt
 .env.local
 .env.*.local
+
+# Build artifacts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+.next/
+.vercel

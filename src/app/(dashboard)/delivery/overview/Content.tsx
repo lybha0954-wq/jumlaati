@@ -33,11 +33,11 @@ export default function DeliveryOverviewPage() {
       const res = await fetch("/api/delivery/tasks");
       const data: Task[] = res.ok ? await res.json() : [];
       const active = data.filter(
-        (t) => t.status === "accepted" || t.status === "shipped"
+        (t) => t.status === "reviewing" || t.status === "delivering"
       ).length;
-      const completed = data.filter((t) => t.status === "delivered").length;
+      const completed = data.filter((t) => t.status === "completed").length;
       const earnings = data
-        .filter((t) => t.status === "delivered")
+        .filter((t) => t.status === "completed")
         .reduce((sum, t) => sum + (Number(t.total) || 0) * 0.1, 0);
 
       setStats({ active, completed, earnings });

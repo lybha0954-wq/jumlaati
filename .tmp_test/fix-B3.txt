@@ -1,0 +1,21 @@
+═══ 1) فحص AuthProvider في layout.tsx ═══
+4:import { AuthProvider } from "@/contexts/AuthContext";
+30:        <AuthProvider>
+33:        </AuthProvider>
+  ✅ AuthProvider موجود — نُكمل
+
+═══ 2) نسخة احتياطية ═══
+  ✅ Topbar.tsx.before
+
+═══ 3) كتابة Topbar الجديد ═══
+
+═══ 4) تحقق — لا setUser / createClient / onAuthStateChange ═══
+  ✅ نظيف
+
+═══ 5) تحقق — useAuth موجود ═══
+9:import { useAuth } from "@/contexts/AuthContext";
+15:  const { signOut } = useAuth();
+33:      await signOut();
+
+═══ 6) عدد الأسطر ═══
+99 src/components/dashboard/Topbar.tsx

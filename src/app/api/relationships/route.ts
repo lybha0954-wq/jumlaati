@@ -20,11 +20,11 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { wholesalerId, retailerId, deliveryId } = body;
-    if (!wholesalerId && !retailerId && !deliveryId) {
+    const { supplierId, retailerId } = body;
+    if (!supplierId && !retailerId) {
       return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
     }
-    const rel = await relationshipService.sendRequest({ wholesalerId, retailerId, deliveryId });
+    const rel = await relationshipService.sendRequest({ supplierId, retailerId });
     return NextResponse.json(rel, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

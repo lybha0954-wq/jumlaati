@@ -1,0 +1,22 @@
+═══ تحقق: الملف كُتب كاملاً ═══
+173 src/contexts/AuthContext.tsx
+
+═══ تحقق: الأسطر الحرجة موجودة ═══
+5:import { useUserStore } from '@/lib/stores/userStore';
+39:  const fetchProfile = async (userId: string) => {
+64:      useUserStore.getState().setUser(storeUser);
+66:      console.error('[AuthContext] fetchProfile error:', err);
+80:      if (s?.user) fetchProfile(s.user.id);
+89:          fetchProfile(s.user.id);
+92:          useUserStore.getState().setUser(null);
+126:    if (data.user) await fetchProfile(data.user.id);
+135:    useUserStore.getState().setUser(null);
+
+═══ تحقق: لا wholesale/supplier خاطئ ═══
+8:export type UserRole = 'admin' | 'supplier' | 'retailer' | 'delivery';
+
+═══ تحقق نحوي (هل TS سليم؟) ═══
+src/contexts/AuthContext.tsx(4,52): error TS2307: Cannot find module '@/lib/supabase/client' or its corresponding type declarations.
+src/contexts/AuthContext.tsx(5,30): error TS2307: Cannot find module '@/lib/stores/userStore' or its corresponding type declarations.
+src/contexts/AuthContext.tsx(6,27): error TS2307: Cannot find module '@/types/user' or its corresponding type declarations.
+src/contexts/AuthContext.tsx(157,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.

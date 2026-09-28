@@ -5,26 +5,32 @@ import type { Commission } from "@/types/commission";
 
 export const commissionService = {
   calculateCommission(orderTotal: number): number {
-    return orderTotal * paymentConfig.commissionRate;
+    return Math.round(orderTotal * paymentConfig.commissionRate);
   },
 
-  async createCommission(orderId: string, retailerId: string, orderTotal: number) {
+  async createCommission(
+    orderId: string,
+    retailerProfileId: string,
+    supplierProfileId: string,
+    orderTotal: number
+  ) {
     const supabase = await createClient();
-    const amount = this.calculateCommission(orderTotal);
-    
+    const commissionAmount = this.calculateCommission(orderTotal);
+
     const { data, error } = await supabase
       .from("commissions")
       .insert({
         order_id: orderId,
-        retailer_id: retailerId,
-        amount,
-        status: "pending"
+        commission: commissionAmount,
+        retailer_profile_id: retailerProfileId,
+        supplier_profile_id: supplierProfileId,
+        status: "pending",
       })
       .select()
       .single();
 
     if (error) {
-      logger.error("Error creating commission", error);
+      logger.error("Commission: create failed", error);
       throw new Error(error.message);
     }
     return data as Commission;
@@ -33,13 +39,15 @@ export const commissionService = {
   async getMyCommissions(): Promise<Commission[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+    if (!user) throw new Error("Unauthorized");
+
     const { data, error } = await supabase
       .from("commissions")
       .select("*")
-      .eq("retailer_id", user?.id);
+      .eq("retailer_profile_id", user.id)
+      .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
     return data as Commission[];
-  }
+  },
 };

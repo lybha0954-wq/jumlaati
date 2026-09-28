@@ -1,0 +1,122 @@
+═══ 1) config/routes.ts كامل ═══
+/**
+ * 🏛️ مرجع المسارات المركزي
+ * لتغيير مسار أي صفحة — عدّل هنا فقط.
+ */
+
+export const ROUTES = {
+  public: {
+    home: "/",
+    about: "/about",
+    contact: "/contact",
+    terms: "/terms",
+    offers: "/offers",
+    checkout: "/checkout",
+    products: "/products",
+    product: (slug: string) => `/products/${slug}`,
+    store: (slug: string) => `/store/${slug}`,
+    designPreview: "/design-preview",
+  },
+
+  auth: {
+    login: "/login",
+    register: "/register",
+  },
+
+  admin: {
+    home: "/admin/home",
+    overview: "/admin/overview",
+    analytics: "/admin/analytics",
+    auditLogs: "/admin/audit-logs",
+    commissions: "/admin/commissions",
+    coupons: "/admin/coupons",
+    disputes: "/admin/disputes",
+    matching: "/admin/matching",
+    payments: "/admin/payments",
+    payouts: "/admin/payouts",
+    refunds: "/admin/refunds",
+    requests: "/admin/requests",
+    settings: "/admin/settings",
+    users: "/admin/users",
+  },
+
+  wholesale: {
+    overview: "/wholesale/overview",
+    products: "/wholesale/products",
+    inventory: "/wholesale/inventory",
+    orders: "/wholesale/orders",
+    payouts: "/wholesale/payouts",
+    commissions: "/wholesale/commissions",
+    deliveryRequests: "/wholesale/delivery-requests",
+    nearbyRequests: "/wholesale/nearby-requests",
+    settings: "/wholesale/settings",
+  },
+
+  retailer: {
+    overview: "/retailer/overview",
+    cart: "/retailer/cart",
+    orders: "/retailer/orders",
+    invoices: "/retailer/invoices",
+    favorites: "/retailer/favorites",
+    points: "/retailer/points",
+    commissions: "/retailer/commissions",
+    nearbyWholesale: "/retailer/nearby-wholesale",
+    settings: "/retailer/settings",
+  },
+
+  delivery: {
+    overview: "/delivery/overview",
+    tasks: "/delivery/tasks",
+    taskHistory: "/delivery/task-history",
+    earnings: "/delivery/earnings",
+    payouts: "/delivery/payouts",
+    commissions: "/delivery/commissions",
+    myWholesalers: "/delivery/my-wholesalers",
+    nearbyWholesale: "/delivery/nearby-wholesale",
+    settings: "/delivery/settings",
+  },
+
+  shared: {
+    messages: "/messages",
+  },
+} as const;
+
+export function getDashboardPath(role: string): string {
+  switch (role) {
+    case "admin":
+      return ROUTES.admin.home;
+    case "supplier":
+      return ROUTES.wholesale.overview;
+    case "delivery":
+      return ROUTES.delivery.overview;
+    case "retailer":
+    default:
+      return ROUTES.retailer.overview;
+  }
+}
+
+═══ 2) من يستخدم ROUTES.supplier أو getDashboardPath؟ ═══
+src/app/(auth)/components/LoginForm.tsx:10:import { getDashboardPath } from '@/config/routes';
+src/app/(auth)/components/LoginForm.tsx:29:      // استخدام getDashboardPath — مصدر واحد للحقيقة
+src/app/(auth)/components/LoginForm.tsx:31:      const dashboardPath = getDashboardPath(finalRole);
+src/app/(auth)/components/SignupForm.tsx:53:        case 'admin': router.push(getDashboardPath(role)); break;
+src/app/(auth)/components/SignupForm.tsx:54:        case 'supplier': router.push(getDashboardPath(role)); break;
+src/app/(auth)/components/SignupForm.tsx:55:        case 'delivery': router.push(getDashboardPath(role)); break;
+src/app/(auth)/components/SignupForm.tsx:56:        default: router.push(getDashboardPath(role)); break;
+src/config/routes.ts:83:export function getDashboardPath(role: string): string {
+
+═══ 3) من يستخدم lib/constants/roles.ts؟ ═══
+
+═══ 4) باقي استخدامات wholesaler كقيمة (بعد الإصلاح) ═══
+src/app/(dashboard)/admin/components/UsersTable.tsx:60:            <option value="wholesaler">تاجر جملة</option>
+src/app/(dashboard)/admin/users/page.tsx:47:            <option value="wholesaler">تاجر جملة</option>
+src/app/(dashboard)/retailer/nearby-wholesale/page.tsx:19:        const res = await fetch("/api/users?role=wholesaler");
+src/app/(public)/store/[slug]/page.tsx:21:    .eq("role", "wholesaler")
+src/app/api/orders/route.ts:29:    if (role === 'wholesaler') {
+src/components/dashboard/Sidebar.tsx:37:    { href: "/wholesale/products", label: "منتجاتي", icon: Package, roles: ["wholesaler"] },
+src/components/dashboard/Sidebar.tsx:38:    { href: "/wholesale/orders", label: "الطلبات", icon: ShoppingCart, roles: ["wholesaler"] },
+src/components/dashboard/Sidebar.tsx:39:    { href: "/wholesale/nearby-requests", label: "طلبات قريبة", icon: MessageCircle, roles: ["wholesaler"] },
+src/components/dashboard/Sidebar.tsx:49:    { href: "/messages", label: "الرسائل", icon: MessageCircle, roles: ["admin", "wholesaler", "retailer", "delivery"] },
+src/components/dashboard/Sidebar.tsx:50:    { href: `${rolePrefix}/settings`, label: "الإعدادات", icon: Settings, roles: ["admin", "wholesaler", "retailer", "delivery"] },
+src/components/shared/BottomNavBar.tsx:62:  } else if (role === "wholesaler") {
+src/lib/validations/auth.schema.ts:13:  role: z.enum(["retailer", "wholesaler", "delivery"]).default("retailer"),

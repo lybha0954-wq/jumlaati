@@ -7,7 +7,7 @@ export const analyticsService = {
     const { data, error } = await supabase
       .from("orders")
       .select("total")
-      .eq("status", "delivered");
+      .eq("status", "completed");
 
     if (error) throw new Error(error.message);
     return data.reduce((sum, order) => sum + order.total, 0);
@@ -17,7 +17,7 @@ export const analyticsService = {
   async getUsersCountByRole(role: string): Promise<number> {
     const supabase = await createClient();
     const { count } = await supabase
-      .from("users")
+      .from("user_profiles")
       .select("*", { count: 'exact', head: true })
       .eq("role", role);
 

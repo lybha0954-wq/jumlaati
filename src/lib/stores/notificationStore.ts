@@ -34,7 +34,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     if (data) {
       set({
         notifications: data,
-        unreadCount: data.filter((n) => !n.is_read).length,
+        unreadCount: data.filter((n: any) => !n.is_read).length,
       });
     }
   },

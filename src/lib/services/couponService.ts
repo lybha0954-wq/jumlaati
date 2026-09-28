@@ -47,7 +47,7 @@ export const couponService = {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("coupons")
-      .insert({ code, discount_percent, max_uses })
+      .insert({ code, discount_percent, max_uses, is_active: true, used_count: 0 })
       .select()
       .single();
 

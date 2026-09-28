@@ -3,7 +3,7 @@ import { wholesaleService } from '@/lib/services/wholesaleService';
 import { requireRole } from '@/lib/api/auth';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { user, error } = await requireRole(['wholesaler', 'admin']);
+  const { user, error } = await requireRole(['supplier', 'admin']);
   if (error || !user) return error!;
 
   try {
@@ -17,7 +17,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { user, error } = await requireRole(['wholesaler', 'admin']);
+  const { user, error } = await requireRole(['supplier', 'admin']);
   if (error || !user) return error!;
 
   try {

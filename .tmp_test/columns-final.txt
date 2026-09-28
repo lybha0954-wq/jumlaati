@@ -1,0 +1,95 @@
+═══ commissions (استكشاف موسّع) ═══
+  ✅ commissions.id (RLS)
+  ✅ commissions.order_id (RLS)
+  ❌ commissions.user_id
+  ❌ commissions.buyer_id
+  ❌ commissions.seller_id
+  ❌ commissions.retailer_id
+  ❌ commissions.supplier_id
+  ❌ commissions.amount
+  ❌ commissions.rate
+  ❌ commissions.percentage
+  ❌ commissions.commission_amount
+  ❌ commissions.total_amount
+  ❌ commissions.value
+  ❌ commissions.status
+  ❌ commissions.state
+  ❌ commissions.created_at
+  ❌ commissions.updated_at
+  ❌ commissions.paid_at
+  ❌ commissions.is_paid
+
+═══ payments ═══
+  ✅ payments.id (RLS)
+  ✅ payments.order_id (RLS)
+  ✅ payments.user_id (RLS)
+  ✅ payments.amount (RLS)
+  ✅ payments.status (RLS)
+  ❌ payments.method
+  ❌ payments.provider
+  ❌ payments.reference
+  ✅ payments.created_at (RLS)
+  ✅ payments.paid_at (RLS)
+
+═══ order_items ═══
+  ✅ order_items.id (RLS)
+  ✅ order_items.order_id (RLS)
+  ✅ order_items.product_id (RLS)
+  ❌ order_items.quantity
+  ❌ order_items.price
+  ❌ order_items.subtotal
+  ❌ order_items.total
+  ✅ order_items.unit_price (RLS)
+  ❌ order_items.created_at
+
+═══ disputes ═══
+  ✅ disputes.id (RLS)
+  ✅ disputes.order_id (RLS)
+  ❌ disputes.user_id
+  ✅ disputes.opened_by (RLS)
+  ✅ disputes.status (RLS)
+  ❌ disputes.reason
+  ✅ disputes.description (RLS)
+  ✅ disputes.created_at (RLS)
+  ✅ disputes.resolved_at (RLS)
+
+═══ coupon_usage ═══
+  ✅ coupon_usage.id (RLS)
+  ✅ coupon_usage.coupon_id (RLS)
+  ✅ coupon_usage.user_id (RLS)
+  ✅ coupon_usage.order_id (RLS)
+  ✅ coupon_usage.used_at (RLS)
+  ❌ coupon_usage.created_at
+
+═══ wishlist ═══
+  ✅ wishlist.id (RLS)
+  ✅ wishlist.user_id (RLS)
+  ✅ wishlist.product_id (RLS)
+  ✅ wishlist.created_at (RLS)
+
+═══ notifications ═══
+  ✅ notifications.id (RLS)
+  ✅ notifications.user_id (RLS)
+  ❌ notifications.title
+  ❌ notifications.message
+  ✅ notifications.type (RLS)
+  ✅ notifications.is_read (RLS)
+  ❌ notifications.link
+  ✅ notifications.created_at (RLS)
+
+═══ chat_messages ═══
+  ✅ chat_messages.id (RLS)
+  ✅ chat_messages.sender_id (RLS)
+  ✅ chat_messages.receiver_id (RLS)
+  ✅ chat_messages.message (RLS)
+  ❌ chat_messages.content
+  ✅ chat_messages.is_read (RLS)
+  ✅ chat_messages.created_at (RLS)
+
+═══ delivery_tasks ═══
+  ✅ delivery_tasks.id (RLS)
+  ✅ delivery_tasks.order_id (RLS)
+  ❌ delivery_tasks.delivery_id
+  ✅ delivery_tasks.delivery_profile_id (RLS)
+  ✅ delivery_tasks.status (RLS)
+  ✅ delivery_tasks.created_at (RLS)

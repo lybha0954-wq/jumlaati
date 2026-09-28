@@ -1,0 +1,65 @@
+═══ 1) من يستخدم offerService؟ ═══
+src/app/api/offers/route.ts:9:    const data = await offerService.getActiveOffers();
+
+═══ 2) من يستخدم matchingService؟ ═══
+  (لا أحد)
+
+═══ 3) من يستخدم authService.login؟ ═══
+src/app/api/auth/login/route.ts:12:    const data = await authService.login(parsed.identifier, parsed.password);
+
+═══ 4) API matching — كامل ═══
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+// Matching = relationships (علاقات ثقة بين الأدوار)
+export async function GET() {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { data, error } = await supabase
+    .from("relationships")
+    .select(`
+      id,
+      status,
+      created_at,
+      retailer:retailer_id ( id, full_name, email, role ),
+      supplier:supplier_id ( id, full_name, email, role ),
+      delivery:delivery_id ( id, full_name, email, role )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data || []);
+}
+
+═══ 5) API offers — إن وُجد ═══
+src/app/api/offers/route.ts
+src/app/api/offers/route.ts.before
+import { NextResponse } from "next/server";
+
+// ملاحظة: جدول offers غير موجود في Supabase حالياً.
+// نُرجع مصفوفة فارغة مؤقتاً حتى يُنشأ الجدول أو يُعاد ربط الخدمة.
+
+export async function GET() {
+  try {
+    const { offerService } = await import("@/lib/services/offerService");
+    const data = await offerService.getActiveOffers();
+    return NextResponse.json(data || []);
+  } catch (error: any) {
+    const msg = error?.message || "";
+    // جدول مفقود = لا خطأ للمستخدم
+    if (msg.includes("Could not find") || msg.includes("schema cache")) {
+      return NextResponse.json([]);
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
+
+═══ 6) صفحة matching admin — من يستدعي؟ ═══
+
+═══ 7) صفحة offers العامة — من يستدعي؟ ═══
+12:  const fetchOffers = useCallback(async () => {
+14:      const res = await fetch("/api/offers");
+19:  useEffect(() => { fetchOffers(); }, [fetchOffers]);

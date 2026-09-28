@@ -1,0 +1,28 @@
+✅ 6 نسخ احتياطية
+
+═══ تحقق — الملفات كُتبت ═══
+  src/lib/services/retailerService.ts                          92 سطر
+  src/lib/services/commissionService.ts                        53 سطر
+  src/lib/services/notificationService.ts                      52 سطر
+  src/lib/services/deliveryService.ts                          30 سطر
+  src/app/api/orders/route.ts                                  131 سطر
+  src/app/api/notifications/route.ts                           43 سطر
+
+═══ تحقق — لا wholesale/user_id/delivery_id خاطئ ═══
+— src/lib/services/retailerService.ts:
+46:        payment_status: "pending",
+— src/lib/services/commissionService.ts:
+27:        status: "pending",
+— src/app/api/orders/route.ts:
+  ✅
+
+═══ تحقق — الأعمدة الجديدة موجودة ═══
+— retailer_service:
+5
+— orders POST payload:
+29:      query = query.eq('supplier_profile_id', user.id);
+31:      query = query.eq('retailer_profile_id', user.id);
+92:        supplier_profile_id: supplierId,
+93:        retailer_profile_id: user.id,
+95:        delivery_address: parsed.address,
+98:        order_number: orderNumber,

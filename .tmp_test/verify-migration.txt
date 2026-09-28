@@ -1,0 +1,8 @@
+═══ تحقق من Migration ═══
+  ✅ order_items.quantity
+  ✅ notifications.title
+  ✅ notifications.message
+  ✅ commissions.retailer_profile_id
+  ✅ commissions.supplier_profile_id
+  ✅ commissions.status
+  ✅ commissions.created_at

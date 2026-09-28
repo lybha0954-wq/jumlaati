@@ -1,0 +1,58 @@
+═══════ products ═══════
+  ✅ products.id                    موجود
+  ✅ products.name                  موجود
+  ❌ products.owner_id              غير موجود
+  ✅ products.supplier_id           موجود
+  ❌ products.price                 غير موجود
+  ✅ products.final_price           موجود
+  ✅ products.cost_price            موجود
+  ✅ products.stock                 موجود
+  ✅ products.status                موجود
+  ✅ products.category              موجود
+  ❌ products.is_active             غير موجود
+  ✅ products.barcode               موجود
+  ✅ products.unit                  موجود
+  ✅ products.min_order_qty         موجود
+  ✅ products.created_at            موجود
+
+═══════ relationships ═══════
+  ⚠️  relationships.id               HTTP 401
+  ❌ relationships.wholesaler_id    غير موجود
+  ⚠️  relationships.supplier_id      HTTP 401
+  ⚠️  relationships.retailer_id      HTTP 401
+  ❌ relationships.retailer_profile_id غير موجود
+  ❌ relationships.delivery_id      غير موجود
+  ❌ relationships.delivery_profile_id غير موجود
+  ⚠️  relationships.status           HTTP 401
+  ⚠️  relationships.created_at       HTTP 401
+
+═══════ orders ═══════
+  ⚠️  orders.id                      HTTP 401
+  ⚠️  orders.order_number            HTTP 401
+  ⚠️  orders.status                  HTTP 401
+  ⚠️  orders.payment_status          HTTP 401
+  ⚠️  orders.total                   HTTP 401
+  ⚠️  orders.commission              HTTP 401
+  ⚠️  orders.store_id                HTTP 401
+  ⚠️  orders.buyer_name              HTTP 401
+  ❌ orders.buyer_id                غير موجود
+  ❌ orders.retailer_id             غير موجود
+  ⚠️  orders.retailer_profile_id     HTTP 401
+  ❌ orders.supplier_id             غير موجود
+  ⚠️  orders.supplier_profile_id     HTTP 401
+  ❌ orders.wholesaler_id           غير موجود
+  ❌ orders.delivery_id             غير موجود
+  ⚠️  orders.delivery_profile_id     HTTP 401
+  ⚠️  orders.created_at              HTTP 401
+
+═══════ user_profiles ═══════
+  ⚠️  user_profiles.id               HTTP 401
+  ⚠️  user_profiles.email            HTTP 401
+  ⚠️  user_profiles.full_name        HTTP 401
+  ⚠️  user_profiles.role             HTTP 401
+  ⚠️  user_profiles.phone            HTTP 401
+  ⚠️  user_profiles.business_name    HTTP 401
+  ⚠️  user_profiles.governorate      HTTP 401
+  ⚠️  user_profiles.district         HTTP 401
+  ⚠️  user_profiles.avatar_url       HTTP 401
+  ⚠️  user_profiles.created_at       HTTP 401

@@ -1,0 +1,59 @@
+═══ types/order.ts ═══
+export type OrderStatus = "reviewing" | "delivering" | "completed" | "cancelled";
+export type PaymentStatus = "paid" | "pending" | "overdue";
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  name: string;
+  unit_price: number;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  order_number: string | null;
+  status: OrderStatus;
+  payment_status: PaymentStatus;
+  total: number;
+  commission: number | null;
+  store_id: string | null;
+  buyer_name: string | null;
+  delivery_address: string | null;
+  retailer_profile_id: string | null;
+  supplier_profile_id: string | null;
+  delivery_profile_id: string | null;
+  created_at: string;
+}
+
+═══ types/commission.ts ═══
+export type CommissionStatus = "pending" | "paid" | "cancelled";
+
+export interface Commission {
+  id: string;
+  order_id: string;
+  commission: number;
+  retailer_profile_id: string | null;
+  supplier_profile_id: string | null;
+  status: CommissionStatus;
+  created_at: string;
+}
+
+═══ types/notification.ts ═══
+export type NotificationType = "order" | "payout" | "commission" | "match" | "system";
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string | null;
+  message: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+═══ تحقق: كلها نظيفة ═══
+  types/order.ts → 27 سطر
+  types/commission.ts → 11 سطر
+  types/notification.ts → 11 سطر

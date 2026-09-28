@@ -1,0 +1,27 @@
+53:        case 'admin': router.push(getDashboardPath(role)); break;
+54:        case 'supplier': router.push(getDashboardPath(role)); break;
+55:        case 'delivery': router.push(getDashboardPath(role)); break;
+56:        default: router.push(getDashboardPath(role)); break;
+  ➕ نُضيف الاستيراد
+
+═══ 2) nearby-wholesale — إعادة تسمية wholesalerId → supplierId ═══
+— التحقق:
+30:  const handleSendRequest = async (supplierId: string) => {
+35:        body: JSON.stringify({ supplierId }),
+88:                <Button onClick={() => handleSendRequest(wholesaler.id)} className="w-full gap-2">
+
+═══ 3) useAuth.ts — type annotation ═══
+12:    supabase.auth.getUser().then(({ data }: { data: any }) => {
+
+═══ 4) useRealtime.ts — type annotation ═══
+5:export function useRealtime(table: string, callback: (payload: any) => void) {
+13:        (payload: any) => callback(payload)
+
+═══ 5) notificationStore.ts — type annotation ═══
+37:        unreadCount: data.filter((n: any) => !n.is_read).length,
+
+═══ 6) إعادة فحص TS ═══
+
+— العدد:
+0
+0

@@ -6,29 +6,17 @@ import Link from "next/link";
 import { useUserStore } from "@/lib/stores/userStore";
 import { useNotificationStore } from "@/lib/stores/notificationStore";
 import { useRealtime } from "@/hooks/useRealtime";
-import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Package, Bell, Search, LogIn, LogOut } from "lucide-react";
-import type { User } from "@/types/user";
 
 export function Topbar() {
   const router = useRouter();
   const user = useUserStore((s) => s.user);
-  const setUser = useUserStore((s) => s.setUser);
+  const { signOut } = useAuth();
   const { unreadCount, fetchNotifications } = useNotificationStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   const refresh = useCallback(() => { fetchNotifications(); }, [fetchNotifications]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser((data.user as unknown as User) || null);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser((session?.user as unknown as User) || null);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [setUser]);
 
   useRealtime("notifications", () => { refresh(); });
   useEffect(() => { refresh(); }, [refresh]);
@@ -41,9 +29,11 @@ export function Topbar() {
   };
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('[Topbar] logout error:', err);
+    }
     router.push("/login");
     router.refresh();
   };

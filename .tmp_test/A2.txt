@@ -1,0 +1,130 @@
+═══════════════════════════════════════════════════════════
+📄 chatService.ts
+═══════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const chatService = {
+  async getConversation(otherUserId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`)
+      .order("created_at", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async sendMessage(receiverId: string, message: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({ sender_id: user.id, receiver_id: receiverId, message })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+
+═══════════════════════════════════════════════════════════
+📄 walletService.ts
+═══════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const walletService = {
+  async getMyWallet() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw new Error(error.message);
+    return data;
+  },
+  
+  async getMyPoints() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("points_transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+
+═══════════════════════════════════════════════════════════
+📄 wishlistService.ts
+═══════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const wishlistService = {
+  async getMyWishlist() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("wishlist")
+      .select("*, products(*)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async addToWishlist(productId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("wishlist")
+      .insert({ user_id: user.id, product_id: productId })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async removeFromWishlist(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("wishlist").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+};
+
+
+═══════════════════════════════════════════════════════════
+📊 من يستخدمها؟
+═══════════════════════════════════════════════════════════
+— chatService:
+src/app/api/chat/route.ts:16:      const messages = await chatService.getConversation(userId);
+src/app/api/chat/route.ts:37:    const chat = await chatService.sendMessage(receiverId, message);
+— walletService:
+— wishlistService:
+src/app/api/wishlist/route.ts:14:    const data = await wishlistService.getMyWishlist();
+src/app/api/wishlist/route.ts:24:    const data = await wishlistService.addToWishlist(productId);

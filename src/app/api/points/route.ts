@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server';
-import { pointsService } from '@/lib/services/pointsService';
+import { NextResponse } from "next/server";
+import { pointsService } from "@/lib/services/pointsService";
 
 export async function GET() {
   try {
     const data = await pointsService.getMyPoints();
-    return NextResponse.json(data);
+    return NextResponse.json(data || []);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const msg = error?.message || "خطأ غير معروف";
+    if (msg.includes("دخول") || msg.includes("Unauthorized")) {
+      return NextResponse.json({ error: msg }, { status: 401 });
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

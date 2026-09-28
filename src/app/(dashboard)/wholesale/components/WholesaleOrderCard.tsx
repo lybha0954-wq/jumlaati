@@ -14,21 +14,20 @@ import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 
 export type OrderStatus =
-  | "pending"
-  | "processing"
-  | "shipped"
-  | "delivered"
+  | "reviewing"
+  | "delivering"
+  | "completed"
   | "cancelled";
 
 export interface WholesaleOrder {
   id: string;
-  user_id: string;
-  wholesaler_id?: string;
+  retailer_profile_id: string;
+  supplier_profile_id?: string;
   total: number;
   status: OrderStatus;
   address?: string;
   created_at: string;
-  users?: { name?: string; email?: string } | null;
+  users?: { full_name?: string; email?: string } | null;
 }
 
 interface Props {
@@ -43,25 +42,19 @@ const statusConfig: Record<
   OrderStatus,
   { label: string; bg: string; text: string; Icon: typeof Clock }
 > = {
-  pending: {
+  reviewing: {
     label: "قيد الانتظار",
     bg: "bg-amber-50",
     text: "text-amber-700",
     Icon: Clock,
   },
-  processing: {
-    label: "قيد المعالجة",
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    Icon: Clock,
-  },
-  shipped: {
+  delivering: {
     label: "تم الشحن",
     bg: "bg-purple-50",
     text: "text-purple-700",
     Icon: Truck,
   },
-  delivered: {
+  completed: {
     label: "تم التوصيل",
     bg: "bg-emerald-50",
     text: "text-emerald-700",
@@ -89,9 +82,9 @@ export function WholesaleOrderCard({
     return () => clearTimeout(t);
   }, []);
 
-  const config = statusConfig[order.status] || statusConfig.pending;
+  const config = statusConfig[order.status] || statusConfig.reviewing;
   const StatusIcon = config.Icon;
-  const customerName = order.users?.name || "عميل";
+  const customerName = order.users?.full_name || "عميل";
   const initial = customerName.charAt(0);
 
   const dateStr = new Date(order.created_at).toLocaleDateString("ar-IQ", {

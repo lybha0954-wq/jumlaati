@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import { baseMetadata } from "@/config/seo";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "sonner";
 import "../styles/globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "700", "800", "900"],
+  variable: "--font-tajawal",
+});
 
 export const metadata: Metadata = baseMetadata;
 
@@ -19,8 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+    <html lang="ar" dir="rtl" className={tajawal.variable}>
+      <body className={`${tajawal.className} antialiased`}>
+        <AuthProvider>
+          {children}
+          <Toaster position="top-center" richColors closeButton dir="rtl" />
+        </AuthProvider>
+      </body>
     </html>
   );
 }

@@ -10,5 +10,5 @@ export const registerSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
   phone: z.string().optional(),
   password: z.string().min(6, "كلمة المرور قصيرة جداً"),
-  role: z.enum(["retailer", "wholesaler", "delivery"]).default("retailer"),
+  role: z.enum(["retailer", "supplier", "delivery"]).default("retailer"),
 });

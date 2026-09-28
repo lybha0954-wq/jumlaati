@@ -1,0 +1,144 @@
+═══════════════════════════════════════════════
+📄 store/[slug]/page.tsx — أسطر 10-45
+═══════════════════════════════════════════════
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  // slug هنا هو owner_id (معرّف تاجر الجملة)
+  const { data: wholesaler } = await supabase
+    .from("users")
+    .select("id, name, email, role")
+    .eq("id", slug)
+    .eq("role", "supplier")
+    .single();
+
+  if (!wholesaler) notFound();
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("*")
+    .eq("owner_id", wholesaler.id)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <Topbar />
+      <div className="container mx-auto py-12 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{wholesaler.name}</h1>
+          <p className="text-muted-foreground">{wholesaler.email}</p>
+        </div>
+
+        {(products || []).length === 0 ? (
+          <div className="bg-card p-10 text-center text-muted-foreground rounded-2xl border border-dashed border-border">
+            لا توجد منتجات في هذا المتجر بعد.
+          </div>
+
+═══════════════════════════════════════════════
+📄 api/orders/route.ts — أسطر 20-95
+═══════════════════════════════════════════════
+      .single();
+
+    const role = profile?.role || 'retailer';
+
+    let query = supabase
+      .from('orders')
+      .select('*, users(name, email)')
+      .order('created_at', { ascending: false });
+
+    if (role === 'supplier') {
+      query = query.eq('wholesaler_id', user.id);
+    } else if (role === 'retailer') {
+      query = query.eq('user_id', user.id);
+    } else if (role === 'delivery') {
+      query = query.eq('delivery_id', user.id);
+    }
+
+    const { data, error } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data || []);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول أولاً' }, { status: 401 });
+
+    const body = await req.json();
+    const parsed = createOrderSchema.parse(body);
+
+    let discountPercent = 0;
+    let appliedCouponId = null;
+    if (parsed.coupon_code) {
+      const coupon = await couponService.validateCoupon(parsed.coupon_code);
+      discountPercent = coupon.discount_percent;
+      appliedCouponId = coupon.id;
+      await couponService.incrementUsage(coupon.id);
+    }
+
+    const groupedItems: { [wholesalerId: string]: typeof parsed.items } = {};
+    for (const item of parsed.items) {
+      if (!groupedItems[item.wholesalerId]) groupedItems[item.wholesalerId] = [];
+      groupedItems[item.wholesalerId].push(item);
+    }
+
+    const retailerId = user.id;
+    const createdOrders = [];
+
+    for (const [wholesalerId, items] of Object.entries(groupedItems)) {
+      const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const total = subtotal - (subtotal * discountPercent) / 100;
+
+      const order = await retailerService.createOrder({
+        user_id: retailerId,
+        wholesaler_id: wholesalerId,
+        items: items,
+        total: total,
+        address: parsed.address,
+      });
+
+      await commissionService.createCommission(order.id, retailerId, total);
+      await notificationService.sendInApp({
+        userId: wholesalerId,
+        type: "order",
+        title: "طلب جديد من تاجر تجزئة!",
+        message: `طلب بقيمة ${total.toLocaleString()} د.ع بانتظار معالجتك.`,
+      });
+
+      createdOrders.push(order);
+    }
+
+    return NextResponse.json({ success: true, orders: createdOrders }, { status: 201 });
+
+═══════════════════════════════════════════════
+📄 retailer/nearby-wholesale/page.tsx — أسطر 25-45
+═══════════════════════════════════════════════
+      }
+    };
+    fetchWholesalers();
+  }, []);
+
+  const handleSendRequest = async (wholesalerId: string) => {
+    try {
+      const res = await fetch("/api/relationships", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wholesalerId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast("تم إرسال طلب الانضمام بنجاح!", "success");
+      } else {
+        showToast(data.error || "حدث خطأ", "error");
+      }
+    } catch (error) {
+      showToast("تعذر الاتصال بالخادم", "error");
+    }

@@ -1,14 +1,21 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { addressSchema } from '@/lib/validations/address.schema';
-import { addressService } from '@/lib/services/addressService';
+import { NextResponse } from "next/server";
+import { addressSchema } from "@/lib/validations/address.schema";
+import { addressService } from "@/lib/services/addressService";
+
+function handleError(error: any) {
+  const msg = error?.message || "خطأ غير معروف";
+  if (msg.includes("دخول") || msg.includes("Unauthorized")) {
+    return NextResponse.json({ error: msg }, { status: 401 });
+  }
+  return NextResponse.json({ error: msg }, { status: 500 });
+}
 
 export async function GET() {
   try {
     const data = await addressService.getMyAddresses();
-    return NextResponse.json(data);
+    return NextResponse.json(data || []);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleError(error);
   }
 }
 
@@ -19,6 +26,10 @@ export async function POST(req: Request) {
     const data = await addressService.addAddress(parsed);
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    const msg = error?.message || "خطأ غير معروف";
+    if (msg.includes("دخول") || msg.includes("Unauthorized")) {
+      return NextResponse.json({ error: msg }, { status: 401 });
+    }
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

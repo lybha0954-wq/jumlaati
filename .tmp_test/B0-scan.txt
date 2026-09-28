@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════
+📊 B-0: مسح آلي لكل API
+═══════════════════════════════════════════════
+
+═══ 1) عدد ملفات API الفعلي ═══
+40
+
+═══ 2) قائمة الملفات ═══
+src/app/api/addresses/route.ts
+src/app/api/admin/analytics/route.ts
+src/app/api/admin/audit-logs/route.ts
+src/app/api/admin/payments/route.ts
+src/app/api/admin/payouts/route.ts
+src/app/api/admin/users/[id]/route.ts
+src/app/api/admin/users/route.ts
+src/app/api/auth/login/route.ts
+src/app/api/auth/phone/route.ts
+src/app/api/auth/register/route.ts
+src/app/api/chat/route.ts
+src/app/api/commissions/calculate/route.ts
+src/app/api/commissions/route.ts
+src/app/api/coupons/route.ts
+src/app/api/coupons/validate/route.ts
+src/app/api/delivery/tasks/route.ts
+src/app/api/matching/route.ts
+src/app/api/notifications/route.ts
+src/app/api/offers/route.ts
+src/app/api/orders/[id]/route.ts
+src/app/api/orders/route.ts
+src/app/api/payments/route.ts
+src/app/api/payments/webhook/route.ts
+src/app/api/payouts/route.ts
+src/app/api/points/route.ts
+src/app/api/products/[id]/route.ts
+src/app/api/products/route.ts
+src/app/api/refunds/[id]/route.ts
+src/app/api/refunds/route.ts
+src/app/api/relationships/[id]/route.ts
+src/app/api/relationships/route.ts
+src/app/api/requests/[id]/route.ts
+src/app/api/requests/route.ts
+src/app/api/reviews/route.ts
+src/app/api/upload/route.ts
+src/app/api/users/profile/route.ts
+src/app/api/users/route.ts
+src/app/api/wallet/route.ts
+src/app/api/whatsapp/route.ts
+src/app/api/wishlist/route.ts
+
+═══ 3) 🔴 نمط: from('users') — جدول مفقود ═══
+src/app/api/admin/analytics/route.ts
+src/app/api/admin/audit-logs/route.ts
+src/app/api/admin/payments/route.ts
+src/app/api/admin/users/[id]/route.ts
+src/app/api/admin/users/route.ts.before
+src/app/api/chat/route.ts
+src/app/api/coupons/route.ts
+src/app/api/orders/route.ts.before
+src/app/api/refunds/[id]/route.ts
+src/app/api/refunds/route.ts
+src/app/api/users/profile/route.ts
+src/app/api/users/route.ts
+
+═══ 4) 🔴 نمط: جداول مفقودة (matches/offers/wallets/wishlist/ledger) ═══
+  matches → 0 ملف
+  offers → 0 ملف
+  wallets → 1 ملف
+  ledger → 0 ملف
+
+═══ 5) 🔴 نمط: أعمدة orders خاطئة ═══
+  wholesaler_id:
+src/app/api/orders/route.ts.before
+src/app/api/whatsapp/route.ts.before
+  .eq('user_id' — في orders:
+src/app/api/notifications/route.ts
+src/app/api/notifications/route.ts.before
+src/app/api/orders/route.ts.before
+src/app/api/payouts/route.ts
+src/app/api/wallet/route.ts
+  .eq('delivery_id':
+src/app/api/delivery/tasks/route.ts
+src/app/api/orders/route.ts.before
+
+═══ 6) 🔴 نمط: status خاطئ ═══
+  status: 'active':
+  status: 'pending' (في orders context):
+  status: 'delivered':
+    ✅
+
+═══ 7) 🔴 نمط: owner_id / is_active / price ═══
+src/app/api/products/route.ts
+src/app/api/products/route.ts.before
+
+═══ 8) 🔴 نمط: alias users: (في select) ═══
+
+═══ 9) 🟡 نمط: users(name) في select ═══
+src/app/api/admin/audit-logs/route.ts:16:      .select('*, users(name)')
+src/app/api/orders/route.ts.before:26:      .select('*, users(name, email)')
+
+═══ 10) 📊 توزيع الملفات حسب المجلد ═══
+      6 admin
+      3 auth
+      2 users
+      2 requests
+      2 relationships
+      2 refunds
+      2 products
+      2 payments
+      2 orders
+      2 coupons
+      2 commissions
+      1 wishlist
+      1 whatsapp
+      1 wallet
+      1 upload
+      1 reviews
+      1 points
+      1 payouts
+      1 offers
+      1 notifications
+      1 matching
+      1 delivery
+      1 chat
+      1 addresses

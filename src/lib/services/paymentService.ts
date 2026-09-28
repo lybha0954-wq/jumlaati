@@ -20,7 +20,7 @@ export const paymentService = {
     const supabase = await createClient();
 
     const updates: any = { status };
-    if (transactionId) updates.provider_transaction_id = transactionId;
+    // ملاحظة: لا يوجد provider_transaction_id في schema
 
     const { data, error } = await supabase
       .from("payments")
@@ -33,7 +33,7 @@ export const paymentService = {
 
     // تحديث حالة الطلب إلى "مدفوع" إذا نجحت العملية
     if (status === "success") {
-      await supabase.from("orders").update({ status: "paid" }).eq("id", data.order_id);
+      await supabase.from("orders").update({ payment_status: "paid" }).eq("id", data.order_id);
     }
 
     return data;

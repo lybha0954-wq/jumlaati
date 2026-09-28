@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 // helper داخلي: اقرأ الدور من public.users لا من JWT
 async function getUserRole(supabase: any, userId: string): Promise<string> {
   const { data } = await supabase
-    .from("users")
+    .from("user_profiles")
     .select("role")
     .eq("id", userId)
     .single();
@@ -48,7 +48,7 @@ export const payoutService = {
         amount,
         status,
         created_at,
-        users:user_id ( id, name, email, role )
+        user_profiles:user_id ( id, full_name, email, role )
       `)
       .order("created_at", { ascending: false });
 
@@ -75,7 +75,7 @@ export const payoutService = {
         amount,
         status,
         created_at,
-        users:user_id ( id, name, email, role )
+        user_profiles:user_id ( id, full_name, email, role )
       `)
       .eq("status", "pending")
       .order("created_at", { ascending: true });

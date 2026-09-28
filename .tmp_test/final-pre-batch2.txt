@@ -1,0 +1,79 @@
+═══ orderService.ts ═══
+import { createClient } from "@/lib/supabase/server";
+import type { Order } from "@/types/order";
+
+export const orderService = {
+  // عرض تفاصيل طلب واحد
+  async getOrderById(id: string): Promise<Order> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw new Error("الطلب غير موجود");
+    return data as Order;
+  },
+
+  // جلب الطلبات من منظور الأدمن (كل الطلبات)
+  async getAllOrders(): Promise<Order[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Order[];
+  }
+};
+
+═══ types/product.ts ═══
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  wholesalePrice: number;
+  stock: number;
+  category: string;
+  images: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+export type ProductInput = Omit<Product, "id" | "createdAt">;
+
+═══ types/review.ts ═══
+export interface Review {
+  id: string;
+  product_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export type ReviewInput = Omit<Review, "id" | "user_id" | "created_at">;
+
+═══ lib/validations/order.schema.ts (نراجع) ═══
+import * as z from "zod";
+
+export const createOrderSchema = z.object({
+  items: z.array(z.object({
+    productId: z.string(),
+    quantity: z.number().int().positive(),
+    wholesalerId: z.string(),
+    price: z.number().positive(),
+  })).min(1, "السلة فارغة"),
+  address: z.string().min(5, "العنوان مفصل جداً"),
+  coupon_code: z.string().optional(),
+});
+
+═══ config/payment.ts (نراجع) ═══
+export const paymentConfig = {
+  currency: "IQD",
+  methods: ["cash_on_delivery", "bank_transfer", "card"] as const,
+  commissionRate: 0.05,
+};

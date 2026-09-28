@@ -58,9 +58,9 @@ export default function WholesaleOrdersPage() {
     { key: "actions", header: "إجراءات", render: (row: any) => (
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => handlePrint(row)}><Printer size={14} /></Button>
-          {row.status === "pending" && <Button size="sm" onClick={() => updateStatus(row.id, "processing")}>قبول</Button>}
-          {row.status === "processing" && <Button size="sm" variant="secondary" onClick={() => handleShipAndWhatsApp(row.id)}><Send size={14} /> شحن واتساب</Button>}
-          {row.status === "shipped" && <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, "delivered")}>تم التوصيل</Button>}
+          {row.status === "reviewing" && <Button size="sm" onClick={() => updateStatus(row.id, "delivering")}>قبول</Button>}
+          {row.status === "delivering" && <Button size="sm" variant="secondary" onClick={() => handleShipAndWhatsApp(row.id)}><Send size={14} /> شحن واتساب</Button>}
+          {row.status === "delivering" && <Button size="sm" variant="outline" onClick={() => updateStatus(row.id, "completed")}>تم التوصيل</Button>}
         </div>
     )},
   ];

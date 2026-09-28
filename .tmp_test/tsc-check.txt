@@ -1,0 +1,12 @@
+═══ TypeScript check (سريع — للتأكد من عدم وجود أخطاء صارخة) ═══
+src/app/(auth)/components/SignupForm.tsx(53,35): error TS2304: Cannot find name 'getDashboardPath'.
+src/app/(auth)/components/SignupForm.tsx(54,38): error TS2304: Cannot find name 'getDashboardPath'.
+src/app/(auth)/components/SignupForm.tsx(55,38): error TS2304: Cannot find name 'getDashboardPath'.
+src/app/(auth)/components/SignupForm.tsx(56,30): error TS2304: Cannot find name 'getDashboardPath'.
+src/app/(dashboard)/retailer/nearby-wholesale/page.tsx(35,32): error TS18004: No value exists in scope for the shorthand property 'supplierId'. Either declare one or provide an initializer.
+src/hooks/useAuth.ts(12,37): error TS7031: Binding element 'data' implicitly has an 'any' type.
+src/hooks/useRealtime.ts(13,10): error TS7006: Parameter 'payload' implicitly has an 'any' type.
+src/lib/stores/notificationStore.ts(37,35): error TS7006: Parameter 'n' implicitly has an 'any' type.
+
+═══ عدد الأخطاء الكلي ═══
+8

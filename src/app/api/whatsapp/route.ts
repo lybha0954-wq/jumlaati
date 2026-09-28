@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
 
     // جلب رقم هاتف تاجر الجملة
-    const phone = await whatsappService.getPhoneById(order.wholesaler_id);
+    const phone = await whatsappService.getPhoneById(order.supplier_profile_id);
     if (!phone) return NextResponse.json({ error: 'No phone number found' }, { status: 404 });
 
     // جلب عناصر الطلب

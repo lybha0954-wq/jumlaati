@@ -59,7 +59,7 @@ export function BottomNavBar() {
       { key: "orders", href: "/retailer/orders", label: "طلباتي", icon: Truck },
       { key: "dashboard", href: "/retailer/overview", label: "لوحتي", icon: LayoutDashboard },
     ];
-  } else if (role === "wholesaler") {
+  } else if (role === "supplier") {
     roleLinks = [
       { key: "dashboard", href: "/wholesale/overview", label: "لوحتي", icon: LayoutDashboard },
       { key: "products", href: "/wholesale/products", label: "منتجاتي", icon: Package },

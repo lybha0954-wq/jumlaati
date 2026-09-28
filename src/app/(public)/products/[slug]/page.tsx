@@ -72,7 +72,7 @@ export default async function ProductPage({
             </div>
             <AddToCartButton
               productId={product.id}
-              wholesalerId={product.owner_id || product.ownerId || "default"}
+              wholesalerId={product.supplier_id || ""}
               name={product.name}
               price={product.price}
               image={image}

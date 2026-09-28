@@ -1,0 +1,179 @@
+═══════════════════════════════════════════════════════════
+📄 couponService.ts
+═══════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const couponService = {
+  async validateCoupon(code: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", code)
+      .eq("is_active", true)
+      .single();
+
+    if (error || !data) throw new Error("كود الخصم غير صالح");
+    if (data.used_count >= data.max_uses) throw new Error("تم استنفاد هذا الكود");
+    return data;
+  },
+
+  async incrementUsage(couponId: string) {
+    const supabase = await createClient();
+    const { data: existingCoupon } = await supabase
+      .from("coupons")
+      .select("used_count")
+      .eq("id", couponId)
+      .single();
+
+    const count = existingCoupon?.used_count || 0;
+    const { error } = await supabase
+      .from("coupons")
+      .update({ used_count: count + 1 })
+      .eq("id", couponId);
+
+    if (error) throw new Error(error.message);
+  },
+
+  async getAllCoupons() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async createCoupon(code: string, discount_percent: number, max_uses: number) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coupons")
+      .insert({ code, discount_percent, max_uses })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+
+═══════════════════════════════════════════════════════════
+📄 paymentService.ts
+═══════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const paymentService = {
+  // إنشاء عملية دفع جديدة (مع دعم الدفع عند الاستلام كخيار افتراضي)
+  async createPayment(orderId: string, amount: number, gateway: string = "cod") {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("payments")
+      .insert({ order_id: orderId, amount, gateway, status: "pending" })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // معالجة رد بوابة الدفع (Webhook)
+  async handleWebhook(paymentId: string, status: string, transactionId?: string) {
+    const supabase = await createClient();
+
+    const updates: any = { status };
+    if (transactionId) updates.provider_transaction_id = transactionId;
+
+    const { data, error } = await supabase
+      .from("payments")
+      .update(updates)
+      .eq("id", paymentId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    // تحديث حالة الطلب إلى "مدفوع" إذا نجحت العملية
+    if (status === "success") {
+      await supabase.from("orders").update({ status: "paid" }).eq("id", data.order_id);
+    }
+
+    return data;
+  }
+};
+
+
+═══════════════════════════════════════════════════════════
+📄 uploadService.ts
+═══════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/client";
+
+export const uploadService = {
+  /**
+   * رفع صورة منتج إلى Supabase Storage
+   * @returns URL العام للصورة
+   */
+  async uploadProductImage(file: File, userId: string): Promise<string> {
+    const supabase = createClient();
+    
+    // تحقق من النوع
+    if (!file.type.startsWith("image/")) {
+      throw new Error("الملف يجب أن يكون صورة");
+    }
+    
+    // تحقق من الحجم (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("حجم الصورة يجب أن يكون أقل من 5 ميجابايت");
+    }
+
+    // اسم فريد
+    const ext = file.name.split(".").pop() || "jpg";
+    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from("product-images")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) throw new Error(error.message);
+
+    // الحصول على الرابط العام
+    const { data: { publicUrl } } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(data.path);
+
+    return publicUrl;
+  },
+
+  /**
+   * حذف صورة
+   */
+  async deleteProductImage(path: string): Promise<void> {
+    const supabase = createClient();
+    const { error } = await supabase.storage
+      .from("product-images")
+      .remove([path]);
+    if (error) throw new Error(error.message);
+  },
+};
+
+
+═══════════════════════════════════════════════════════════
+📊 من يستخدمها؟
+═══════════════════════════════════════════════════════════
+— couponService:
+src/app/api/coupons/route.ts:14:    const coupons = await couponService.getAllCoupons();
+src/app/api/coupons/route.ts:24:    const coupon = await couponService.createCoupon(code, discount_percent, max_uses);
+src/app/api/coupons/validate/route.ts:9:    const coupon = await couponService.validateCoupon(code);
+src/app/api/orders/route.ts:62:      const coupon = await couponService.validateCoupon(parsed.coupon_code);
+src/app/api/orders/route.ts:64:      await couponService.incrementUsage(coupon.id);
+— paymentService:
+src/app/api/payments/route.ts:14:    const payment = await paymentService.createPayment(orderId, amount, gateway || "cod");
+src/app/api/payments/webhook/route.ts:11:    const payment = await paymentService.handleWebhook(paymentId, status, transactionId);
+— uploadService:
+src/components/forms/ImageUploader.tsx:46:        const url = await uploadService.uploadProductImage(files[i], user.id);

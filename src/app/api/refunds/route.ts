@@ -8,10 +8,10 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // التحقق مما إذا كان أدمن ليرى الكل، أو تاجر ليرى طلباته فقط
-    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+    const { data: adminCheck } = await supabase.from('user_profiles').select('role').eq('id', user.id).single();
     const isAdmin = adminCheck?.role === 'admin';
 
-    let query = supabase.from('refunds').select('*, orders(address, total)').order('created_at', { ascending: false });
+    let query = supabase.from('refunds').select('*, orders(delivery_address, total)').order('created_at', { ascending: false });
     if (!isAdmin) query = query.eq('requested_by', user.id);
 
     const { data, error } = await query;

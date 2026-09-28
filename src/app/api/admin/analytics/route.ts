@@ -8,7 +8,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { data: adminCheck } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('role')
       .eq('id', user.id)
       .single();
@@ -39,7 +39,7 @@ export async function GET() {
     const totalRevenue = (orders || []).reduce((s, o) => s + Number(o.total), 0);
 
     const { count: usersCount } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true });
 
     return NextResponse.json({

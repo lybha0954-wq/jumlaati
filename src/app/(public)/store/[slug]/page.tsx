@@ -15,10 +15,10 @@ export default async function StorePage({
 
   // slug هنا هو owner_id (معرّف تاجر الجملة)
   const { data: wholesaler } = await supabase
-    .from("users")
-    .select("id, name, email, role")
+    .from("user_profiles")
+    .select("id, full_name, email, role")
     .eq("id", slug)
-    .eq("role", "wholesaler")
+    .eq("role", "supplier")
     .single();
 
   if (!wholesaler) notFound();
@@ -26,8 +26,8 @@ export default async function StorePage({
   const { data: products } = await supabase
     .from("products")
     .select("*")
-    .eq("owner_id", wholesaler.id)
-    .eq("is_active", true)
+    .eq("supplier_id", wholesaler.id)
+    .eq("status", "متوفر")
     .order("created_at", { ascending: false });
 
   return (
@@ -35,7 +35,7 @@ export default async function StorePage({
       <Topbar />
       <div className="container mx-auto py-12 px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{wholesaler.name}</h1>
+          <h1 className="text-3xl font-bold mb-2">{wholesaler.full_name}</h1>
           <p className="text-muted-foreground">{wholesaler.email}</p>
         </div>
 

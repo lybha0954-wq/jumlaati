@@ -1,0 +1,1048 @@
+════════════════════════════════════════
+FILE: src/lib/services/addressService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import type { AddressInput } from "@/types/address";
+
+export const addressService = {
+  async getMyAddresses(): Promise<any[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("addresses")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async addAddress(input: AddressInput) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("addresses")
+      .insert({ ...input, user_id: user.id })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/analyticsService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const analyticsService = {
+  // إجمالي المبيعات
+  async getTotalRevenue(): Promise<number> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("total")
+      .eq("status", "completed");
+
+    if (error) throw new Error(error.message);
+    return data.reduce((sum, order) => sum + order.total, 0);
+  },
+
+  // عدد المستخدمين حسب الدور
+  async getUsersCountByRole(role: string): Promise<number> {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("user_profiles")
+      .select("*", { count: 'exact', head: true })
+      .eq("role", role);
+
+    return count || 0;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/authService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const authService = {
+  // دالة لتحديد نوع الإدخال (بريد أو هاتف)
+  getLoginType(identifier: string): "email" | "phone" {
+    return identifier.includes("@") ? "email" : "phone";
+  },
+
+  async login(identifier: string, password: string) {
+    const supabase = await createClient();
+    const type = this.getLoginType(identifier);
+
+    const credentials = type === "email"
+      ? { email: identifier, password }
+      : { phone: identifier, password };
+
+    const { data, error } = await supabase.auth.signInWithPassword(credentials);
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/chatService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const chatService = {
+  async getConversation(otherUserId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`)
+      .order("created_at", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async sendMessage(receiverId: string, message: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({ sender_id: user.id, receiver_id: receiverId, message })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/commissionService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/utils/logger";
+import { paymentConfig } from "@/config/payment";
+import type { Commission } from "@/types/commission";
+
+export const commissionService = {
+  calculateCommission(orderTotal: number): number {
+    return Math.round(orderTotal * paymentConfig.commissionRate);
+  },
+
+  async createCommission(
+    orderId: string,
+    retailerProfileId: string,
+    supplierProfileId: string,
+    orderTotal: number
+  ) {
+    const supabase = await createClient();
+    const commissionAmount = this.calculateCommission(orderTotal);
+
+    const { data, error } = await supabase
+      .from("commissions")
+      .insert({
+        order_id: orderId,
+        commission: commissionAmount,
+        retailer_profile_id: retailerProfileId,
+        supplier_profile_id: supplierProfileId,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      logger.error("Commission: create failed", error);
+      throw new Error(error.message);
+    }
+    return data as Commission;
+  },
+
+  async getMyCommissions(): Promise<Commission[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from("commissions")
+      .select("*")
+      .eq("retailer_profile_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Commission[];
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/couponService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const couponService = {
+  async validateCoupon(code: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", code)
+      .eq("is_active", true)
+      .single();
+
+    if (error || !data) throw new Error("كود الخصم غير صالح");
+    if (data.used_count >= data.max_uses) throw new Error("تم استنفاد هذا الكود");
+    return data;
+  },
+
+  async incrementUsage(couponId: string) {
+    const supabase = await createClient();
+    const { data: existingCoupon } = await supabase
+      .from("coupons")
+      .select("used_count")
+      .eq("id", couponId)
+      .single();
+
+    const count = existingCoupon?.used_count || 0;
+    const { error } = await supabase
+      .from("coupons")
+      .update({ used_count: count + 1 })
+      .eq("id", couponId);
+
+    if (error) throw new Error(error.message);
+  },
+
+  async getAllCoupons() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async createCoupon(code: string, discount_percent: number, max_uses: number) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coupons")
+      .insert({ code, discount_percent, max_uses, is_active: true, used_count: 0 })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/deliveryService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import type { Order } from "@/types/order";
+
+export const deliveryService = {
+  async getMyTasks(): Promise<Order[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("delivery_profile_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Order[];
+  },
+
+  async updateDeliveryStatus(orderId: string, status: "delivering" | "completed") {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/notificationService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/utils/email";
+import { sendSMS } from "@/lib/utils/sms";
+import { logger } from "@/lib/utils/logger";
+import type { NotificationType } from "@/config/notifications";
+
+interface NotificationPayload {
+  userId: string;
+  type: NotificationType;
+  title?: string;
+  message?: string;
+  email?: string;
+  phone?: string;
+}
+
+export const notificationService = {
+  async sendInApp(payload: NotificationPayload): Promise<void> {
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase.from("notifications").insert({
+        user_id: payload.userId,
+        type: payload.type,
+        title: payload.title ?? null,
+        message: payload.message ?? null,
+      });
+      if (error) throw new Error(error.message);
+      logger.info(`[Notification] Sent to ${payload.userId}: ${payload.title ?? payload.type}`);
+    } catch (err) {
+      logger.error("Failed to send in-app notification", err);
+      throw err;
+    }
+  },
+
+  async sendEmail(payload: NotificationPayload): Promise<void> {
+    if (!payload.email) return;
+    const html = `<h1>${payload.title ?? ""}</h1><p>${payload.message ?? ""}</p>`;
+    try {
+      await sendEmail(payload.email, payload.title ?? "إشعار", html);
+    } catch (err) {
+      logger.error("Failed to send notification email", err);
+    }
+  },
+
+  async sendSMS(payload: NotificationPayload): Promise<void> {
+    if (!payload.phone) return;
+    try {
+      await sendSMS(payload.phone, `${payload.title ?? ""}: ${payload.message ?? ""}`);
+    } catch (err) {
+      logger.error("Failed to send notification SMS", err);
+    }
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/offerService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import type { Offer } from "@/types/offer";
+
+export const offerService = {
+  async getActiveOffers(): Promise<Offer[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("offers")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/orderService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import type { Order } from "@/types/order";
+
+export const orderService = {
+  // عرض تفاصيل طلب واحد
+  async getOrderById(id: string): Promise<Order> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw new Error("الطلب غير موجود");
+    return data as Order;
+  },
+
+  // جلب الطلبات من منظور الأدمن (كل الطلبات)
+  async getAllOrders(): Promise<Order[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Order[];
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/paymentService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const paymentService = {
+  // إنشاء عملية دفع جديدة (مع دعم الدفع عند الاستلام كخيار افتراضي)
+  async createPayment(orderId: string, amount: number, gateway: string = "cod") {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("payments")
+      .insert({ order_id: orderId, amount, gateway, status: "pending" })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // معالجة رد بوابة الدفع (Webhook)
+  async handleWebhook(paymentId: string, status: string, transactionId?: string) {
+    const supabase = await createClient();
+
+    const updates: any = { status };
+    // ملاحظة: لا يوجد provider_transaction_id في schema
+
+    const { data, error } = await supabase
+      .from("payments")
+      .update(updates)
+      .eq("id", paymentId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    // تحديث حالة الطلب إلى "مدفوع" إذا نجحت العملية
+    if (status === "success") {
+      await supabase.from("orders").update({ payment_status: "paid" }).eq("id", data.order_id);
+    }
+
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/payoutService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+// helper داخلي: اقرأ الدور من public.users لا من JWT
+async function getUserRole(supabase: any, userId: string): Promise<string> {
+  const { data } = await supabase
+    .from("user_profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return data?.role || "retailer";
+}
+
+export const payoutService = {
+  // ═══════════════════════════════════════════════════
+  // للتاجر/المندوب: عرض سحوباته الشخصية
+  // ═══════════════════════════════════════════════════
+  async getMyPayouts() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from("payouts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // ═══════════════════════════════════════════════════
+  // للأدمن: عرض كل السحوبات
+  // ═══════════════════════════════════════════════════
+  async getAllPayouts() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const role = await getUserRole(supabase, user.id);
+    if (role !== "admin") throw new Error("Forbidden");
+
+    const { data, error } = await supabase
+      .from("payouts")
+      .select(`
+        id,
+        user_id,
+        amount,
+        status,
+        created_at,
+        user_profiles:user_id ( id, full_name, email, role )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // ═══════════════════════════════════════════════════
+  // للأدمن: السحوبات المعلقة فقط
+  // ═══════════════════════════════════════════════════
+  async getPendingPayouts() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const role = await getUserRole(supabase, user.id);
+    if (role !== "admin") throw new Error("Forbidden");
+
+    const { data, error } = await supabase
+      .from("payouts")
+      .select(`
+        id,
+        user_id,
+        amount,
+        status,
+        created_at,
+        user_profiles:user_id ( id, full_name, email, role )
+      `)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // ═══════════════════════════════════════════════════
+  // للأدمن: تحديث حالة السحب
+  // ═══════════════════════════════════════════════════
+  async updateStatus(payoutId: string, status: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const role = await getUserRole(supabase, user.id);
+    if (role !== "admin") throw new Error("Forbidden");
+
+    const validStatuses = ["pending", "approved", "paid", "rejected", "cancelled"];
+    if (!validStatuses.includes(status)) {
+      throw new Error("حالة غير صحيحة");
+    }
+
+    const { data, error } = await supabase
+      .from("payouts")
+      .update({ status })
+      .eq("id", payoutId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/phoneAuthService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/client";
+
+export const phoneAuthService = {
+  async sendOtp(phone: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: phone,
+      options: {
+        shouldCreateUser: true,
+      },
+    });
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  async verifyOtp(phone: string, token: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: phone,
+      token: token,
+      type: "sms",
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/pointsService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const pointsService = {
+  async getMyPoints() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from("points_transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/productService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const productService = {
+  async getAllProducts(): Promise<any[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/refundService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const refundService = {
+  async createRefund(orderId: string, reason: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("refunds")
+      .insert({ order_id: orderId, requested_by: user.id, reason })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async getMyRefunds() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("refunds")
+      .select("*")
+      .eq("requested_by", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/relationshipService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const relationshipService = {
+  async sendRequest(data: { supplierId?: string; retailerId?: string }) {
+    const supabase = await createClient();
+    const { data: relationship, error } = await supabase
+      .from('relationships')
+      .insert({ 
+        supplier_id: data.supplierId || null, 
+        retailer_id: data.retailerId || null, 
+        status: 'pending' 
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return relationship;
+  },
+
+  async acceptRequest(relationshipId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('relationships')
+      .update({ status: 'active' })
+      .eq('id', relationshipId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async rejectRequest(relationshipId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('relationships')
+      .update({ status: 'suspended' })
+      .eq('id', relationshipId);
+
+    if (error) throw new Error(error.message);
+  },
+
+  async getPendingRequests() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from('relationships')
+      .select('*, retailer:retailer_id(id, full_name, email), supplier:supplier_id(id, full_name, email)')
+      .or(`supplier_id.eq.${user.id},retailer_id.eq.${user.id}`)
+      .eq('status', 'pending');
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/retailerService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/utils/logger";
+import type { Product } from "@/types/product";
+import type { Order } from "@/types/order";
+
+export interface CreateOrderInput {
+  supplier_profile_id: string;
+  retailer_profile_id: string;
+  buyer_name: string;
+  delivery_address: string;
+  total: number;
+  commission: number;
+  order_number: string;
+  items: Array<{
+    product_id: string;
+    name: string;
+    unit_price: number;
+    quantity: number;
+  }>;
+}
+
+export const retailerService = {
+  async getAvailableProducts(): Promise<Product[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("status", "متوفر")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      logger.error("Retailer: Error fetching products", error);
+      throw new Error("فشل في جلب المنتجات");
+    }
+    return data as Product[];
+  },
+
+  async createOrder(input: CreateOrderInput): Promise<Order> {
+    const supabase = await createClient();
+
+    const { data: order, error: orderErr } = await supabase
+      .from("orders")
+      .insert({
+        order_number: input.order_number,
+        status: "reviewing",
+        payment_status: "pending",
+        total: input.total,
+        commission: input.commission,
+        buyer_name: input.buyer_name,
+        delivery_address: input.delivery_address,
+        retailer_profile_id: input.retailer_profile_id,
+        supplier_profile_id: input.supplier_profile_id,
+      })
+      .select()
+      .single();
+
+    if (orderErr || !order) {
+      logger.error("Retailer: createOrder failed", orderErr);
+      throw new Error(orderErr?.message || "فشل إنشاء الطلب");
+    }
+
+    const itemsPayload = input.items.map((it) => ({
+      order_id: order.id,
+      product_id: it.product_id,
+      name: it.name,
+      unit_price: it.unit_price,
+      quantity: it.quantity,
+    }));
+
+    const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
+    if (itemsErr) {
+      logger.error("Retailer: order_items insert failed", itemsErr);
+    }
+
+    return order as Order;
+  },
+
+  async getMyOrders(): Promise<Order[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("retailer_profile_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Order[];
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/reviewService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import type { ReviewInput } from "@/types/review";
+
+export const reviewService = {
+  async getProductReviews(productId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*, user_profiles(full_name)")
+      .eq("product_id", productId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async createReview(input: ReviewInput) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert({ ...input, user_id: user.id })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/uploadService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/client";
+
+export const uploadService = {
+  /**
+   * رفع صورة منتج إلى Supabase Storage
+   * @returns URL العام للصورة
+   */
+  async uploadProductImage(file: File, userId: string): Promise<string> {
+    const supabase = createClient();
+    
+    // تحقق من النوع
+    if (!file.type.startsWith("image/")) {
+      throw new Error("الملف يجب أن يكون صورة");
+    }
+    
+    // تحقق من الحجم (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("حجم الصورة يجب أن يكون أقل من 5 ميجابايت");
+    }
+
+    // اسم فريد
+    const ext = file.name.split(".").pop() || "jpg";
+    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from("product-images")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) throw new Error(error.message);
+
+    // الحصول على الرابط العام
+    const { data: { publicUrl } } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(data.path);
+
+    return publicUrl;
+  },
+
+  /**
+   * حذف صورة
+   */
+  async deleteProductImage(path: string): Promise<void> {
+    const supabase = createClient();
+    const { error } = await supabase.storage
+      .from("product-images")
+      .remove([path]);
+    if (error) throw new Error(error.message);
+  },
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/whatsappService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const whatsappService = {
+  async getPhoneById(userId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("user_profiles").select("phone").eq("id", userId).single();
+    if (error) throw new Error(error.message);
+    return data?.phone;
+  },
+
+  buildOrderMessage(order: any, items: any[], total: number) {
+    let message = `طلب جديد رقم: ${order.id}\n`;
+    message += `العنوان: ${order.address}\n`;
+    message += `-------------------\n`;
+    items.forEach((item: any) => {
+      message += `${item.name} × ${item.quantity} = ${item.price * item.quantity} د.ع\n`;
+    });
+    message += `-------------------\n`;
+    message += `الإجمالي: ${total} د.ع`;
+    return encodeURIComponent(message);
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/wholesaleService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+import type { Product, ProductInput } from "@/types/product";
+
+export const wholesaleService = {
+  async createProduct(input: ProductInput): Promise<Product> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert({ ...input, supplier_id: user.id })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as Product;
+  },
+
+  async getMyProducts(): Promise<Product[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("supplier_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Product[];
+  },
+
+  async updateProduct(productId: string, updates: any): Promise<Product> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .update(updates)
+      .eq("id", productId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as Product;
+  },
+
+  async deleteProduct(productId: string): Promise<void> {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId);
+    if (error) throw new Error(error.message);
+  },
+
+  async getMyOrders(): Promise<any[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("supplier_profile_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+════════════════════════════════════════
+FILE: src/lib/services/wishlistService.ts
+════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server";
+
+export const wishlistService = {
+  async getMyWishlist() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("wishlist")
+      .select("*, products(*)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async addToWishlist(productId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
+    const { data, error } = await supabase
+      .from("wishlist")
+      .insert({ user_id: user.id, product_id: productId })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async removeFromWishlist(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("wishlist").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+};
+

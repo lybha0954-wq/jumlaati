@@ -1,0 +1,220 @@
+═══════ 1) AuthContext.tsx ═══════
+'use client';
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
+
+export type UserRole = 'admin' | 'supplier' | 'retailer' | 'delivery';
+
+interface AuthContextValue {
+  user: any;
+  session: any;
+  loading: boolean;
+  role: UserRole | null;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  getCurrentUser: () => Promise<any>;
+  getUserProfile: () => Promise<any>;
+}
+
+const AuthContext = createContext<AuthContextValue>({} as AuthContextValue);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+};
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<UserRole | null>(null);
+
+  const supabase = isSupabaseConfigured ? createClient() : null;
+
+  const fetchRole = async (userId: string) => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      if (!error && data?.role) setRole(data.role as UserRole);
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then((res: any) => {
+      const s = res?.data?.session ?? null;
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) fetchRole(s.user.id);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_e: any, s: any) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        if (s?.user) fetchRole(s.user.id);
+        else setRole(null);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
+    if (!supabase) throw new Error('Supabase is not configured');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: metadata.full_name || '',
+          role: metadata.role || 'retailer',
+          business_name: metadata.business_name || '',
+          phone: metadata.phone || '',
+          city: metadata.city || '',
+          registration_number: metadata.registration_number || '',
+          vehicle_type: metadata.vehicle_type || '',
+        },
+      },
+    });
+    if (error) throw error;
+    return data;
+  };
+
+  const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase is not configured');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (data.user) await fetchRole(data.user.id);
+    return data;
+  };
+
+  const signOut = async () => {
+    if (!supabase) throw new Error('Supabase is not configured');
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setRole(null);
+  };
+
+  const getCurrentUser = async () => {
+    if (!supabase) return user;
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data.user;
+  };
+
+  const getUserProfile = async () => {
+    if (!user || !supabase) return null;
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (error) throw error;
+    return data;
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        role,
+        signUp,
+        signIn,
+        signOut,
+        getCurrentUser,
+        getUserProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+═══════ 2) من يستدعي setUser؟ ═══════
+src/app/(dashboard)/admin/components/UsersTable.tsx:11:  const [users, setUsers] = useState<any[]>([]);
+src/app/(dashboard)/admin/components/UsersTable.tsx:19:        if (res.ok) setUsers(await res.json());
+src/app/(dashboard)/admin/components/UsersTable.tsx:37:      setUsers(users.map(u => u.id === id ? { ...u, ...data } : u));
+src/app/(dashboard)/admin/users/page.tsx:11:  const [users, setUsers] = useState([]);
+src/app/(dashboard)/admin/users/page.tsx:17:      if (res.ok) setUsers(await res.json());
+src/components/dashboard/Topbar.tsx:16:  const setUser = useUserStore((s) => s.setUser);
+src/components/dashboard/Topbar.tsx:25:      setUser((data.user as unknown as User) || null);
+src/components/dashboard/Topbar.tsx:28:      setUser((session?.user as unknown as User) || null);
+src/components/dashboard/Topbar.tsx:31:  }, [setUser]);
+src/components/dashboard/Topbar.tsx:46:    setUser(null);
+src/hooks/useAuth.ts:7:  const [user, setUser] = useState<User | null>(null);
+src/hooks/useAuth.ts:13:      setUser(data.user as unknown as User);
+src/lib/stores/userStore.ts:6:  setUser: (user: User | null) => void;
+src/lib/stores/userStore.ts:12:  setUser: (user) => set({ user }),
+src/contexts/AuthContext.tsx:29:  const [user, setUser] = useState<any>(null);
+src/contexts/AuthContext.tsx:57:      setUser(s?.user ?? null);
+src/contexts/AuthContext.tsx:65:        setUser(s?.user ?? null);
+
+═══════ 3) من يستدعي showToast؟ (عدد + ملفات) ═══════
+العدد: 158
+— الملفات:
+src/app/(auth)/login/page.tsx.before
+src/app/(auth)/register/page.tsx.before
+src/app/(dashboard)/admin/analytics/page.tsx
+src/app/(dashboard)/admin/audit-logs/page.tsx
+src/app/(dashboard)/admin/commissions/page.tsx
+src/app/(dashboard)/admin/components/UsersTable.tsx
+src/app/(dashboard)/admin/coupons/page.tsx
+src/app/(dashboard)/admin/disputes/page.tsx
+src/app/(dashboard)/admin/home/page.tsx
+src/app/(dashboard)/admin/matching/page.tsx
+src/app/(dashboard)/admin/payments/page.tsx
+src/app/(dashboard)/admin/refunds/page.tsx
+src/app/(dashboard)/admin/requests/page.tsx
+src/app/(dashboard)/admin/users/page.tsx
+src/app/(dashboard)/delivery/my-wholesalers/page.tsx
+src/app/(dashboard)/delivery/overview/Content.tsx
+src/app/(dashboard)/delivery/payouts/page.tsx
+src/app/(dashboard)/delivery/tasks/page.tsx
+src/app/(dashboard)/retailer/cart/page.tsx
+src/app/(dashboard)/retailer/commissions/page.tsx
+src/app/(dashboard)/retailer/favorites/page.tsx
+src/app/(dashboard)/retailer/invoices/page.tsx
+src/app/(dashboard)/retailer/nearby-wholesale/page.tsx
+src/app/(dashboard)/retailer/orders/page.tsx
+src/app/(dashboard)/retailer/overview/Content.tsx
+src/app/(dashboard)/retailer/points/page.tsx
+src/app/(dashboard)/wholesale/commissions/page.tsx
+src/app/(dashboard)/wholesale/inventory/page.tsx
+src/app/(dashboard)/wholesale/nearby-requests/page.tsx
+src/app/(dashboard)/wholesale/orders/page.tsx
+src/app/(dashboard)/wholesale/overview/PageClient.tsx
+src/app/(dashboard)/wholesale/payouts/page.tsx
+src/app/(dashboard)/wholesale/products/page.tsx
+src/app/(public)/checkout/page.tsx
+src/app/(public)/contact/page.tsx
+src/app/(public)/offers/page.tsx
+src/app/(public)/products/[slug]/AddToCartButton.tsx
+src/components/forms/CommissionForm.tsx
+src/components/forms/ImageUploader.tsx
+src/components/forms/MatchingForm.tsx
+src/components/forms/ProductForm.tsx
+src/components/forms/RequestForm.tsx
+src/components/settings/ProfileForm.tsx
+src/components/shared/RequestCard.tsx
+src/components/shared/RequestCard.tsx.before
+src/components/ui/FileUpload.tsx
+src/hooks/useToast.ts
+
+═══════ 4) من يستورد useNotification من hooks؟ ═══════
+  (لا أحد ✅)

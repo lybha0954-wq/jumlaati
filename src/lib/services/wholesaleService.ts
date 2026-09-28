@@ -9,7 +9,7 @@ export const wholesaleService = {
 
     const { data, error } = await supabase
       .from("products")
-      .insert({ ...input, owner_id: user.id, is_active: true })
+      .insert({ ...input, supplier_id: user.id })
       .select()
       .single();
 
@@ -25,7 +25,7 @@ export const wholesaleService = {
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .eq("owner_id", user.id)
+      .eq("supplier_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -62,7 +62,7 @@ export const wholesaleService = {
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .eq("wholesaler_id", user.id)
+      .eq("supplier_profile_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);

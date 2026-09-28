@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export const whatsappService = {
   async getPhoneById(userId: string) {
     const supabase = await createClient();
-    const { data, error } = await supabase.from("users").select("phone").eq("id", userId).single();
+    const { data, error } = await supabase.from("user_profiles").select("phone").eq("id", userId).single();
     if (error) throw new Error(error.message);
     return data?.phone;
   },

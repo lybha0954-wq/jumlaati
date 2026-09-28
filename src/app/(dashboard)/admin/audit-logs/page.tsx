@@ -23,7 +23,7 @@ export default function AdminAuditLogsPage() {
   const columns = [
     { key: "id", header: "المعرف" },
     { key: "action", header: "الإجراء" },
-    { key: "users", header: "المستخدم", render: (row: any) => row.users?.name || row.user_id },
+    { key: "users", header: "المستخدم", render: (row: any) => row.users?.full_name || row.user_id },
     { key: "details", header: "التفاصيل", render: (row: any) => JSON.stringify(row.details) },
     { key: "created_at", header: "التاريخ", render: (row: any) => new Date(row.created_at).toLocaleString('ar-IQ') },
   ];

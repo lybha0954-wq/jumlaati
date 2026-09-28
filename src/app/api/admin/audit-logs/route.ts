@@ -8,12 +8,12 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // التحقق من صلاحيات الأدمن
-    const { data: adminCheck } = await supabase.from('users').select('role').eq('id', user.id).single();
+    const { data: adminCheck } = await supabase.from('user_profiles').select('role').eq('id', user.id).single();
     if (adminCheck?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { data, error } = await supabase
       .from('audit_logs')
-      .select('*, users(name)')
+      .select('*, user_profiles(full_name)')
       .order('created_at', { ascending: false });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

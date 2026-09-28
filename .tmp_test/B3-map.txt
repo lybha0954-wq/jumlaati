@@ -1,0 +1,123 @@
+═══════════════════════════════════════════════
+📊 B-3: خريطة كاملة لكل استعلامات DB في APIs
+═══════════════════════════════════════════════
+
+━━━ src/app/api/admin/analytics/route.ts ━━━
+  📁 .from('orders') .from('user_profiles') 
+  📋 .select('*', { count: 'exact', head: true }|.select('role'|.select('total, created_at, status'|
+  🔑 .eq('id', user.id 
+
+━━━ src/app/api/admin/audit-logs/route.ts ━━━
+  📁 .from('audit_logs') .from('user_profiles') 
+  📋 .select('*, user_profiles(full_name|.select('role'|
+  🔑 .eq('id', user.id 
+
+━━━ src/app/api/admin/payments/route.ts ━━━
+  📁 .from('payments') .from('user_profiles') 
+  📋 .select('*'|.select('role'|
+  🔑 .eq('id', user.id 
+
+━━━ src/app/api/admin/users/[id]/route.ts ━━━
+  📁 .from('user_profiles') 
+  📋 .select('role'|
+  🔑 .eq('id', id .eq('id', user.id 
+
+━━━ src/app/api/admin/users/route.ts ━━━
+  📁 .from("user_profiles") 
+  📋 .select("id, email, full_name, role, phone, business_name, governorate, created_at"|.select("role"|
+  🔑 .eq("id", user.id 
+
+━━━ src/app/api/chat/route.ts ━━━
+  📁 .from('user_profiles') 
+  📋 .select('id, full_name, role'|
+  🔑 .neq('id', user.id 
+
+━━━ src/app/api/commissions/route.ts ━━━
+  📁 .from("commissions") .from("user_profiles") 
+  📋 .select("*"|.select("role"|
+  🔑 .eq("id", user.id 
+
+━━━ src/app/api/coupons/route.ts ━━━
+  📁 .from('user_profiles') 
+  📋 .select('role'|
+  🔑 .eq('id', user.id 
+
+━━━ src/app/api/delivery/tasks/route.ts ━━━
+  📁 .from("orders") 
+  📋 .select("*"|
+  🔑 .eq("delivery_profile_id", user.id .eq("id", id 
+
+━━━ src/app/api/matching/route.ts ━━━
+  📁 .from("relationships") 
+  📋 .select(`|
+
+━━━ src/app/api/notifications/route.ts ━━━
+  📁 .from('notifications') 
+  📋 .select('*'|
+  🔑 .eq('user_id', user.id 
+
+━━━ src/app/api/orders/[id]/route.ts ━━━
+  📁 .from('orders') 
+  🔑 .eq('id', id 
+
+━━━ src/app/api/orders/route.ts ━━━
+  📁 .from('orders') .from('products') .from('user_profiles') 
+  📋 .select('*'|.select('full_name'|.select('id, name'|
+  🔑 .eq('delivery_profile_id', user.id .eq('id', user.id .eq('retailer_profile_id', user.id .eq('supplier_profile_id', user.id 
+
+━━━ src/app/api/payouts/route.ts ━━━
+  📁 .from("payouts") 
+  📋 .select("*"|
+  🔑 .eq("user_id", user!.id 
+
+━━━ src/app/api/products/route.ts ━━━
+  📁 .from('products') 
+  📋 .select('*'|
+  🔑 .eq('status', 'متوفر' 
+
+━━━ src/app/api/refunds/[id]/route.ts ━━━
+  📁 .from('refunds') .from('user_profiles') 
+  📋 .select('role'|
+  🔑 .eq('id', id .eq('id', user.id 
+
+━━━ src/app/api/refunds/route.ts ━━━
+  📁 .from('refunds') .from('user_profiles') 
+  📋 .select('*, orders(address, total|.select('role'|
+  🔑 .eq('id', user.id .eq('requested_by', user.id 
+
+━━━ src/app/api/requests/[id]/route.ts ━━━
+  📁 .from('requests') 
+  📋 .select('*'|
+  🔑 .eq('id', id 
+
+━━━ src/app/api/requests/route.ts ━━━
+  📁 .from("help_tickets") 
+  📋 .select("*"|
+
+━━━ src/app/api/upload/route.ts ━━━
+  📁 .from('product-images') 
+
+━━━ src/app/api/users/profile/route.ts ━━━
+  📁 .from('user_profiles') 
+  📋 .select('id, full_name, email, phone, role'|.select('id, full_name, email, phone, role, created_at'|
+  🔑 .eq('id', user.id 
+
+━━━ src/app/api/users/route.ts ━━━
+  📁 .from('user_profiles') 
+  📋 .select('id, full_name, email, phone, role'|
+  🔑 .eq('role', role 
+
+━━━ src/app/api/wallet/route.ts ━━━
+  📁 .from("wallets") 
+  📋 .select("*"|
+  🔑 .eq("user_id", user.id 
+
+━━━ src/app/api/whatsapp/route.ts ━━━
+  📁 .from("order_items") .from("orders") 
+  📋 .select("*"|
+  🔑 .eq("id", orderId .eq("order_id", orderId 
+
+═══════════════════════════════════════════════
+📊 الإجمالي
+═══════════════════════════════════════════════
+  ملفات API: 40

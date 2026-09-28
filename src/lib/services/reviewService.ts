@@ -6,7 +6,7 @@ export const reviewService = {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("reviews")
-      .select("*, users(name)")
+      .select("*, user_profiles(full_name)")
       .eq("product_id", productId)
       .order("created_at", { ascending: false });
 

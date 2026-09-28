@@ -1,0 +1,55 @@
+═══════ 1) useToast / Toaster ═══════
+src/components/ui/Toast.tsx
+src/hooks/useToast.ts
+— في layout:
+5:import { Toaster } from "sonner";
+32:          <Toaster position="top-center" richColors closeButton dir="rtl" />
+
+═══════ 2) z?.object (خطأ) ═══════
+src/lib/validations/commission.schema.ts:3:export const commissionSchema = z?.object({
+src/lib/validations/commission.schema.ts:4:  orderId: z?.string(),
+src/lib/validations/commission.schema.ts:5:  retailerId: z?.string(),
+src/lib/validations/commission.schema.ts:6:  amount: z?.coerce?.number()?.positive(),
+src/lib/validations/commission.schema.ts:7:  status: z?.enum(["pending", "paid"])?.default("pending"),
+src/lib/validations/product.schema.ts:3:export const productSchema = z?.object({
+src/lib/validations/product.schema.ts:4:  name: z?.string()?.min(2, "اسم المنتج مطلوب"),
+src/lib/validations/product.schema.ts:5:  description: z?.string()?.optional(),
+src/lib/validations/product.schema.ts:6:  price: z?.coerce?.number()?.positive("السعر يجب أن يكون موجباً"),
+src/lib/validations/product.schema.ts:7:  wholesalePrice: z?.coerce?.number()?.positive("سعر الجملة يجب أن يكون موجباً"),
+src/lib/validations/product.schema.ts:8:  stock: z?.coerce?.number()?.int()?.nonnegative(),
+src/lib/validations/product.schema.ts:9:  category: z?.string()?.min(1, "الفئة مطلوبة"),
+
+═══════ 3) usePermission / useUserStore ═══════
+src/hooks/usePermission.ts
+src/lib/stores/userStore.ts
+— usePermission (أول 40 سطر):
+"use client";
+import { useUserStore } from "@/lib/stores/userStore";
+
+export function usePermission() {
+  const user = useUserStore((state) => state.user);
+
+  const hasPermission = (allowedRoles: string[]) => {
+    if (!user) return false;
+    return allowedRoles.includes(user.role);
+  };
+
+  return { hasPermission, role: user?.role };
+}
+
+═══════ 4) wholesaler في services ═══════
+عدد المرات: 5
+— الملفات المتأثرة:
+src/lib/services/relationshipService.ts
+src/lib/services/wholesaleService.ts
+
+═══════ 5) onAuthStateChange ═══════
+src/components/dashboard/Topbar.tsx:27:    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+src/contexts/AuthContext.tsx:62:    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+
+═══════ 6) notification (تكرار؟) ═══════
+src/components/shared/NotificationCenter.tsx
+src/config/notifications.ts
+src/hooks/useNotification.ts
+src/lib/services/notificationService.ts
+src/lib/stores/notificationStore.ts

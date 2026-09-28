@@ -19,8 +19,8 @@ export async function GET(req: Request) {
 
     // إذا لم يتم تمرير userId، نجلب قائمة جهات الاتصال المحتملة
     const { data: contacts, error } = await supabase
-      .from('users')
-      .select('id, name, role')
+      .from('user_profiles')
+      .select('id, full_name, role')
       .neq('id', user.id)
       .order('name', { ascending: true });
 
