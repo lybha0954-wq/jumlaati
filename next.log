@@ -251,3 +251,12 @@
  ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
  GET /login 200 in 1605ms
  GET /login 200 in 1504ms
+ GET / 200 in 25609ms
+ ✓ Compiled /manifest.webmanifest in 488ms (661 modules)
+ GET /manifest.webmanifest 200 in 842ms
+ GET /register 200 in 340ms
+ GET /manifest.webmanifest 200 in 78ms
+ GET /login 200 in 764ms
+ ✓ Compiled in 3.5s (1079 modules)
+ GET /login 200 in 420ms
+ GET /manifest.webmanifest 200 in 148ms
