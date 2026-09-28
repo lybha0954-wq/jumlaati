@@ -176,3 +176,78 @@
  GET /login 200 in 480ms
  ✓ Compiled /manifest.webmanifest in 387ms (578 modules)
  GET /manifest.webmanifest 200 in 657ms
+ GET /register 200 in 971ms
+ GET / 200 in 286ms
+ GET /manifest.webmanifest 200 in 72ms
+ GET /register 200 in 174ms
+ GET /manifest.webmanifest 200 in 63ms
+ GET /login 200 in 336ms
+ GET /admin/home 200 in 204ms
+ ○ Compiling /api/admin/users ...
+ ✓ Compiled /api/admin/users in 1484ms (646 modules)
+ ✓ Compiled (650 modules)
+ GET /api/admin/payments 200 in 3305ms
+ GET /api/admin/users 200 in 3374ms
+ GET /manifest.webmanifest 200 in 142ms
+ GET /api/admin/payouts 200 in 3561ms
+ GET /api/admin/users 200 in 520ms
+ GET /api/admin/payments 200 in 569ms
+ GET /api/admin/payouts 200 in 767ms
+ GET /api/admin/users 200 in 535ms
+ GET /api/admin/payments 200 in 537ms
+ GET /api/admin/payouts 200 in 676ms
+ GET /api/admin/users 200 in 499ms
+ GET /api/admin/payments 200 in 420ms
+ GET /api/admin/payments 200 in 442ms
+ GET /api/admin/users 200 in 485ms
+ GET /api/admin/payouts 200 in 689ms
+ GET /api/admin/users 200 in 467ms
+ GET /api/admin/payments 200 in 472ms
+ GET /api/admin/payouts 200 in 700ms
+ GET /api/admin/users 200 in 519ms
+ GET /api/admin/payments 200 in 646ms
+ GET /api/admin/payouts 200 in 711ms
+ GET /api/admin/payments 200 in 504ms
+ GET /api/admin/users 200 in 513ms
+ GET /api/admin/payouts 200 in 674ms
+ GET /api/admin/users 200 in 467ms
+ GET /api/admin/payments 200 in 493ms
+ GET /api/admin/payouts 200 in 763ms
+ GET /api/admin/payments 200 in 495ms
+ GET /api/admin/users 200 in 506ms
+ GET /api/admin/payouts 200 in 702ms
+ GET /api/admin/payments 200 in 589ms
+ GET /api/admin/users 200 in 598ms
+ GET /api/admin/payouts 200 in 1074ms
+ GET /api/admin/payments 200 in 545ms
+ GET /api/admin/users 200 in 563ms
+ GET /api/admin/payouts 200 in 691ms
+ GET /api/admin/users 200 in 477ms
+ GET /api/admin/payments 200 in 494ms
+ GET /api/admin/payouts 200 in 721ms
+ GET /api/admin/users 200 in 564ms
+ GET /api/admin/payments 200 in 576ms
+ GET /api/admin/payouts 200 in 873ms
+ GET /api/admin/payments 200 in 449ms
+ GET /api/admin/users 200 in 457ms
+ GET /api/admin/payouts 200 in 662ms
+ GET /api/admin/users 200 in 467ms
+ GET /api/admin/payments 200 in 487ms
+ GET /api/admin/payouts 200 in 816ms
+ GET /login 200 in 370ms
+ GET /api/admin/users 401 in 188ms
+ GET /api/admin/payments 401 in 175ms
+ GET /api/admin/payouts 401 in 286ms
+ GET /api/admin/payouts 401 in 227ms
+ GET /api/admin/users 401 in 160ms
+ GET /api/admin/payments 401 in 179ms
+ GET /login 200 in 576ms
+ GET /api/admin/payouts 401 in 144ms
+ GET /api/admin/users 401 in 146ms
+ GET /api/admin/payments 401 in 155ms
+ GET /api/admin/payouts 401 in 72ms
+ GET /manifest.webmanifest 200 in 57ms
+ ✓ Compiled in 4.3s (1054 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /login 200 in 1605ms
+ GET /login 200 in 1504ms
