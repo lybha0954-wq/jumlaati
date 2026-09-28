@@ -37,14 +37,14 @@ const TABS_BY_ROLE: Record<string, Tab[]> = {
   delivery: [
     { key: "home",    href: "/delivery/overview", label: "الرئيسية", Icon: Home },
     { key: "tasks",   href: "/delivery/tasks",    label: "مهامي",    Icon: Package },
-    { key: "history", href: "/delivery/task-history", label: "السجل", Icon: ShoppingCart },
+    { key: "earnings", href: "/delivery/earnings", label: "أرباحي", Icon: Wallet },
     { key: "me",      href: "/delivery/settings", label: "حسابي",    Icon: Wallet },
     { key: "more",                                 label: "المزيد",   Icon: Menu, action: "drawer" },
   ],
   admin: [
     { key: "home",    href: "/admin/home",        label: "الرئيسية", Icon: Home },
     { key: "users",   href: "/admin/users",       label: "المستخدمون", Icon: User },
-    { key: "reports", href: "/admin/analytics",   label: "التقارير",  Icon: ShoppingCart },
+    { key: "commissions", href: "/admin/commissions", label: "العمولات",  Icon: Wallet },
     { key: "me",      href: "/admin/settings",    label: "حسابي",    Icon: Wallet },
     { key: "more",                                 label: "المزيد",   Icon: Menu, action: "drawer" },
   ],
