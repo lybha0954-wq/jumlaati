@@ -120,7 +120,7 @@ export async function POST() {
     log.push("🗑️ حُذفت الطلبات التجريبية القديمة");
 
     // 5) إنشاء 5 طلبات بحالات مختلفة
-    const statuses = ["reviewing", "delivering", "completed", "cancelled"];
+    const statuses = ["reviewing", "processing", "shipped", "delivered", "cancelled"];
     const deliveryIds = [
       null,
       null,
@@ -162,7 +162,7 @@ export async function POST() {
         .insert({
           order_number: orderNumber,
           status: status,
-          payment_status: status === "completed" ? "paid" : "pending",
+          payment_status: status === "delivered" ? "paid" : "pending",
           total: total,
           commission: Math.round(total * 0.01),
           buyer_name: retailer.full_name || "سوبرماركت",
