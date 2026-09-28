@@ -7069,3 +7069,82 @@ Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home
 Import trace for requested module:
 ./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
 ./src/app/(dashboard)/wholesale/overview/PageClient.tsx
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
+ ○ Compiling /_error ...
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
+ ⨯ ./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx'
+
+Import trace for requested module:
+./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+./src/app/(dashboard)/wholesale/overview/PageClient.tsx
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
+Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
+Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
+ GET /api/orders 500 in 35208ms
+ GET /delivery/overview 500 in 41933ms
+ ⨯ ./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx'
+
+Import trace for requested module:
+./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+./src/app/(dashboard)/wholesale/overview/PageClient.tsx
+ ⨯ ./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx'
+
+Import trace for requested module:
+./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+./src/app/(dashboard)/wholesale/overview/PageClient.tsx
+ GET /api/orders 500 in 1508ms
+ GET /delivery/overview 500 in 1524ms
+ GET /api/orders 500 in 134ms
+ GET /delivery/overview 500 in 200ms
+ GET /api/orders 500 in 107ms
+ GET /delivery/overview 500 in 174ms
+ GET /api/orders 500 in 104ms
+ GET /api/orders 500 in 163ms
+ GET /delivery/overview 500 in 200ms
+ GET /api/orders 500 in 144ms
+ GET /delivery/overview 500 in 163ms
+ GET /api/orders 500 in 111ms
+ GET /delivery/overview 500 in 139ms
+ GET /api/orders 500 in 115ms
+ GET /delivery/overview 500 in 187ms
+ GET /api/orders 500 in 83ms
+ GET /api/orders 500 in 124ms
+ GET /delivery/overview 500 in 184ms
+ GET /api/orders 500 in 129ms
+ GET /delivery/overview 500 in 195ms
+ GET /api/orders 500 in 179ms
+ GET /delivery/overview 500 in 171ms
+ GET /api/orders 500 in 127ms
+ GET /delivery/overview 500 in 190ms
+ GET /api/orders 500 in 127ms
+ GET /api/orders 500 in 112ms
+ GET /delivery/overview 500 in 161ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/.next/cache/webpack/client-development-fallback/1.pack.gz_' -> '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/.next/cache/webpack/client-development-fallback/1.pack.gz'
+ ⨯ ./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+Error: ENOENT: no such file or directory, open '/data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx'
+
+Import trace for requested module:
+./src/app/(dashboard)/wholesale/components/WholesaleOrderCard.tsx
+./src/app/(dashboard)/wholesale/overview/PageClient.tsx
