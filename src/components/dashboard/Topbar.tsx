@@ -32,64 +32,83 @@ export function Topbar() {
     try {
       await signOut();
     } catch (err) {
-      console.error('[Topbar] logout error:', err);
+      console.error("[Topbar] logout error:", err);
     }
     router.push("/login");
     router.refresh();
   };
 
   return (
-    <header className="h-16 sticky top-0 z-40 flex items-center justify-between bg-[#0F172A] px-4 md:px-6 text-white shadow-lg">
-      <Link href="/" className="flex items-center gap-3">
-        <Package className="h-6 w-6 text-[#f59e0b]" />
-        <span className="text-xl font-black">جملتي</span>
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-gray-100 bg-white/95 px-4 backdrop-blur-md md:px-6">
+      {/* الشعار */}
+      <Link href="/" className="flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2e8b73]/10">
+          <Package className="h-5 w-5 text-[#2e8b73]" strokeWidth={2.5} />
+        </div>
+        <span className="text-lg font-black tracking-tight text-gray-900">
+          جُمْلَتِي
+        </span>
       </Link>
 
-      <form onSubmit={handleSearch} className="hidden md:flex items-center bg-white/10 rounded-full px-4 py-2 w-1/3">
-        <Search size={18} className="text-gray-300 ml-2" />
+      {/* البحث — سطح المكتب فقط */}
+      <form
+        onSubmit={handleSearch}
+        className="hidden md:flex items-center gap-2 rounded-full bg-gray-50 border border-gray-100 px-4 py-2 w-1/3 focus-within:border-[#2e8b73]/40 focus-within:bg-white transition-all"
+      >
+        <Search size={16} className="text-gray-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="ابحث عن منتج..."
-          className="bg-transparent outline-none text-sm w-full placeholder:text-gray-300 text-white"
+          className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 outline-none"
         />
       </form>
 
-      <div className="flex items-center gap-3">
-        <button className="relative p-2 rounded-full hover:bg-white/10 transition-colors">
-          <Bell size={20} />
-          {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-5 w-5 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
-              {unreadCount}
-            </span>
-          )}
-        </button>
+      {/* الأزرار */}
+      <div className="flex items-center gap-2">
+        {user && (
+          <button
+            onClick={refresh}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 transition-colors"
+            aria-label="الإشعارات"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#2e8b73] px-1 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {user ? (
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-[#f59e0b] text-gray-900 flex items-center justify-center font-bold">
-                {user?.name?.charAt(0) || user?.email?.charAt(0) || "م"}
-              </div>
-              <span className="text-sm font-medium hidden md:block">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 rounded-full border border-gray-100 py-1 pl-3 pr-1 hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-xs font-medium text-gray-700 hidden sm:block">
                 {user?.name || user?.email?.split("@")[0] || "المستخدم"}
               </span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2e8b73] text-xs font-bold text-white">
+                {user?.name?.charAt(0) || user?.email?.charAt(0) || "م"}
+              </div>
             </Link>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-              title="خروج"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              aria-label="خروج"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
             </button>
           </div>
         ) : (
           <Link
             href="/login"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#f59e0b] text-gray-900 hover:bg-[#d97706] font-bold text-sm"
+            className="flex items-center gap-2 rounded-full bg-[#2e8b73] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#1e6b57] active:scale-95 transition-all"
           >
-            <LogIn size={18} />
+            <LogIn size={16} />
             <span>دخول</span>
           </Link>
         )}

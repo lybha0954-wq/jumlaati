@@ -8,40 +8,106 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 13.9s
+ ✓ Ready in 12.3s
  ○ Compiling /middleware ...
- ✓ Compiled /middleware in 608ms (115 modules)
+ ✓ Compiled /middleware in 538ms (115 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 8.4s (900 modules)
+ GET / 200 in 7781ms
+ ○ Compiling /manifest.webmanifest ...
+ ✓ Compiled /manifest.webmanifest in 1784ms (922 modules)
+ GET /manifest.webmanifest 200 in 2189ms
+ GET / 200 in 523ms
+ GET /manifest.webmanifest 200 in 70ms
+ ○ Compiling /register ...
+ ✓ Compiled /register in 1002ms (948 modules)
+ GET /register 200 in 1291ms
+ GET /manifest.webmanifest 200 in 72ms
+ GET /manifest.webmanifest 200 in 74ms
+ GET /register 200 in 182ms
+ GET /manifest.webmanifest 200 in 84ms
  ○ Compiling /login ...
- ⨯ ./src/styles/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/styles/globals.css
-Error: Cannot find module 'tailwindcss-animate'
-Require stack:
-- /data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/tailwind.config.js
-Import trace for requested module:
-./src/styles/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/styles/globals.css
-./src/styles/globals.css
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data/data'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/data'
-Watchpack Error (watcher): Error: EACCES: permission denied, watch '/'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data/data'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/data'
-Watchpack Error (initial scan): Error: EACCES: permission denied, scandir '/'
- ⨯ ./src/styles/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/styles/globals.css
-Error: Cannot find module 'tailwindcss-animate'
-Require stack:
-- /data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/tailwind.config.js
-Import trace for requested module:
-./src/styles/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/styles/globals.css
-./src/styles/globals.css
- GET / 500 in 4661ms
+ ✓ Compiled /login in 1225ms (959 modules)
+ GET /login 200 in 2159ms
+ ○ Compiling /admin/home ...
+ ✓ Compiled /admin/home in 1333ms (1038 modules)
+ GET /admin/home 200 in 1622ms
+ ○ Compiling /api/admin/payments ...
+ ✓ Compiled /api/admin/payments in 1645ms (1046 modules)
+ GET /api/admin/payments 200 in 2789ms
+ GET /api/admin/users 200 in 2840ms
+ GET /manifest.webmanifest 200 in 149ms
+ GET /api/admin/payouts 200 in 3031ms
+ GET /api/admin/payments 200 in 577ms
+ GET /api/admin/users 200 in 524ms
+ GET /api/admin/payouts 200 in 688ms
+ GET /api/admin/payments 200 in 461ms
+ GET /api/admin/users 200 in 493ms
+ GET /api/admin/payments 200 in 434ms
+ GET /api/admin/payouts 200 in 671ms
+ GET /api/admin/users 200 in 425ms
+ GET /api/admin/users 200 in 478ms
+ GET /api/admin/payments 200 in 484ms
+ GET /api/admin/payouts 200 in 747ms
+ GET /api/admin/users 200 in 819ms
+ GET /api/admin/payments 200 in 834ms
+ GET /api/admin/payouts 200 in 1029ms
+ GET /api/admin/payments 200 in 571ms
+ GET /api/admin/users 200 in 610ms
+ GET /api/admin/payouts 200 in 870ms
+ GET /api/admin/users 200 in 459ms
+ GET /api/admin/payments 200 in 478ms
+ GET /api/admin/payouts 200 in 722ms
+ GET /api/admin/users 200 in 477ms
+ GET /api/admin/payments 200 in 517ms
+ GET /api/admin/payouts 200 in 661ms
+ GET /api/admin/users 200 in 470ms
+ GET /api/admin/payments 200 in 479ms
+ GET /api/admin/payouts 200 in 707ms
+ GET /api/admin/payments 200 in 505ms
+ GET /api/admin/users 200 in 519ms
+ GET /api/admin/payouts 200 in 758ms
+ GET /api/admin/users 200 in 447ms
+ GET /api/admin/payments 200 in 495ms
+ GET /api/admin/payouts 200 in 669ms
+ GET /api/admin/users 200 in 435ms
+ GET /api/admin/payments 200 in 456ms
+ GET /api/admin/payouts 200 in 623ms
+ GET /api/admin/users 200 in 475ms
+ GET /api/admin/payments 200 in 530ms
+ GET /api/admin/payouts 200 in 745ms
+ GET /api/admin/payments 200 in 495ms
+ GET /api/admin/users 200 in 499ms
+ GET /api/admin/payouts 200 in 674ms
+ GET /api/admin/users 200 in 460ms
+ GET /api/admin/payments 200 in 469ms
+ GET /api/admin/payouts 200 in 710ms
+ GET /api/admin/payments 200 in 475ms
+ GET /api/admin/users 200 in 483ms
+ GET /api/admin/payouts 200 in 716ms
+ GET /api/admin/payments 200 in 509ms
+ GET /api/admin/users 200 in 514ms
+ GET /api/admin/payouts 200 in 691ms
+ GET /api/admin/users 200 in 457ms
+ GET /api/admin/payments 200 in 531ms
+ GET /api/admin/payouts 200 in 698ms
+ GET /api/admin/payouts 500 in 501ms
+ GET /api/admin/payments 200 in 501ms
+ GET /api/admin/users 200 in 510ms
+ GET /login 200 in 387ms
+ GET /api/admin/payments 401 in 116ms
+ GET /api/admin/payouts 401 in 425ms
+ GET /api/admin/users 401 in 161ms
+ GET /api/admin/payouts 401 in 256ms
+ GET /api/admin/payments 401 in 269ms
+ GET /api/admin/users 401 in 272ms
+ GET /login 200 in 418ms
+ GET /api/admin/payouts 401 in 181ms
+ GET /api/admin/users 401 in 167ms
+ GET /api/admin/payments 401 in 188ms
+ GET /api/admin/payouts 401 in 72ms
+ GET /manifest.webmanifest 200 in 62ms
+ ✓ Compiled in 4.1s (1039 modules)
+ GET /login 200 in 634ms
+ ✓ Compiled /manifest.webmanifest in 416ms (649 modules)
+ GET /manifest.webmanifest 200 in 828ms
