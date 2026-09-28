@@ -48,3 +48,14 @@ tsconfig.tsbuildinfo
 *.tsbuildinfo
 .next/
 .vercel
+
+# ملفات النسخ الاحتياطية المؤقتة (لا تُرفع لـ git)
+*.bak
+*.bak-*
+*.bak2-*
+*.bak3-*
+*.before
+*.before2
+*.before-*
+*.save
+*.DELETED
