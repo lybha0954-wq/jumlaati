@@ -30,6 +30,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { href: "/admin/refunds",         label: "المرتجعات",     Icon: RotateCcw },
     { href: "/admin/requests",        label: "الدعم الفني",   Icon: Headphones },
     { href: "/admin/payment-methods", label: "طرق الدفع",     Icon: CreditCard },
+    { href: "/admin/subscriptions",   label: "الاشتراكات",    Icon: Crown },
     { href: "/admin/settings",        label: "الإعدادات",     Icon: Settings },
   ],
   supplier: [
