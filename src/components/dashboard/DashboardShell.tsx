@@ -3,6 +3,7 @@
 import { useUserStore } from "@/lib/stores/userStore";
 import { Sidebar } from "./Sidebar";
 import { BottomNavBar } from "@/components/shared/BottomNavBar";
+import { Footer } from "@/components/shared/Footer";
 
 export const SIDEBAR_ROLES = ["admin", "supplier"];
 
@@ -15,6 +16,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {hasSidebar && <Sidebar />}
       <div className={hasSidebar ? "md:mr-64 pb-16 md:pb-0" : "pb-16"}>
         {children}
+        <Footer />
       </div>
       <BottomNavBar />
     </div>

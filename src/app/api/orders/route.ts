@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit, buildKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
@@ -73,6 +74,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+
+    // ═══ Rate Limit ═══
+    const rlKey = buildKey(req);
+    const rl = rateLimit(rlKey, { windowMs: 60000, max: 30 });
+    if (!rl.allowed) return rateLimitResponse(rl);
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول' }, { status: 401 });

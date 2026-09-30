@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, buildKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+
+    // ═══ Rate Limit ═══
+    const rlKey = buildKey(req);
+    const rl = rateLimit(rlKey, { windowMs: 60000, max: 5 });
+    if (!rl.allowed) return rateLimitResponse(rl);
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
