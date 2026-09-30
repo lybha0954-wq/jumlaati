@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { retailerService } from '@/lib/services/retailerService';
-import { commissionService } from '@/lib/services/commissionService';
-import { notificationService } from '@/lib/services/notificationService';
-import { couponService } from '@/lib/services/couponService';
-import { createOrderSchema } from '@/lib/validations/order.schema';
 
 export async function GET() {
   try {
@@ -13,30 +8,65 @@ export async function GET() {
     if (!user) return NextResponse.json([], { status: 401 });
 
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     const role = profile?.role || 'retailer';
 
     let query = supabase
       .from('orders')
-      .select('*')
+      .select(`
+        id, order_number, status, payment_status,
+        subtotal, delivery_fee, commission, total_amount,
+        buyer_name, delivery_address,
+        retailer_id, supplier_id, delivery_id,
+        created_at, accepted_at, shipped_at,
+        picked_up_at, delivered_at, cancelled_at
+      `)
       .order('created_at', { ascending: false });
 
     if (role === 'supplier') {
-      query = query.eq('supplier_profile_id', user.id);
+      query = query.eq('supplier_id', user.id);
     } else if (role === 'retailer') {
-      query = query.eq('retailer_profile_id', user.id);
+      query = query.eq('retailer_id', user.id);
     } else if (role === 'delivery') {
-      query = query.eq('delivery_profile_id', user.id);
+      query = query.eq('delivery_id', user.id);
     }
 
     const { data, error } = await query;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data || []);
+    if (error) {
+      console.error('[api/orders] query error:', error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const ids = new Set<string>();
+    (data || []).forEach((o: any) => {
+      if (o.retailer_id) ids.add(o.retailer_id);
+      if (o.supplier_id) ids.add(o.supplier_id);
+      if (o.delivery_id) ids.add(o.delivery_id);
+    });
+
+    let nameMap: Record<string, string> = {};
+    if (ids.size > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', Array.from(ids));
+      (profiles || []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
+    }
+
+    const orders = (data || []).map((o: any) => ({
+      ...o,
+      retailer_name: o.retailer_id ? nameMap[o.retailer_id] : null,
+      supplier_name: o.supplier_id ? nameMap[o.supplier_id] : null,
+      delivery_name: o.delivery_id ? nameMap[o.delivery_id] : null,
+    }));
+
+    return NextResponse.json(orders);
   } catch (error: any) {
+    console.error('[api/orders] catch:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -45,86 +75,198 @@ export async function POST(req: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول أولاً' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول' }, { status: 401 });
 
     const body = await req.json();
-    const parsed = createOrderSchema.parse(body);
+    const { supplier_id, items, delivery_address, buyer_name, coupon_code, payment_method } = body;
 
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single();
-    const buyerName = profile?.full_name || 'زبون';
+    // ═══ ثوابت النموذج المالي ═══
+    const DELIVERY_FEE = 3000;        // رسوم التوصيل على السوبرماركت
+    const DELIVERY_SHARE = 2000;      // حصة المندوب
+    const PLATFORM_COMMISSION_RATE = 0.01; // 1% على تاجر الجملة
 
-    let discountPercent = 0;
-    if (parsed.coupon_code) {
-      const coupon = await couponService.validateCoupon(parsed.coupon_code);
-      discountPercent = coupon.discount_percent;
-      await couponService.incrementUsage(coupon.id);
+
+    if (!supplier_id || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'بيانات ناقصة' }, { status: 400 });
     }
 
-    const productIds = parsed.items.map((it: any) => it.productId);
-    const { data: products } = await supabase
+    const productIds = items.map((i: any) => i.product_id);
+    const { data: prods } = await supabase
       .from('products')
-      .select('id, name')
+      .select('id, name, price, supplier_id, stock_quantity')
       .in('id', productIds);
-    const nameById: Record<string, string> = {};
-    (products || []).forEach((p: any) => { nameById[p.id] = p.name; });
 
-    const groupedItems: Record<string, any[]> = {};
-    for (const item of parsed.items as any[]) {
-      const supplierId = item.wholesalerId || item.supplierId;
-      if (!supplierId) continue;
-      if (!groupedItems[supplierId]) groupedItems[supplierId] = [];
-      groupedItems[supplierId].push(item);
+    if (!prods || prods.length === 0) {
+      return NextResponse.json({ error: 'المنتجات غير موجودة' }, { status: 400 });
     }
 
-    const createdOrders = [];
-    let idx = 0;
-    for (const [supplierId, items] of Object.entries(groupedItems)) {
-      const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
-      const total = Math.round(subtotal - (subtotal * discountPercent) / 100);
-      const commissionAmount = commissionService.calculateCommission(total);
-      const orderNumber = `ORD-${Date.now()}-${idx++}-${Math.floor(Math.random() * 1000)}`;
-
-      const order = await retailerService.createOrder({
-        supplier_profile_id: supplierId,
-        retailer_profile_id: user.id,
-        buyer_name: buyerName,
-        delivery_address: parsed.address,
-        total,
-        commission: commissionAmount,
-        order_number: orderNumber,
-        items: items.map((it: any) => ({
-          product_id: it.productId,
-          name: nameById[it.productId] || 'منتج',
-          unit_price: it.price,
-          quantity: it.quantity,
-        })),
+    let subtotal = 0;
+    const orderItems: any[] = [];
+    for (const item of items) {
+      const p = prods.find((x: any) => x.id === item.product_id);
+      if (!p) continue;
+      if (p.supplier_id !== supplier_id) continue;
+      const qty = Number(item.quantity) || 0;
+      if (qty <= 0) continue;
+      if (Number(p.stock_quantity) < qty) {
+        return NextResponse.json(
+          { error: `الكمية المتوفرة من "${p.name}" ${p.stock_quantity} فقط` },
+          { status: 400 }
+        );
+      }
+      const lineTotal = Number(p.price) * qty;
+      subtotal += lineTotal;
+      orderItems.push({
+        product_id: p.id,
+        product_name: p.name,
+        quantity: qty,
+        unit_price: Number(p.price),
+        subtotal: lineTotal,
+        current_stock: Number(p.stock_quantity),
       });
-
-      try {
-        await commissionService.createCommission(order.id, user.id, supplierId, total);
-      } catch (e) {
-        console.error('[orders POST] commission failed:', e);
-      }
-
-      try {
-        await notificationService.sendInApp({
-          userId: supplierId,
-          type: 'order',
-          title: 'طلب جديد',
-          message: `طلب بقيمة ${total.toLocaleString()} د.ع بانتظار معالجتك.`,
-        });
-      } catch (e) {
-        console.error('[orders POST] notification failed:', e);
-      }
-
-      createdOrders.push(order);
     }
 
-    return NextResponse.json({ success: true, orders: createdOrders }, { status: 201 });
+    if (orderItems.length === 0) {
+      return NextResponse.json({ error: 'لا أصناف صالحة' }, { status: 400 });
+    }
+
+    // ═══ حساب الخصم (كوبون) ═══
+    let discount = 0;
+    let couponId: string | null = null;
+    if (coupon_code) {
+      try {
+        const { data: c } = await supabase
+          .from('coupons')
+          .select('*')
+          .eq('code', String(coupon_code).toUpperCase().trim())
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (c) {
+          const minOrder = Number(c.min_order || 0);
+          const validNow = !c.valid_to || new Date(c.valid_to) >= new Date();
+          const notExhausted = c.used_count < c.max_uses;
+          if (validNow && notExhausted && subtotal >= minOrder) {
+            if (c.discount_type === 'percent') {
+              discount = Math.round(subtotal * (Number(c.discount_value) / 100));
+            } else {
+              discount = Math.min(Number(c.discount_value), subtotal);
+            }
+            couponId = c.id;
+          }
+        }
+      } catch (e) {
+        console.error('[api/orders] coupon apply failed:', e);
+      }
+    }
+
+    // ═══ النموذج المالي ═══
+    const delivery_fee = DELIVERY_FEE;
+    const commission = Math.round(subtotal * PLATFORM_COMMISSION_RATE);
+    const total_amount = Math.max(0, subtotal + delivery_fee - discount);
+
+    // ═══ الحصص ═══
+    // السوبرماركت: total_amount (subtotal + delivery - discount)
+    // التاجر يستلم: subtotal - commission
+    // المندوب يستلم: DELIVERY_SHARE
+    // المنصة تستلم: commission + (delivery_fee - DELIVERY_SHARE)
+    const supplier_net = subtotal - commission;
+    const delivery_net = DELIVERY_SHARE;
+    const platform_net = commission + (delivery_fee - DELIVERY_SHARE);
+
+    const orderNumber = `ORD-${Date.now()}`;
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .insert({
+        order_number: orderNumber,
+        retailer_id: user.id,
+        supplier_id,
+        status: 'pending',
+        payment_status: 'unpaid',
+        subtotal,
+        delivery_fee,
+        commission,
+        total_amount,
+        buyer_name: buyer_name || null,
+        delivery_address: delivery_address || null,
+        notes: discount > 0 ? `خصم كوبون: ${discount} د.ع` : null,
+        payment_method: payment_method || 'cash',
+      })
+      .select()
+      .single();
+
+    if (orderErr || !order) {
+      return NextResponse.json(
+        { error: orderErr?.message || 'فشل إنشاء الطلب' },
+        { status: 500 }
+      );
+    }
+
+    // Insert order items (without current_stock field)
+    const rows = orderItems.map(({ current_stock, ...it }) => ({
+      ...it,
+      order_id: order.id,
+    }));
+    const { error: itemsErr } = await supabase.from('order_items').insert(rows);
+    if (itemsErr) {
+      return NextResponse.json({ error: itemsErr.message }, { status: 500 });
+    }
+
+    // Decrement stock
+    const stockErrors: string[] = [];
+    for (const it of orderItems) {
+      const newStock = Math.max(0, it.current_stock - it.quantity);
+      const { error: stockErr } = await supabase
+        .from('products')
+        .update({ stock_quantity: newStock })
+        .eq('id', it.product_id);
+      if (stockErr) {
+        stockErrors.push(`منتج #${it.product_id}: ${stockErr.message}`);
+      }
+    }
+
+    // ═══ زيادة استخدام الكوبون ═══
+    if (couponId) {
+      try {
+        const { data: c } = await supabase
+          .from('coupons').select('used_count').eq('id', couponId).single();
+        await supabase
+          .from('coupons')
+          .update({ used_count: (c?.used_count || 0) + 1 })
+          .eq('id', couponId);
+      } catch (e) {
+        console.error('[api/orders] coupon increment failed:', e);
+      }
+    }
+
+    // Notify supplier
+    try {
+      await supabase.from('notifications').insert({
+        user_id: supplier_id,
+        type: 'order',
+        title: 'طلب جديد ' + orderNumber,
+        body: 'بقيمة ' + total_amount + ' د.ع',
+        order_id: order.id,
+      });
+    } catch (e) {
+      console.error('[api/orders] notification failed:', e);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      order,
+      breakdown: {
+        subtotal,
+        discount,
+        delivery_fee,
+        total_amount,
+        commission,
+        supplier_net,
+        delivery_net,
+        platform_net,
+      },
+      stock_warnings: stockErrors.length > 0 ? stockErrors : undefined,
+    }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

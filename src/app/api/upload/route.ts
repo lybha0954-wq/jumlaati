@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireFeature } from "@/lib/feature-flags";
 
 export async function POST(req: Request) {
   try {
+    const guard = await requireFeature("upload");
+    if (guard) return guard;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

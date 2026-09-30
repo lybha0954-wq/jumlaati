@@ -3,6 +3,8 @@ import { Tajawal } from "next/font/google";
 import { baseMetadata } from "@/config/seo";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
+import { InstallPrompt } from "@/components/shared/InstallPrompt";
+import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
 import "../styles/globals.css";
 
 const tajawal = Tajawal({
@@ -11,12 +13,25 @@ const tajawal = Tajawal({
   variable: "--font-tajawal",
 });
 
-export const metadata: Metadata = baseMetadata;
+export const metadata: Metadata = {
+  ...baseMetadata,
+  applicationName: "جُمْلَتِي",
+  appleWebApp: {
+    capable: true,
+    title: "جُمْلَتِي",
+    statusBarStyle: "default",
+  },
+  formatDetection: { telephone: false },
+  manifest: "/manifest.webmanifest",
+};
 
 export const viewport: Viewport = {
-  themeColor: "#f59e0b",
+  themeColor: "#2e8b73",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -29,6 +44,8 @@ export default function RootLayout({
       <body className={`${tajawal.className} antialiased`}>
         <AuthProvider>
           {children}
+          <InstallPrompt />
+          <ServiceWorkerRegister />
           <Toaster position="top-center" richColors closeButton dir="rtl" />
         </AuthProvider>
       </body>

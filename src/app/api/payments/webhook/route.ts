@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { paymentService } from '@/lib/services/paymentService';
+import { requireFeature } from "@/lib/feature-flags";
 
 export async function POST(req: Request) {
   try {
+    const guard = await requireFeature("payments_webhook");
+    if (guard) return guard;
     const body = await req.json();
     const { paymentId, status, transactionId } = body;
 

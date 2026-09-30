@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { wishlistService } from "@/lib/services/wishlistService";
+import { requireFeature } from "@/lib/feature-flags";
 
 function handleError(error: any) {
   const msg = error?.message || "خطأ غير معروف";
@@ -11,6 +12,8 @@ function handleError(error: any) {
 
 export async function GET() {
   try {
+    const guard = await requireFeature("wishlist");
+    if (guard) return guard;
     const data = await wishlistService.getMyWishlist();
     return NextResponse.json(data || []);
   } catch (error: any) {
@@ -20,6 +23,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const guard = await requireFeature("wishlist");
+    if (guard) return guard;
     const { productId } = await req.json();
     const data = await wishlistService.addToWishlist(productId);
     return NextResponse.json(data, { status: 201 });

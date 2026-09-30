@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireFeature } from "@/lib/feature-flags";
 
 export async function GET() {
   try {
+    const guard = await requireFeature("delivery_tasks");
+    if (guard) return guard;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -10,7 +13,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .eq("delivery_profile_id", user.id)
+      .eq("delivery_id", user.id)
       .or("status.eq.accepted,status.eq.shipped")
       .order("created_at", { ascending: false });
 
@@ -23,6 +26,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    const guard = await requireFeature("delivery_tasks");
+    if (guard) return guard;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

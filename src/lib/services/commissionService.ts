@@ -22,8 +22,8 @@ export const commissionService = {
       .insert({
         order_id: orderId,
         commission: commissionAmount,
-        retailer_profile_id: retailerProfileId,
-        supplier_profile_id: supplierProfileId,
+        retailer_id: retailerProfileId,
+        supplier_id: supplierProfileId,
         status: "pending",
       })
       .select()
@@ -44,7 +44,7 @@ export const commissionService = {
     const { data, error } = await supabase
       .from("commissions")
       .select("*")
-      .eq("retailer_profile_id", user.id)
+      .eq("retailer_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);

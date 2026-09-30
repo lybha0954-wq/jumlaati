@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { reviewService } from '@/lib/services/reviewService';
 import { reviewSchema } from '@/lib/validations/review.schema';
+import { requireFeature } from "@/lib/feature-flags";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -17,6 +18,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const guard = await requireFeature("reviews");
+    if (guard) return guard;
     const body = await req.json();
     const parsed = reviewSchema.parse(body);
     const data = await reviewService.createReview({ ...parsed, comment: parsed.comment || "" });

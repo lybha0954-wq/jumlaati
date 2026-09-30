@@ -9,7 +9,7 @@ import { useCartStore } from "@/lib/stores/cartStore";
 import { formatCurrency } from "@/lib/utils/currency";
 import {
   ShoppingCart, Plus, Minus, Trash2, MapPin,
-  ArrowRight, Package, CheckCircle2,
+  ArrowRight, Package, CheckCircle2, Ticket, X, Wallet,
 } from "lucide-react";
 
 export default function RetailerCartPage() {
@@ -21,6 +21,29 @@ export default function RetailerCartPage() {
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [coupon, setCoupon] = useState<any>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+
+  // ═══ النموذج المالي ═══
+  const DELIVERY_FEE = 3000;
+
+  // جلب طرق الدفع
+  useEffect(() => {
+    fetch("/api/payment-methods")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => {
+        const arr = Array.isArray(d) ? d : [];
+        setPaymentMethods(arr);
+        // اختيار أول طريقة مفعّلة
+        const firstEnabled = arr.find((m: any) => m.enabled);
+        if (firstEnabled) setPaymentMethod(firstEnabled.key);
+      })
+      .catch(() => setPaymentMethods([]));
+  }, []);
 
   const total = getTotal();
   const grouped = getGroupedItems();
@@ -53,13 +76,16 @@ export default function RetailerCartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          supplier_id: supplierId,
           items: supplierItems.map((i) => ({
-            productId: i.productId,
+            product_id: Number(i.productId),
             quantity: i.quantity,
-            wholesalerId: supplierId,
-            price: i.price,
           })),
-          address: address.trim(),
+          delivery_address: address.trim(),
+          buyer_name: "سوبرماركت",
+          coupon_code: coupon?.code || null,
+          discount: discount,
+          payment_method: paymentMethod,
         }),
       });
 
@@ -76,6 +102,53 @@ export default function RetailerCartPage() {
       setLoading(false);
     }
   };
+
+  const applyCoupon = async () => {
+    setCouponError("");
+    setCoupon(null);
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      setCouponError("أدخل كود الكوبون");
+      return;
+    }
+    setCouponBusy(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.valid) {
+        throw new Error(d.error || "كود غير صالح");
+      }
+      setCoupon(d.coupon);
+      showToast("✅ تم تطبيق الكوبون", "success");
+    } catch (e: any) {
+      setCouponError(e?.message || "كود غير صالح");
+    } finally {
+      setCouponBusy(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
+  // حساب الخصم
+  const discount = (() => {
+    if (!coupon) return 0;
+    const minOrder = Number(coupon.min_order || 0);
+    if (minOrder > 0 && total < minOrder) return 0;
+    if (coupon.discount_type === "percent") {
+      return Math.round(total * (Number(coupon.discount_value) / 100));
+    }
+    return Math.min(Number(coupon.discount_value || 0), total);
+  })();
+
+  const finalTotal = Math.max(0, total + DELIVERY_FEE - discount);
 
   /* ═══════════ حالة فارغة ═══════════ */
   if (items.length === 0) {
@@ -263,6 +336,104 @@ export default function RetailerCartPage() {
           </div>
         )}
 
+        {/* طرق الدفع */}
+        {paymentMethods.length > 0 && (
+          <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-4">
+            <label className="mb-3 flex items-center gap-2 text-xs font-bold text-gray-700">
+              <Wallet size={14} className="text-[#2e8b73]" />
+              طريقة الدفع
+            </label>
+            <div className="space-y-2">
+              {paymentMethods.map((pm) => (
+                <button
+                  key={pm.key}
+                  onClick={() => pm.enabled && setPaymentMethod(pm.key)}
+                  disabled={!pm.enabled}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl border-2 p-3 text-right transition-all ${
+                    paymentMethod === pm.key && pm.enabled
+                      ? "border-[#2e8b73] bg-[#e8f4f0]"
+                      : pm.enabled
+                      ? "border-gray-100 bg-white hover:border-[#2e8b73]/30"
+                      : "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xl flex-shrink-0">{pm.icon || "💳"}</span>
+                    <div className="min-w-0">
+                      <p className={`text-sm font-bold ${pm.enabled ? "text-gray-900" : "text-gray-500"}`}>
+                        {pm.label}
+                      </p>
+                      <p className="text-[10px] text-gray-500 truncate">
+                        {pm.description || ""}
+                      </p>
+                    </div>
+                  </div>
+                  {pm.enabled ? (
+                    paymentMethod === pm.key ? (
+                      <CheckCircle2 size={18} className="flex-shrink-0 text-[#2e8b73]" />
+                    ) : (
+                      <div className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-gray-300" />
+                    )
+                  ) : (
+                    <span className="flex-shrink-0 rounded-full bg-gray-200 px-2 py-0.5 text-[9px] font-bold text-gray-500">
+                      قريباً
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* الكوبون */}
+        <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-4">
+          <label className="mb-2 flex items-center gap-2 text-xs font-bold text-gray-700">
+            <Ticket size={14} className="text-amber-500" />
+            كود الخصم
+          </label>
+
+          {coupon ? (
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-[#2e8b73]/30 bg-[#e8f4f0] p-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-[#2e8b73]" />
+                <span className="font-mono text-sm font-black text-[#1e6b57]">{coupon.code}</span>
+                <span className="text-xs text-[#1e6b57]">
+                  {coupon.discount_type === "percent"
+                    ? `-${coupon.discount_value}%`
+                    : `-${formatCurrency(coupon.discount_value)}`}
+                </span>
+              </div>
+              <button onClick={removeCoupon}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[#1e6b57] hover:bg-white/60">
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="أدخل الكود"
+                  dir="ltr"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 font-mono text-sm uppercase outline-none focus:border-[#2e8b73] focus:bg-white"
+                />
+                <button
+                  onClick={applyCoupon}
+                  disabled={couponBusy || !couponCode.trim()}
+                  className="flex-shrink-0 rounded-xl bg-amber-500 px-4 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-50"
+                >
+                  {couponBusy ? "..." : "تطبيق"}
+                </button>
+              </div>
+              {couponError && (
+                <p className="mt-2 text-xs font-bold text-red-600">{couponError}</p>
+              )}
+            </>
+          )}
+        </div>
+
         {/* الملخص */}
         <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-4">
           <div className="flex items-center justify-between py-1.5 text-sm">
@@ -271,12 +442,18 @@ export default function RetailerCartPage() {
           </div>
           <div className="flex items-center justify-between py-1.5 text-sm">
             <span className="text-gray-500">التوصيل</span>
-            <span className="text-xs text-gray-400">يُحدد عند القبول</span>
+            <span className="font-bold text-gray-700">{formatCurrency(DELIVERY_FEE)}</span>
           </div>
+          {discount > 0 && (
+            <div className="flex items-center justify-between py-1.5 text-sm">
+              <span className="text-amber-600">الخصم</span>
+              <span className="font-bold text-amber-600">- {formatCurrency(discount)}</span>
+            </div>
+          )}
           <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-3">
             <span className="text-sm font-bold text-gray-700">الإجمالي</span>
             <span className="text-lg font-black text-[#2e8b73]">
-              {formatCurrency(total)}
+              {formatCurrency(finalTotal)}
             </span>
           </div>
         </div>
@@ -288,7 +465,7 @@ export default function RetailerCartPage() {
           <div className="flex-1">
             <div className="text-[10px] text-gray-500">الإجمالي</div>
             <div className="text-base font-black text-[#2e8b73]">
-              {formatCurrency(total)}
+              {formatCurrency(finalTotal)}
             </div>
           </div>
 

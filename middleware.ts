@@ -4,7 +4,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 const AUTH_PAGES = ['/login', '/register'];
 
 const ROLE_TO_HOME: Record<string, string> = {
-  owner: '/admin/home',
   admin: '/admin/home',
   supplier: '/wholesale/overview',
   retailer: '/retailer/overview',
@@ -12,10 +11,17 @@ const ROLE_TO_HOME: Record<string, string> = {
 };
 
 const ROLE_PREFIX: Record<string, string[]> = {
-  '/admin': ['admin', 'owner'],
-  '/wholesale': ['supplier', 'owner'],
-  '/retailer': ['retailer', 'owner'],
-  '/delivery': ['delivery', 'owner'],
+  '/admin':     ['admin'],
+  '/wholesale': ['supplier'],
+  '/retailer':  ['retailer'],
+  '/delivery':  ['delivery'],
+};
+
+// Map legacy role names to canonical ones
+const ROLE_ALIASES: Record<string, string> = {
+  owner:      'admin',
+  wholesaler: 'supplier',
+  store:      'retailer',
 };
 
 type CookieToSet = {
@@ -56,6 +62,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(p)
   );
 
+  // Not logged in → protect dashboard routes
   if (!user && matchedPrefix) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -65,32 +72,39 @@ export async function middleware(request: NextRequest) {
 
   if (!user) return response;
 
-  let userRole: string = (user.user_metadata?.role as string) || '';
+  // Determine role: metadata first, then profiles table
+  let rawRole: string = (user.user_metadata?.role as string) || '';
 
-  if (!userRole) {
+  if (!rawRole) {
     try {
       const { data } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
-      userRole = data?.role || 'retailer';
+        .maybeSingle();
+      rawRole = data?.role || 'retailer';
     } catch {
-      userRole = 'retailer';
+      rawRole = 'retailer';
     }
   }
 
+  // Normalize legacy role names
+  const userRole = ROLE_ALIASES[rawRole] || rawRole;
+  const home = ROLE_TO_HOME[userRole] || '/retailer/overview';
+
+  // Logged in → redirect away from auth pages
   if (isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = ROLE_TO_HOME[userRole] || ROLE_TO_HOME.retailer;
+    url.pathname = home;
     return NextResponse.redirect(url);
   }
 
+  // Role-based access control
   if (matchedPrefix) {
     const allowedRoles = ROLE_PREFIX[matchedPrefix];
     if (!allowedRoles.includes(userRole)) {
       const url = request.nextUrl.clone();
-      url.pathname = ROLE_TO_HOME[userRole] || '/login';
+      url.pathname = home;
       return NextResponse.redirect(url);
     }
   }

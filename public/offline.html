@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>غير متصل — جُمْلَتِي</title>
+<link rel="icon" href="/favicon.svg">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+    background: #fafafa;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    max-width: 420px;
+    width: 100%;
+    background: #fff;
+    border-radius: 24px;
+    border: 1px solid #f0f0f0;
+    padding: 40px 24px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  }
+  .icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: #e8f4f0;
+    color: #2e8b73;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  h1 { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
+  p { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 24px; }
+  button {
+    background: #2e8b73;
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover { background: #1e6b57; }
+  button:active { transform: scale(0.97); }
+  .status {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  .status.online { color: #2e8b73; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">📡</div>
+  <h1>غير متصل بالإنترنت</h1>
+  <p>يبدو أنك فقدت الاتصال. تحقق من الشبكة ثم حاول مجدداً.</p>
+  <button onclick="location.reload()">إعادة المحاولة</button>
+  <div id="status" class="status">افحص اتصالك بالإنترنت</div>
+</div>
+<script>
+  function updateStatus() {
+    const s = document.getElementById('status');
+    if (navigator.onLine) {
+      s.textContent = '✅ عاد الاتصال — جارٍ التحويل...';
+      s.classList.add('online');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      s.textContent = 'افحص اتصالك بالإنترنت';
+      s.classList.remove('online');
+    }
+  }
+  window.addEventListener('online', updateStatus);
+  window.addEventListener('offline', updateStatus);
+  updateStatus();
+</script>
+</body>
+</html>

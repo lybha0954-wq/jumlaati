@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { whatsappService } from '@/lib/services/whatsappService';
+import { requireFeature } from "@/lib/feature-flags";
 
 export async function POST(req: Request) {
   try {
+    const guard = await requireFeature("whatsapp");
+    if (guard) return guard;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,14 +19,14 @@ export async function POST(req: Request) {
     if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
 
     // جلب رقم هاتف تاجر الجملة
-    const phone = await whatsappService.getPhoneById(order.supplier_profile_id);
+    const phone = await whatsappService.getPhoneById(order.supplier_id);
     if (!phone) return NextResponse.json({ error: 'No phone number found' }, { status: 404 });
 
     // جلب عناصر الطلب
     const { data: items } = await supabase.from("order_items").select("*").eq("order_id", orderId);
 
     // بناء الرسالة
-    const message = whatsappService.buildOrderMessage(order, items || [], order.total);
+    const message = whatsappService.buildOrderMessage(order, items || [], order.total_amount);
 
     // رابط واتساب
     const whatsappUrl = `https://wa.me/${phone}?text=${message}`;

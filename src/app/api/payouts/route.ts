@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireFeature } from "@/lib/feature-flags";
 
 // فحص auth
 async function requireUser() {
@@ -10,6 +11,8 @@ async function requireUser() {
 }
 
 export async function GET() {
+  const guard = await requireFeature("payouts");
+  if (guard) return guard;
   const { supabase, user, error } = await requireUser();
   if (error) return error;
 

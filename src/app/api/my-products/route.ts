@@ -20,7 +20,7 @@ export async function GET() {
 
     // قراءة الدور
     const { data: profile } = await supabase
-      .from("user_profiles")
+      .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();

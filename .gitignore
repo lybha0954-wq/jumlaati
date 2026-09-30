@@ -61,3 +61,14 @@ tsconfig.tsbuildinfo
 *.DELETED
 
 backups-*
+
+# Temp test files
+.tmp_test/
+scan.tmp
+check*.txt
+audit*.txt
+dead-code.txt
+
+# Cleanup backups
+_cleanup-backup/
+*.debug

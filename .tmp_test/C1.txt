@@ -1,3 +1,0 @@
-═══ بعد الإصلاح ═══
-30:  const handleSendRequest = async (wholesalerId: string) => {
-35:        body: JSON.stringify({ supplierId }),

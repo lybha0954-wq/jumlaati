@@ -1,25 +1,26 @@
 "use client";
 
-import { use, useEffect, useState, useMemo } from "react";
+import { use, useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { formatCurrency } from "@/lib/utils/currency";
 import {
   ArrowRight, Plus, Minus, ShoppingCart, Store, Package, Phone,
-  Search, AlertTriangle, CheckCircle2,
+  Search, AlertTriangle, CheckCircle2, Heart,
 } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  final_price?: number;
-  stock?: number;
-  image?: string;
-  images?: string[];
+
+  stock_quantity?: number;
+  image_url?: string;
+
   category?: string;
 }
 
@@ -49,6 +50,8 @@ export default function SupplierCatalogPage({
   const cartItems = useCartStore((s) => s.items);
   const cartTotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
   const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
+  const wishlistEnabled = useFeatureFlag("wishlist");
+  const [wishlistIds, setWishlistIds] = useState<Record<string, string>>({}); // productId -> wishlistId
 
   useEffect(() => {
     Promise.all([
@@ -66,6 +69,58 @@ export default function SupplierCatalogPage({
       .finally(() => setLoading(false));
   }, [supplierId, showToast]);
 
+  // تحميل المفضلة
+  const reloadWishlist = useCallback(async () => {
+    if (!wishlistEnabled) return;
+    try {
+      const res = await fetch("/api/wishlist");
+      if (!res.ok) return;
+      const data = await res.json();
+      const map: Record<string, string> = {};
+      (Array.isArray(data) ? data : []).forEach((w: any) => {
+        const pid = w.product_id || w.products?.id || w.product?.id;
+        if (pid) map[String(pid)] = String(w.id);
+      });
+      setWishlistIds(map);
+    } catch {}
+  }, [wishlistEnabled]);
+
+  useEffect(() => { reloadWishlist(); }, [reloadWishlist]);
+
+  const toggleWishlist = async (productId: string) => {
+    const existing = wishlistIds[productId];
+    try {
+      if (existing) {
+        const res = await fetch(`/api/wishlist/${existing}`, { method: "DELETE" });
+        if (res.ok) {
+          setWishlistIds((prev) => {
+            const next = { ...prev };
+            delete next[productId];
+            return next;
+          });
+          showToast("أُزيل من المفضلة", "success");
+        } else {
+          showToast("فشل الحذف", "error");
+        }
+      } else {
+        const res = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+        if (res.ok) {
+          const w = await res.json();
+          setWishlistIds((prev) => ({ ...prev, [productId]: String(w.id) }));
+          showToast("أُضيف للمفضلة ❤️", "success");
+        } else {
+          showToast("فشل الإضافة", "error");
+        }
+      }
+    } catch {
+      showToast("خطأ في الاتصال", "error");
+    }
+  };
+
   const getQty = (id: string) => quantities[id] || 0;
 
   const setQty = (id: string, q: number) => {
@@ -78,26 +133,26 @@ export default function SupplierCatalogPage({
       showToast("أضف كمية أولاً", "error");
       return;
     }
-    const stock = Number(p.stock ?? 999);
+    const stock = Number(p.stock_quantity ?? 999);
     if (qty > stock) {
       showToast(`المتوفر ${stock} فقط`, "error");
       return;
     }
-    const price = Number(p.final_price ?? p.price ?? 0);
+    const price = Number(p.price ?? 0);
     addItem({
       productId: p.id,
       wholesalerId: supplierId,
       name: p.name,
       price,
       quantity: qty,
-      image: p.image || (p.images && p.images[0]),
+      image: p.image_url || undefined,
     });
     showToast(`تمت إضافة ${qty} × ${p.name}`, "success");
     setQty(p.id, 0);
   };
 
   const isOutOfStock = (p: Product) => {
-    const stock = Number(p.stock ?? 1);
+    const stock = Number(p.stock_quantity ?? 1);
     return stock <= 0;
   };
 
@@ -253,8 +308,8 @@ export default function SupplierCatalogPage({
             {filtered.map((p) => {
               const qty = getQty(p.id);
               const outOfStock = isOutOfStock(p);
-              const stock = Number(p.stock ?? 0);
-              const price = Number(p.final_price ?? p.price ?? 0);
+              const stock = Number(p.stock_quantity ?? 0);
+              const price = Number(p.price ?? 0);
 
               return (
                 <div
@@ -267,9 +322,9 @@ export default function SupplierCatalogPage({
                 >
                   {/* صورة */}
                   <div className="relative mb-3 flex h-24 items-center justify-center overflow-hidden rounded-xl bg-gray-50">
-                    {p.image || p.images?.[0] ? (
+                    {p.image_url ? (
                       <img
-                        src={p.image || p.images?.[0]}
+                        src={p.image_url}
                         alt={p.name}
                         className="h-full w-full object-cover"
                       />
@@ -280,6 +335,26 @@ export default function SupplierCatalogPage({
                       <span className="absolute top-2 right-2 rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-black text-white">
                         نفد
                       </span>
+                    )}
+                    {wishlistEnabled && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist(p.id);
+                        }}
+                        aria-label="المفضلة"
+                        className={`absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-all ${
+                          wishlistIds[p.id]
+                            ? "bg-rose-500 text-white"
+                            : "bg-white/90 text-gray-400 hover:text-rose-500"
+                        }`}
+                      >
+                        <Heart
+                          size={13}
+                          fill={wishlistIds[p.id] ? "currentColor" : "none"}
+                        />
+                      </button>
                     )}
                   </div>
 
@@ -294,7 +369,7 @@ export default function SupplierCatalogPage({
                   </p>
 
                   {/* المخزون */}
-                  {p.stock !== undefined && (
+                  {p.stock_quantity !== undefined && (
                     <p
                       className={`mb-2 text-[10px] ${
                         outOfStock

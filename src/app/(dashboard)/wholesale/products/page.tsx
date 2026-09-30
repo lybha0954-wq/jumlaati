@@ -2,20 +2,34 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
-import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ListSkeleton, KPISkeleton } from "@/components/shared/SkeletonLoader";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Package, Plus, Trash2, Pencil, AlertTriangle, X } from "lucide-react";
+import {
+  Package, Plus, Trash2, Pencil, AlertTriangle, X, Download,
+  TrendingDown, TrendingUp, Minus, Boxes,
+} from "lucide-react";
 
 interface Product {
-  id: string; name: string; price: number; final_price?: number;
-  stock?: number; category?: string; status?: string; image?: string;
+  id: string;
+  name: string;
+  price: number;
+  stock_quantity?: number;
+  category?: string;
+  status?: string;
+  image_url?: string;
+  unit?: string;
 }
+
+type Tab = "products" | "inventory";
 
 export default function WholesaleProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [tab, setTab] = useState<Tab>("products");
+  const [saving, setSaving] = useState<string | null>(null);
   const { showToast } = useToast();
 
   const fetchProducts = useCallback(async () => {
@@ -24,9 +38,12 @@ export default function WholesaleProductsPage() {
       const d = await res.json();
       const list = Array.isArray(d) ? d : (d.products || []);
       setProducts(list);
-    } catch { showToast("فشل تحميل المنتجات", "error"); }
-    finally { setLoading(false); }
-  }, [showToast]);
+    } catch {
+      showToast("فشل تحميل المنتجات", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -37,81 +54,81 @@ export default function WholesaleProductsPage() {
     else showToast("فشل الحذف", "error");
   };
 
+  const adjustStock = async (id: string, delta: number) => {
+    setSaving(id);
+    try {
+      const res = await fetch(`/api/products/${id}/stock`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delta }),
+      });
+      if (!res.ok) throw new Error("fail");
+      await fetchProducts();
+      showToast("تم التحديث", "success");
+    } catch {
+      showToast("فشل التحديث", "error");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50/50 pb-24">
+        <Topbar />
+        <div className="mx-auto max-w-3xl px-4 py-6">
+          <div className="mb-5">
+            <div className="h-7 w-40 animate-pulse rounded bg-gray-200" />
+            <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-100" />
+          </div>
+          <ListSkeleton count={5} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/50 pb-24">
       <Topbar />
       <div className="mx-auto max-w-3xl px-4 py-6">
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <h1 className="mb-1 text-2xl font-black text-gray-900">منتجاتي</h1>
             <p className="text-sm text-gray-500">{products.length} منتج في متجرك</p>
           </div>
-          <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 rounded-full bg-[#2e8b73] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#2e8b73]/20 transition-all hover:bg-[#1e6b57] active:scale-95">
-            <Plus size={14} /> إضافة
+          <div className="flex items-center gap-2">
+            <a href="/api/export/my-products"
+              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:border-[#2e8b73]/40 hover:text-[#2e8b73]">
+              <Download size={14} /> CSV
+            </a>
+            <button onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 rounded-full bg-[#2e8b73] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#2e8b73]/20 hover:bg-[#1e6b57] active:scale-95">
+              <Plus size={14} /> إضافة
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-5 flex gap-2">
+          <button onClick={() => setTab("products")}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
+              tab === "products" ? "bg-[#2e8b73] text-white shadow-sm"
+              : "border border-gray-200 bg-white text-gray-600 hover:border-[#2e8b73]/40"
+            }`}>
+            <Package size={14} /> المنتجات ({products.length})
+          </button>
+          <button onClick={() => setTab("inventory")}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
+              tab === "inventory" ? "bg-[#2e8b73] text-white shadow-sm"
+              : "border border-gray-200 bg-white text-gray-600 hover:border-[#2e8b73]/40"
+            }`}>
+            <Boxes size={14} /> المخزون
           </button>
         </div>
 
-        {loading ? (
-          <div className="py-16"><LoadingSpinner /></div>
-        ) : products.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f4f0]">
-              <Package className="h-7 w-7 text-[#2e8b73]" />
-            </div>
-            <p className="text-sm font-bold text-gray-800">لا توجد منتجات بعد</p>
-            <button onClick={() => setShowForm(true)}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#2e8b73] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#2e8b73]/20 transition-all hover:bg-[#1e6b57] active:scale-95">
-              <Plus size={16} /> أضف منتجك الأول
-            </button>
-          </div>
+        {tab === "products" ? (
+          <ProductsView products={products} onDelete={handleDelete} onAdd={() => setShowForm(true)} />
         ) : (
-          <div className="space-y-3">
-            {products.map((p) => {
-              const stock = Number(p.stock ?? 0);
-              const stockInfo =
-                stock === 0
-                  ? { label: "نفد", cls: "bg-red-50 text-red-700" }
-                  : stock < 10
-                  ? { label: `منخفض (${stock})`, cls: "bg-amber-50 text-amber-700" }
-                  : { label: `${stock} متوفر`, cls: "bg-[#e8f4f0] text-[#1e6b57]" };
-              const price = Number(p.final_price ?? 0);
-
-              return (
-                <div key={p.id}
-                  className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 transition-all hover:border-[#2e8b73]/30">
-                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50">
-                    {p.image ? (
-                      <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <Package className="h-6 w-6 text-gray-300" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-gray-900">{p.name}</p>
-                    <p className="mt-0.5 text-base font-black text-[#2e8b73]">
-                      {formatCurrency(price)}
-                    </p>
-                    <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${stockInfo.cls}`}>
-                      {stockInfo.label}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-shrink-0 gap-1">
-                    <button onClick={() => showToast("التعديل قريباً", "info")}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 text-gray-500 transition-colors hover:border-[#2e8b73]/30 hover:text-[#2e8b73]">
-                      <Pencil size={14} />
-                    </button>
-                    <button onClick={() => handleDelete(p.id, p.name)}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 text-gray-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <InventoryView products={products} onAdjust={adjustStock} saving={saving} />
         )}
       </div>
 
@@ -125,7 +142,149 @@ export default function WholesaleProductsPage() {
   );
 }
 
-/* ═══════════ نافذة الإضافة السريعة ═══════════ */
+function ProductsView({ products, onDelete, onAdd }: any) {
+  if (products.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f4f0]">
+          <Package className="h-7 w-7 text-[#2e8b73]" />
+        </div>
+        <p className="text-sm font-bold text-gray-800">لا توجد منتجات بعد</p>
+        <button onClick={onAdd}
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#2e8b73] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#2e8b73]/20 hover:bg-[#1e6b57] active:scale-95">
+          <Plus size={16} /> أضف منتجك الأول
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {products.map((p: Product) => {
+        const stock = Number(p.stock_quantity ?? 0);
+        const stockInfo =
+          stock === 0
+            ? { label: "نفد", cls: "bg-red-50 text-red-700" }
+            : stock < 10
+            ? { label: `منخفض (${stock})`, cls: "bg-amber-50 text-amber-700" }
+            : { label: `${stock} متوفر`, cls: "bg-[#e8f4f0] text-[#1e6b57]" };
+        const price = Number(p.price ?? 0);
+
+        return (
+          <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 hover:border-[#2e8b73]/30">
+            <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50">
+              {p.image_url ? (
+                <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" />
+              ) : (
+                <Package className="h-6 w-6 text-gray-300" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-gray-900">{p.name}</p>
+              <p className="mt-0.5 text-base font-black text-[#2e8b73]">{formatCurrency(price)}</p>
+              <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${stockInfo.cls}`}>
+                {stockInfo.label}
+              </span>
+            </div>
+
+            <div className="flex flex-shrink-0 gap-1">
+              <button className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 text-gray-500 hover:border-[#2e8b73]/30 hover:text-[#2e8b73]">
+                <Pencil size={14} />
+              </button>
+              <button onClick={() => onDelete(p.id, p.name)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function InventoryView({ products, onAdjust, saving }: any) {
+  const totalItems = products.length;
+  const lowStock = products.filter((p: Product) => Number(p.stock_quantity) < 10 && Number(p.stock_quantity) > 0).length;
+  const outOfStock = products.filter((p: Product) => Number(p.stock_quantity) === 0).length;
+
+  if (products.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
+        <Package className="mx-auto mb-4 h-10 w-10 text-gray-300" />
+        <p className="text-sm text-gray-500">لا توجد منتجات بعد</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="mb-5 grid grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-3 text-center">
+          <p className="mb-1 text-[10px] text-gray-500">إجمالي</p>
+          <p className="text-xl font-black text-gray-900">{totalItems}</p>
+        </div>
+        <div className={`rounded-2xl border bg-white p-3 text-center ${lowStock > 0 ? "border-amber-200" : "border-gray-100"}`}>
+          <p className="mb-1 text-[10px] text-gray-500">منخفضة</p>
+          <p className={`text-xl font-black ${lowStock > 0 ? "text-amber-600" : "text-gray-900"}`}>{lowStock}</p>
+        </div>
+        <div className={`rounded-2xl border bg-white p-3 text-center ${outOfStock > 0 ? "border-red-200" : "border-gray-100"}`}>
+          <p className="mb-1 text-[10px] text-gray-500">نفد</p>
+          <p className={`text-xl font-black ${outOfStock > 0 ? "text-red-600" : "text-gray-900"}`}>{outOfStock}</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {products.map((p: Product) => {
+          const stock = Number(p.stock_quantity ?? 0);
+          const stockInfo =
+            stock === 0
+              ? { label: "نفد", cls: "bg-red-50 text-red-700", icon: <TrendingDown size={12} /> }
+              : stock < 10
+              ? { label: "منخفض", cls: "bg-amber-50 text-amber-700", icon: <TrendingDown size={12} /> }
+              : { label: "متوفر", cls: "bg-[#e8f4f0] text-[#1e6b57]", icon: <TrendingUp size={12} /> };
+          const busy = saving === p.id;
+
+          return (
+            <div key={p.id} className="rounded-2xl border border-gray-100 bg-white p-4 hover:border-[#2e8b73]/30">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-gray-900">{p.name}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${stockInfo.cls}`}>
+                      {stockInfo.icon} {stockInfo.label}
+                    </span>
+                    <span className="text-xs text-gray-500">{stock} {p.unit || "قطعة"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={() => onAdjust(p.id, -10)} disabled={busy || stock < 10}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-xs font-bold text-gray-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-30">
+                  <Minus size={12} /> 10
+                </button>
+                <button onClick={() => onAdjust(p.id, -1)} disabled={busy || stock < 1}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-xs font-bold text-gray-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-30">
+                  <Minus size={12} /> 1
+                </button>
+                <button onClick={() => onAdjust(p.id, 1)} disabled={busy}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#2e8b73] py-2 text-xs font-bold text-white hover:bg-[#1e6b57] disabled:opacity-50">
+                  <Plus size={12} /> 1
+                </button>
+                <button onClick={() => onAdjust(p.id, 10)} disabled={busy}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#2e8b73] py-2 text-xs font-bold text-white hover:bg-[#1e6b57] disabled:opacity-50">
+                  <Plus size={12} /> 10
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
 
 function QuickAddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [name, setName] = useState("");
@@ -139,17 +298,12 @@ function QuickAddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
     setError("");
     if (!name.trim()) return setError("أدخل اسم المنتج");
     if (!price || Number(price) <= 0) return setError("أدخل سعراً صحيحاً");
-
     setSaving(true);
     try {
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          price: Number(price),
-          stock: Number(stock) || 0,
-        }),
+        body: JSON.stringify({ name: name.trim(), price: Number(price), stock: Number(stock) || 0 }),
       });
       const d = await res.json();
       if (!res.ok || !d.ok) throw new Error(d.message || d.error || "فشل");
@@ -157,16 +311,18 @@ function QuickAddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
       onSuccess();
     } catch (e: any) {
       setError(e?.message || "خطأ");
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4 animate-fade-in">
-      <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl animate-slide-up">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-black text-gray-900">إضافة منتج جديد</h2>
           <button onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">
             <X size={18} />
           </button>
         </div>
@@ -175,8 +331,8 @@ function QuickAddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           <div>
             <label className="mb-1.5 block text-xs font-bold text-gray-700">اسم المنتج</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="مثال: شاي العروسة 500g"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all focus:border-[#2e8b73] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2e8b73]/20" />
+              placeholder="مثال: شاي 500g"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm outline-none focus:border-[#2e8b73] focus:bg-white focus:ring-2 focus:ring-[#2e8b73]/20" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -184,13 +340,13 @@ function QuickAddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
               <label className="mb-1.5 block text-xs font-bold text-gray-700">السعر (د.ع)</label>
               <input type="number" value={price} onChange={(e) => setPrice(e.target.value)}
                 placeholder="5000" dir="ltr"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all focus:border-[#2e8b73] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2e8b73]/20" />
+                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm outline-none focus:border-[#2e8b73] focus:bg-white focus:ring-2 focus:ring-[#2e8b73]/20" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700">المخزون</label>
               <input type="number" value={stock} onChange={(e) => setStock(e.target.value)}
                 placeholder="50" dir="ltr"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all focus:border-[#2e8b73] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2e8b73]/20" />
+                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm outline-none focus:border-[#2e8b73] focus:bg-white focus:ring-2 focus:ring-[#2e8b73]/20" />
             </div>
           </div>
 
@@ -202,7 +358,7 @@ function QuickAddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           )}
 
           <button onClick={handleSave} disabled={saving}
-            className="w-full rounded-xl bg-[#2e8b73] py-3.5 text-sm font-black text-white shadow-lg shadow-[#2e8b73]/20 transition-all hover:bg-[#1e6b57] active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none">
+            className="w-full rounded-xl bg-[#2e8b73] py-3.5 text-sm font-black text-white shadow-lg shadow-[#2e8b73]/20 hover:bg-[#1e6b57] active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none">
             {saving ? "جارٍ الحفظ..." : "حفظ المنتج"}
           </button>
         </div>

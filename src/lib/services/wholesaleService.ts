@@ -34,10 +34,14 @@ export const wholesaleService = {
 
   async updateProduct(productId: string, updates: any): Promise<Product> {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
     const { data, error } = await supabase
       .from("products")
       .update(updates)
       .eq("id", productId)
+      .eq("supplier_id", user.id)
       .select()
       .single();
 
@@ -47,22 +51,26 @@ export const wholesaleService = {
 
   async deleteProduct(productId: string): Promise<void> {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("يجب تسجيل الدخول");
+
     const { error } = await supabase
       .from("products")
       .delete()
-      .eq("id", productId);
+      .eq("id", productId)
+      .eq("supplier_id", user.id);
     if (error) throw new Error(error.message);
   },
 
   async getMyOrders(): Promise<any[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    if (!user) throw new Error("يجب تسجيل الدخول");
 
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .eq("supplier_profile_id", user.id)
+      .eq("supplier_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);

@@ -18,26 +18,40 @@ export default function WholesaleOverviewPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [ordersRes, prodsRes] = await Promise.all([
+      const [ordersRes] = await Promise.all([
         fetch("/api/orders").then((r) => r.json()),
-        fetch("/api/my-products").then((r) => r.json()).catch(() => ({ products: [] })),
       ]);
 
-      const orders = Array.isArray(ordersRes) ? ordersRes : (ordersRes.orders || []);
-      const newCount = orders.filter((o: any) => o.status === "reviewing").length;
-      const activeCount = orders.filter((o: any) => o.status === "delivering").length;
-      const sales = orders
-        .filter((o: any) => o.status === "completed")
-        .reduce((s: number, o: any) => s + (Number(o.total) || 0), 0);
+      const orders = Array.isArray(ordersRes)
+        ? ordersRes
+        : (ordersRes.orders || []);
 
-      setStats({ total: orders.length, new: newCount, active: activeCount, sales });
+      // Map current DB statuses to categories
+      const newCount = orders.filter((o: any) =>
+        o.status === "pending"
+      ).length;
+
+      const activeCount = orders.filter((o: any) =>
+        ["accepted", "shipped", "picked_up"].includes(o.status)
+      ).length;
+
+      const sales = orders
+        .filter((o: any) => o.status === "delivered")
+        .reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0);
+
+      setStats({
+        total: orders.length,
+        new: newCount,
+        active: activeCount,
+        sales,
+      });
       setRecent(orders.slice(0, 5));
     } catch {
       showToast("فشل تحميل البيانات", "error");
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -75,7 +89,7 @@ export default function WholesaleOverviewPage() {
 
         <div className="mb-6 grid grid-cols-2 gap-3">
           <KpiCard icon={<Clock className="h-5 w-5" />} label="طلبات جديدة" value={String(stats.new)} color="amber" highlight={stats.new > 0} />
-          <KpiCard icon={<Package className="h-5 w-5" />} label="قيد التوصيل" value={String(stats.active)} color="purple" />
+          <KpiCard icon={<Package className="h-5 w-5" />} label="قيد التنفيذ" value={String(stats.active)} color="purple" />
           <KpiCard icon={<CheckCircle2 className="h-5 w-5" />} label="إجمالي الطلبات" value={String(stats.total)} color="blue" />
           <KpiCard icon={<Wallet className="h-5 w-5" />} label="مبيعات مكتملة" value={formatCurrency(stats.sales)} color="emerald" />
         </div>
@@ -102,6 +116,7 @@ export default function WholesaleOverviewPage() {
             <ul className="divide-y divide-gray-50">
               {recent.map((o: any) => {
                 const st = getStatusInfo(o.status);
+                const orderNum = o.order_number || `#${String(o.id).slice(0, 8)}`;
                 return (
                   <li key={o.id}>
                     <Link href={`/orders/${o.id}`}
@@ -111,12 +126,12 @@ export default function WholesaleOverviewPage() {
                           <Store className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-900">#{String(o.id).slice(0, 8)}</p>
+                          <p className="text-sm font-bold text-gray-900">{orderNum}</p>
                           <p className="text-xs text-gray-500">{o.retailer_name || "سوبرماركت"}</p>
                         </div>
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-black text-[#2e8b73]">{formatCurrency(o.total)}</p>
+                        <p className="text-sm font-black text-[#2e8b73]">{formatCurrency(o.total_amount || 0)}</p>
                         <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${st.className}`}>{st.label}</span>
                       </div>
                     </Link>
@@ -149,10 +164,12 @@ function KpiCard({ icon, label, value, color, highlight }: any) {
 
 function getStatusInfo(status: string) {
   const map: Record<string, any> = {
-    reviewing: { label: "قيد المراجعة", className: "bg-amber-50 text-amber-700" },
-    delivering: { label: "قيد التوصيل", className: "bg-purple-50 text-purple-700" },
-    completed: { label: "مكتمل", className: "bg-[#e8f4f0] text-[#1e6b57]" },
-    cancelled: { label: "ملغي", className: "bg-red-50 text-red-700" },
+    pending:   { label: "جديد",           className: "bg-amber-50 text-amber-700" },
+    accepted:  { label: "مقبول",          className: "bg-blue-50 text-blue-700" },
+    shipped:   { label: "قيد التوصيل",    className: "bg-purple-50 text-purple-700" },
+    picked_up: { label: "مع المندوب",     className: "bg-indigo-50 text-indigo-700" },
+    delivered: { label: "تم التسليم",     className: "bg-[#e8f4f0] text-[#1e6b57]" },
+    cancelled: { label: "ملغي",           className: "bg-red-50 text-red-700" },
   };
   return map[status] || { label: status, className: "bg-gray-50 text-gray-600" };
 }

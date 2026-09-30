@@ -9,7 +9,7 @@ import { formatCurrency } from "@/lib/utils/currency";
 import {
   ArrowRight, Package, Store, Truck, User,
   MapPin, Calendar, Phone, MessageCircle,
-  CheckCircle2, Clock, XCircle, FileText,
+  CheckCircle2, Clock, XCircle, FileText, Copy, Share2,
 } from "lucide-react";
 
 interface OrderItem {
@@ -18,11 +18,16 @@ interface OrderItem {
 }
 
 interface Order {
-  id: string; status: string; total: number; created_at: string;
+  id: string; status: string; total_amount: number; created_at: string;
   retailer_name?: string; retailer_phone?: string;
   supplier_name?: string; supplier_phone?: string;
   delivery_name?: string; delivery_phone?: string;
   delivery_address?: string;
+  accepted_at?: string | null;
+  shipped_at?: string | null;
+  picked_up_at?: string | null;
+  delivered_at?: string | null;
+  cancelled_at?: string | null;
 }
 
 export default function OrderDetailsPage({
@@ -34,7 +39,28 @@ export default function OrderDetailsPage({
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
+
+  const orderNumber = order ? String(order.id).slice(0, 8) : "";
+  const fullNumber = order ? String(order.id) : "";
+
+  const copyNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(fullNumber);
+      setCopied(true);
+      showToast("✅ تم نسخ رقم الطلب", "success");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      showToast("فشل النسخ", "error");
+    }
+  };
+
+  const shareWhatsapp = () => {
+    const text = `مرحباً، تابع طلبي في جُمْلَتِي\n\n📦 رقم الطلب: ${orderNumber}\n📅 التاريخ: ${new Date(order.created_at).toLocaleDateString("ar-IQ")}\n💰 الإجمالي: ${order.total_amount} د.ع\n📌 الحالة: ${getStatusInfo(order.status).label}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -93,8 +119,13 @@ export default function OrderDetailsPage({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h1 className="text-base font-black text-gray-900">
-                طلب #{String(order.id).slice(0, 8)}
+                طلب #{orderNumber}
               </h1>
+              <button onClick={copyNumber}
+                className="flex h-6 w-6 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-[#2e8b73]"
+                aria-label="نسخ الرقم">
+                <Copy size={12} />
+              </button>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${status.className}`}>
                 {status.label}
               </span>
@@ -107,10 +138,18 @@ export default function OrderDetailsPage({
             </p>
           </div>
 
-          <a href={`/invoice.html?id=${order.id}`} target="_blank" rel="noreferrer"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-500 transition-colors hover:border-[#2e8b73]/30 hover:text-[#2e8b73]">
-            <FileText size={18} />
-          </a>
+          <div className="flex flex-shrink-0 gap-1">
+            <button onClick={shareWhatsapp}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100"
+              aria-label="مشاركة عبر واتساب">
+              <Share2 size={16} />
+            </button>
+            <a href={`/invoice/${order.id}`} target="_blank" rel="noreferrer"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-500 transition-colors hover:border-[#2e8b73]/30 hover:text-[#2e8b73]"
+              aria-label="الفاتورة">
+              <FileText size={18} />
+            </a>
+          </div>
         </div>
 
         <div className="mb-5 rounded-2xl border border-gray-100 bg-white p-5">
@@ -175,7 +214,7 @@ export default function OrderDetailsPage({
           <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 p-4">
             <span className="text-sm font-bold text-gray-700">الإجمالي</span>
             <span className="text-lg font-black text-[#2e8b73]">
-              {formatCurrency(order.total)}
+              {formatCurrency(order.total_amount)}
             </span>
           </div>
         </div>
@@ -186,13 +225,15 @@ export default function OrderDetailsPage({
 
 function Timeline({ status, order }: { status: string; order: Order }) {
   const steps = [
-    { key: "reviewing",  label: "تم إنشاء الطلب",    icon: Package,      time: order.created_at },
-    { key: "delivering", label: "قيد التوصيل",        icon: Truck,        time: null },
-    { key: "completed",  label: "تم التسليم",         icon: CheckCircle2, time: null },
+    { key: "pending",   label: "تم إنشاء الطلب", icon: Package,      time: order.created_at },
+    { key: "accepted",  label: "قبله المورد",     icon: CheckCircle2, time: order.accepted_at },
+    { key: "shipped",   label: "قيد التوصيل",     icon: Truck,        time: order.shipped_at },
+    { key: "picked_up", label: "استلمه المندوب", icon: Package,      time: order.picked_up_at },
+    { key: "delivered", label: "تم التسليم",      icon: CheckCircle2, time: order.delivered_at },
   ];
 
   const orderIdx: Record<string, number> = {
-    reviewing: 0, delivering: 1, completed: 2,
+    pending: 0, accepted: 1, shipped: 2, picked_up: 3, delivered: 4,
   };
   const currentIdx = orderIdx[status] ?? -1;
 
@@ -204,7 +245,7 @@ function Timeline({ status, order }: { status: string; order: Order }) {
         </div>
         <div>
           <p className="text-sm font-bold text-red-700">تم إلغاء الطلب</p>
-          <p className="text-xs text-gray-500">{formatDate(order.created_at)}</p>
+          <p className="text-xs text-gray-500">{formatDate(order.cancelled_at || order.created_at)}</p>
         </div>
       </div>
     );
@@ -290,10 +331,12 @@ function PartyRow({ icon, label, name, phone, color }: any) {
 
 function getStatusInfo(status: string) {
   const map: Record<string, any> = {
-    reviewing: { label: "قيد المراجعة", className: "bg-amber-50 text-amber-700" },
-    delivering: { label: "قيد التوصيل", className: "bg-purple-50 text-purple-700" },
-    completed: { label: "تم التسليم", className: "bg-[#e8f4f0] text-[#1e6b57]" },
-    cancelled: { label: "ملغي", className: "bg-red-50 text-red-700" },
+    pending:   { label: "قيد الانتظار",   className: "bg-amber-50 text-amber-700" },
+    accepted:  { label: "مقبول",           className: "bg-blue-50 text-blue-700" },
+    shipped:   { label: "قيد التوصيل",     className: "bg-purple-50 text-purple-700" },
+    picked_up: { label: "استلمه المندوب", className: "bg-indigo-50 text-indigo-700" },
+    delivered: { label: "تم التسليم",     className: "bg-[#e8f4f0] text-[#1e6b57]" },
+    cancelled: { label: "ملغي",            className: "bg-red-50 text-red-700" },
   };
   return map[status] || { label: status, className: "bg-gray-50 text-gray-600" };
 }

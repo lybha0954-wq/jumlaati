@@ -8,10 +8,17 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 4.3s
+ ✓ Ready in 4.8s
  ○ Compiling /middleware ...
- ✓ Compiled /middleware in 1666ms (115 modules)
- ○ Compiling /api/dev/introspect ...
- ✓ Compiled /api/dev/introspect in 4.7s (361 modules)
- GET /api/dev/introspect 200 in 8881ms
- ✓ Compiled in 284ms (309 modules)
+ ✓ Compiled /middleware in 759ms (173 modules)
+ ○ Compiling /invoice/[id] ...
+ ✓ Compiled /invoice/[id] in 9.7s (880 modules)
+ GET /invoice/1 200 in 12757ms
+ GET /invoice/13 200 in 423ms
+ ○ Compiling /orders/[id] ...
+ ✓ Compiled /orders/[id] in 3.4s (899 modules)
+ GET /orders/1 200 in 5829ms
+ ○ Compiling /api/admin/users/[id] ...
+ ✓ Compiled /api/admin/users/[id] in 1318ms (969 modules)
+ GET /api/admin/users/abc 401 in 3315ms
+ ✓ Compiled in 661ms (383 modules)

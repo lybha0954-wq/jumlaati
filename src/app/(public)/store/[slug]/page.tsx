@@ -15,7 +15,7 @@ export default async function StorePage({
 
   // slug هنا هو owner_id (معرّف تاجر الجملة)
   const { data: wholesaler } = await supabase
-    .from("user_profiles")
+    .from("profiles")
     .select("id, full_name, email, role")
     .eq("id", slug)
     .eq("role", "supplier")

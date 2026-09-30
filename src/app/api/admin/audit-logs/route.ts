@@ -5,20 +5,32 @@ export async function GET() {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return NextResponse.json([], { status: 401 });
 
-    // التحقق من صلاحيات الأدمن
-    const { data: adminCheck } = await supabase.from('user_profiles').select('role').eq('id', user.id).single();
-    if (adminCheck?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
 
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+    }
+
+    // Use notifications as activity log
     const { data, error } = await supabase
-      .from('audit_logs')
-      .select('*, user_profiles(full_name)')
-      .order('created_at', { ascending: false });
+      .from('notifications')
+      .select('id, type, title, body, user_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[api/admin/audit-logs] error:', error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data || []);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

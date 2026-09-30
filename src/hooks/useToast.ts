@@ -1,4 +1,5 @@
 "use client";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 type ToastType = "success" | "error" | "info";
@@ -6,25 +7,25 @@ type ToastType = "success" | "error" | "info";
 /**
  * useToast — واجهة موحّدة للرسائل المنبثقة
  *
- * API متوافق مع الإصدار السابق (Zustand store محذوف):
+ * API:
  *   const { showToast, closeToast } = useToast();
- *   showToast("تم الحفظ");                 // success (افتراضي)
+ *   showToast("تم الحفظ");                 // success
  *   showToast("خطأ", "error");
  *   showToast("معلومة", "info");
- *   closeToast();                          // إخفاء كل الرسائل
+ *   closeToast();
  *
- * داخلياً يستخدم sonner المُثبّت في layout.tsx
+ * ✅ الدوال ثابتة (useCallback) — آمنة داخل useEffect
  */
 export function useToast() {
-  const showToast = (message: string, type: ToastType = "success") => {
+  const showToast = useCallback((message: string, type: ToastType = "success") => {
     if (type === "error") toast.error(message);
     else if (type === "info") toast.info(message);
     else toast.success(message);
-  };
+  }, []);
 
-  const closeToast = () => {
+  const closeToast = useCallback(() => {
     toast.dismiss();
-  };
+  }, []);
 
-  return { showToast, closeToast };
+  return useMemo(() => ({ showToast, closeToast }), [showToast, closeToast]);
 }

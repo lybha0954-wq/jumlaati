@@ -14,7 +14,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('id, full_name, email, phone, role, created_at')
       .eq('id', user.id)
       .single();
@@ -36,7 +36,7 @@ export async function PATCH(req: Request) {
     const parsed = profileSchema.parse(body);
 
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .update(parsed)
       .eq('id', user.id)
       .select('id, full_name, email, phone, role')
