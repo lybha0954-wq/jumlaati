@@ -6,14 +6,11 @@
 - Local:         http://localhost:3001
 - Network:       http://192.168.1.106:3001
 - Environments: .env.local
-✓ Ready in 1085ms
-✓ Running next.config.mjs took 57ms
+✓ Ready in 1341ms
+✓ Running next.config.mjs took 58ms
   Skipping creating a lockfile at /data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/.next/dev/lock because we're using WASM bindings
 
-○ Compiling /api/orders ...
- GET /api/orders 401 in 4.4s (next.js: 3.6s, proxy.ts: 641ms, application-code: 238ms)
-○ Compiling /api/reviews ...
- GET /api/reviews?productId=1 200 in 5.5s (next.js: 3.9s, proxy.ts: 284ms, application-code: 1301ms)
- POST /api/coupons/validate 400 in 1070ms (next.js: 443ms, proxy.ts: 22ms, application-code: 605ms)
- GET /api/feature-flags 200 in 817ms (next.js: 578ms, proxy.ts: 15ms, application-code: 224ms)
- GET /api/payment-methods 200 in 681ms (next.js: 432ms, proxy.ts: 18ms, application-code: 231ms)
+ GET /api/subscriptions/plans 200 in 5.1s (next.js: 2.9s, proxy.ts: 646ms, application-code: 1536ms)
+ GET /api/subscriptions/my 200 in 3.5s (next.js: 3.1s, proxy.ts: 292ms, application-code: 95ms)
+○ Compiling /supplier/subscription ...
+ GET /supplier/subscription 200 in 10.0s (next.js: 9.2s, proxy.ts: 20ms, application-code: 822ms)

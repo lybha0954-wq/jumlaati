@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useUserStore } from "@/lib/stores/userStore";
 import {
   Home, Package, ShoppingCart, ShoppingBag, Wallet, Users,
-  FileText, Settings, Truck, Store, BarChart3, Flag, Ticket, RotateCcw, Headphones, CreditCard,
+  FileText, Settings, Truck, Store, BarChart3, Flag, Ticket, RotateCcw, Headphones, CreditCard, Crown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,8 +36,9 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { href: "/wholesale/overview", label: "الرئيسية",        Icon: Home },
     { href: "/wholesale/products", label: "منتجاتي",         Icon: Package },
     { href: "/wholesale/orders",   label: "الطلبات الواردة", Icon: ShoppingCart },
-    { href: "/wholesale/finance",  label: "المالية",          Icon: Wallet },
-    { href: "/wholesale/settings", label: "الإعدادات",       Icon: Settings },
+    { href: "/wholesale/finance",       label: "المالية",          Icon: Wallet },
+    { href: "/supplier/subscription",   label: "الباقات",          Icon: Crown },
+    { href: "/wholesale/settings",      label: "الإعدادات",       Icon: Settings },
   ],
   retailer: [
     { href: "/retailer/overview", label: "الرئيسية", Icon: Home },
