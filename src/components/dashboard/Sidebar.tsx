@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useUserStore } from "@/lib/stores/userStore";
 import {
   Home, Package, ShoppingCart, ShoppingBag, Wallet, Users,
-  FileText, Settings, Truck, Store, BarChart3, Flag, Ticket, RotateCcw, Headphones,
+  FileText, Settings, Truck, Store, BarChart3, Flag, Ticket, RotateCcw, Headphones, CreditCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,9 +27,10 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { href: "/admin/audit-logs", label: "سجل النشاط",   Icon: FileText },
     { href: "/admin/flags",      label: "الميزات",       Icon: Flag },
     { href: "/admin/coupons",    label: "الكوبونات",     Icon: Ticket },
-    { href: "/admin/refunds",    label: "المرتجعات",     Icon: RotateCcw },
-    { href: "/admin/requests",   label: "الدعم الفني",   Icon: Headphones },
-    { href: "/admin/settings",   label: "الإعدادات",    Icon: Settings },
+    { href: "/admin/refunds",         label: "المرتجعات",     Icon: RotateCcw },
+    { href: "/admin/requests",        label: "الدعم الفني",   Icon: Headphones },
+    { href: "/admin/payment-methods", label: "طرق الدفع",     Icon: CreditCard },
+    { href: "/admin/settings",        label: "الإعدادات",     Icon: Settings },
   ],
   supplier: [
     { href: "/wholesale/overview", label: "الرئيسية",        Icon: Home },
