@@ -1,16 +1,26 @@
 
 > jumlaati@0.1.0 dev
-> next dev -p 3001
+> next dev --webpack -p 3001
 
-   ▲ Next.js 15.5.25
-   - Local:        http://localhost:3001
-   - Network:      http://192.168.1.106:3001
-   - Environments: .env.local
+▲ Next.js 16.3.8 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.106:3001
+- Environments: .env.local
+✓ Ready in 1444ms
+✓ Running next.config.mjs took 39ms
+  Skipping creating a lockfile at /data/data/com.termux/files/home/jumlati-all-sources/03-github/legacy-v1/.next/dev/lock because we're using WASM bindings
 
- ✓ Starting...
- ✓ Ready in 5.7s
- ○ Compiling /middleware ...
- ✓ Compiled /middleware in 748ms (173 modules)
- ○ Compiling /api/payment-methods ...
- ✓ Compiled /api/payment-methods in 2.3s (361 modules)
- GET /api/payment-methods 200 in 4306ms
+○ Compiling proxy ...
+○ Compiling / ...
+ GET / 200 in 10.2s (next.js: 7.7s, proxy.ts: 480ms, application-code: 1990ms)
+○ Compiling /login ...
+ GET /login 200 in 6.4s (next.js: 5.7s, proxy.ts: 298ms, application-code: 404ms)
+ GET / 200 in 986ms (next.js: 12ms, proxy.ts: 20ms, application-code: 953ms)
+ GET /login 200 in 136ms (next.js: 4ms, proxy.ts: 14ms, application-code: 117ms)
+ GET /register 200 in 2.0s (next.js: 1568ms, proxy.ts: 11ms, application-code: 457ms)
+ GET /products 200 in 1555ms (next.js: 861ms, proxy.ts: 18ms, application-code: 676ms)
+ GET /offers 200 in 1526ms (next.js: 1104ms, proxy.ts: 14ms, application-code: 408ms)
+ GET /api/feature-flags 200 in 2.9s (next.js: 1947ms, proxy.ts: 17ms, application-code: 896ms)
+ GET /api/payment-methods 200 in 1510ms (next.js: 1041ms, proxy.ts: 15ms, application-code: 453ms)
+ GET /api/products 200 in 1378ms (next.js: 1021ms, proxy.ts: 13ms, application-code: 345ms)
+ GET /api/offers 200 in 1554ms (next.js: 1015ms, proxy.ts: 15ms, application-code: 524ms)
