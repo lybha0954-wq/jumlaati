@@ -305,3 +305,9 @@ https://react.dev/link/hydration-mismatch
  GET /manifest.webmanifest 200 in 46ms (next.js: 6ms, proxy.ts: 34ms, application-code: 7ms)
  GET /api/orders 200 in 891ms (next.js: 9ms, proxy.ts: 285ms, application-code: 597ms)
  GET /api/orders 200 in 702ms (next.js: 10ms, proxy.ts: 185ms, application-code: 507ms)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin/orders 200 in 1758ms (next.js: 1002ms, proxy.ts: 676ms, application-code: 80ms)
+ GET /admin/orders 200 in 1555ms (next.js: 359ms, proxy.ts: 449ms, application-code: 748ms)
+ GET /manifest.webmanifest 200 in 2.3s (next.js: 2.3s, proxy.ts: 10ms, application-code: 62ms)
+ GET /api/orders 200 in 3.3s (next.js: 1286ms, proxy.ts: 1156ms, application-code: 853ms)
+ GET /api/orders 200 in 639ms (next.js: 5ms, proxy.ts: 122ms, application-code: 512ms)
