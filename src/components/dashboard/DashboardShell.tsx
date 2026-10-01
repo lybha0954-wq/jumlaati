@@ -16,8 +16,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {hasSidebar && <Sidebar />}
       <div className={hasSidebar ? "md:mr-64 pb-16 md:pb-0" : "pb-16"}>
         {children}
-        <Footer />
       </div>
+      <Footer />
       <BottomNavBar />
     </div>
   );

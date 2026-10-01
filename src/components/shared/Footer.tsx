@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function Footer() {
-  const year = new Date().getFullYear();
+  const [year, setYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
   return (
     <footer className="border-t border-gray-100 bg-white">
       <div className="mx-auto max-w-4xl px-4 py-6">
@@ -22,8 +30,8 @@ export function Footer() {
             تواصل معنا
           </Link>
         </div>
-        <p className="text-center text-[11px] text-gray-400">
-          © {year} جُمْلَتِي — جميع الحقوق محفوظة
+        <p className="text-center text-[11px] text-gray-400" suppressHydrationWarning>
+          © {year || ""} جُمْلَتِي — جميع الحقوق محفوظة
         </p>
         <p className="mt-1 text-center text-[10px] text-gray-300">
           بُني بـ ❤️ في العراق
