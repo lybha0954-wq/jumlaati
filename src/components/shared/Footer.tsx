@@ -4,34 +4,36 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export function Footer() {
-  const [year, setYear] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setYear(new Date().getFullYear());
+    setMounted(true);
   }, []);
+
+  const year = mounted ? new Date().getFullYear() : 2026;
 
   return (
     <footer className="border-t border-gray-100 bg-white">
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
-          <Link href="/privacy" className="font-bold text-gray-600 hover:text-[#2e8b73]">
+          <Link href="/privacy" prefetch={false} className="font-bold text-gray-600 hover:text-[#2e8b73]">
             سياسة الخصوصية
           </Link>
           <span className="text-gray-300">|</span>
-          <Link href="/terms" className="font-bold text-gray-600 hover:text-[#2e8b73]">
+          <Link href="/terms" prefetch={false} className="font-bold text-gray-600 hover:text-[#2e8b73]">
             الشروط والأحكام
           </Link>
           <span className="text-gray-300">|</span>
-          <Link href="/refund-policy" className="font-bold text-gray-600 hover:text-[#2e8b73]">
+          <Link href="/refund-policy" prefetch={false} className="font-bold text-gray-600 hover:text-[#2e8b73]">
             سياسة الاسترداد
           </Link>
           <span className="text-gray-300">|</span>
-          <Link href="/contact" className="font-bold text-gray-600 hover:text-[#2e8b73]">
+          <Link href="/contact" prefetch={false} className="font-bold text-gray-600 hover:text-[#2e8b73]">
             تواصل معنا
           </Link>
         </div>
-        <p className="text-center text-[11px] text-gray-400" suppressHydrationWarning>
-          © {year || ""} جُمْلَتِي — جميع الحقوق محفوظة
+        <p className="text-center text-[11px] text-gray-400">
+          © {year} جُمْلَتِي — جميع الحقوق محفوظة
         </p>
         <p className="mt-1 text-center text-[10px] text-gray-300">
           بُني بـ ❤️ في العراق

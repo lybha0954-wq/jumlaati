@@ -123,7 +123,7 @@ export function Topbar() {
             </button>
           </div>
         ) : (
-          <Link href="/login"
+          <Link href="/login" prefetch={false}
             className="flex items-center gap-1.5 rounded-full bg-[#2e8b73] px-3 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#1e6b57] active:scale-95 sm:px-4">
             <LogIn size={16} />
             <span className="hidden sm:inline">دخول</span>
