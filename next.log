@@ -311,3 +311,377 @@ https://react.dev/link/hydration-mismatch
  GET /manifest.webmanifest 200 in 2.3s (next.js: 2.3s, proxy.ts: 10ms, application-code: 62ms)
  GET /api/orders 200 in 3.3s (next.js: 1286ms, proxy.ts: 1156ms, application-code: 853ms)
  GET /api/orders 200 in 639ms (next.js: 5ms, proxy.ts: 122ms, application-code: 512ms)
+ GET /admin/orders 200 in 1602ms (next.js: 365ms, proxy.ts: 553ms, application-code: 684ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'PPR')
+    at Topbar (webpack-internal:///(app-pages-browser)/./src/components/dashboard/Topbar.tsx:125:96)
+    at AdminOrdersPage (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/orders/page.tsx:145:92)
+ GET /manifest.webmanifest 200 in 3.0s (next.js: 2.9s, proxy.ts: 10ms, application-code: 83ms)
+ GET /admin/orders 200 in 3.6s (next.js: 2.8s, proxy.ts: 287ms, application-code: 532ms)
+ GET /manifest.webmanifest 200 in 20ms (next.js: 5ms, proxy.ts: 7ms, application-code: 7ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'PPR')
+    at Topbar (webpack-internal:///(app-pages-browser)/./src/components/dashboard/Topbar.tsx:125:96)
+    at AdminOrdersPage (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/orders/page.tsx:145:92)
+ GET /admin/orders 200 in 511ms (next.js: 8ms, proxy.ts: 367ms, application-code: 137ms)
+ GET /manifest.webmanifest 200 in 21ms (next.js: 4ms, proxy.ts: 9ms, application-code: 8ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'PPR')
+    at Topbar (webpack-internal:///(app-pages-browser)/./src/components/dashboard/Topbar.tsx:125:96)
+    at AdminOrdersPage (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/orders/page.tsx:145:92)
+ GET /admin/orders 200 in 426ms (next.js: 10ms, proxy.ts: 249ms, application-code: 168ms)
+ GET /manifest.webmanifest 200 in 26ms (next.js: 7ms, proxy.ts: 12ms, application-code: 8ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'PPR')
+    at Topbar (webpack-internal:///(app-pages-browser)/./src/components/dashboard/Topbar.tsx:125:96)
+    at AdminOrdersPage (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/orders/page.tsx:145:92)
+ GET /admin/orders 200 in 346ms (next.js: 5ms, proxy.ts: 136ms, application-code: 206ms)
+ GET /manifest.webmanifest 200 in 23ms (next.js: 7ms, proxy.ts: 9ms, application-code: 7ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>
+      <InnerScrollHandlerNew focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+          <LoadingBoundary name="/" loading={null}>
+            <HTTPAccessFallbackBoundary notFound={{...}} forbidden={undefined} unauthorized={undefined}>
+              <HTTPAccessFallbackErrorBoundary pathname="/admin/orders" notFound={{...}} forbidden={undefined} ...>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/orders" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>
+                      <SegmentViewNode type="layout" pagePath="(dashboard...">
+                        <SegmentTrieNode>
+                        <DashboardLayout>
+                          <DashboardShell>
+                            <div className="min-h-scre...">
+-                             <footer className="border-t border-gray-100 bg-white">
+                    ...
+        ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at DashboardShell (webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardShell.tsx:29:87)
+    at DashboardLayout (about://React/Server/webpack-internal:///(rsc)/./src/app/(dashboard)/layout.tsx?6:11:87)
+ GET /manifest.webmanifest 200 in 162ms (next.js: 18ms, proxy.ts: 135ms, application-code: 9ms)
+ GET /api/orders 200 in 2.5s (next.js: 1331ms, proxy.ts: 325ms, application-code: 868ms)
+ GET /api/orders 200 in 677ms (next.js: 4ms, proxy.ts: 123ms, application-code: 551ms)
+ GET /admin/home 200 in 1615ms (next.js: 144ms, proxy.ts: 641ms, application-code: 829ms)
+ GET /manifest.webmanifest 200 in 60ms (next.js: 21ms, proxy.ts: 11ms, application-code: 27ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'PPR')
+    at Topbar (webpack-internal:///(app-pages-browser)/./src/components/dashboard/Topbar.tsx:126:96)
+    at AdminHomeContent (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/home/Content.tsx:70:92)
+    at Page (about://React/Server/webpack-internal:///(rsc)/./src/app/(dashboard)/admin/home/page.tsx?7:13:87)
+ GET /admin/home 200 in 418ms (next.js: 8ms, proxy.ts: 227ms, application-code: 183ms)
+ GET /manifest.webmanifest 200 in 26ms (next.js: 5ms, proxy.ts: 10ms, application-code: 11ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'PPR')
+    at Topbar (webpack-internal:///(app-pages-browser)/./src/components/dashboard/Topbar.tsx:126:96)
+    at AdminHomeContent (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/home/Content.tsx:70:92)
+    at Page (about://React/Server/webpack-internal:///(rsc)/./src/app/(dashboard)/admin/home/page.tsx?7:13:87)
+ GET /admin/home 200 in 333ms (next.js: 48ms, proxy.ts: 134ms, application-code: 151ms)
+ GET /admin/home 200 in 330ms (next.js: 8ms, proxy.ts: 137ms, application-code: 185ms)
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
+}
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
+}
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
+}
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
+}
+ GET /login?redirect=%2Fwholesale%2Finventory 200 in 419ms (next.js: 19ms, proxy.ts: 207ms, application-code: 193ms)
+ GET /admin/home 200 in 554ms (next.js: 30ms, proxy.ts: 364ms, application-code: 160ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /api/orders 200 in 2.0s (next.js: 20ms, proxy.ts: 237ms, application-code: 1752ms)
+○ Compiling /api/admin/users ...
+ GET /api/admin/users 200 in 4.7s (next.js: 3.6s, proxy.ts: 209ms, application-code: 898ms)
+ GET /api/orders 200 in 1326ms (next.js: 18ms, proxy.ts: 751ms, application-code: 557ms)
+ GET /api/admin/users 200 in 623ms (next.js: 4ms, proxy.ts: 126ms, application-code: 492ms)
+ GET /admin/home 200 in 609ms (next.js: 149ms, proxy.ts: 364ms, application-code: 96ms)
+ GET /admin/orders 200 in 210ms (next.js: 21ms, proxy.ts: 128ms, application-code: 61ms)
+ GET /api/orders 200 in 634ms (next.js: 7ms, proxy.ts: 125ms, application-code: 501ms)
+ GET /api/orders 200 in 703ms (next.js: 4ms, proxy.ts: 122ms, application-code: 577ms)
+ GET /admin/users 200 in 3.3s (next.js: 2.8s, proxy.ts: 379ms, application-code: 92ms)
+ GET /api/admin/users 200 in 1054ms (next.js: 12ms, proxy.ts: 208ms, application-code: 834ms)
+ GET /api/admin/users 200 in 738ms (next.js: 4ms, proxy.ts: 170ms, application-code: 565ms)
+ GET /admin/analytics 200 in 2.9s (next.js: 2.5s, proxy.ts: 294ms, application-code: 108ms)
+ GET /api/orders 200 in 918ms (next.js: 22ms, proxy.ts: 144ms, application-code: 752ms)
+ GET /api/orders 200 in 632ms (next.js: 4ms, proxy.ts: 118ms, application-code: 510ms)
+ GET /admin/finance 200 in 2.5s (next.js: 1890ms, proxy.ts: 549ms, application-code: 95ms)
+ GET /api/orders 200 in 1640ms (next.js: 20ms, proxy.ts: 139ms, application-code: 1482ms)
+○ Compiling /api/payouts ...
+ GET /api/admin/payments 200 in 5.0s (next.js: 4.0s, proxy.ts: 369ms, application-code: 588ms)
+ GET /api/payouts 200 in 5.0s (next.js: 4.0s, proxy.ts: 398ms, application-code: 604ms)
+ GET /api/commissions 200 in 5.4s (next.js: 4.0s, proxy.ts: 396ms, application-code: 1068ms)
+ GET /admin/requests 200 in 3.3s (next.js: 2.8s, proxy.ts: 413ms, application-code: 103ms)
+ GET /api/orders 200 in 3.9s (next.js: 2.6s, proxy.ts: 414ms, application-code: 830ms)
+ GET /api/admin/payments 200 in 1075ms (next.js: 58ms, proxy.ts: 609ms, application-code: 409ms)
+ GET /api/payouts 200 in 1111ms (next.js: 21ms, proxy.ts: 605ms, application-code: 484ms)
+ GET /api/commissions 200 in 1236ms (next.js: 43ms, proxy.ts: 607ms, application-code: 586ms)
+ GET /api/requests 200 in 2.1s (next.js: 1284ms, proxy.ts: 126ms, application-code: 698ms)
+ GET /api/requests 200 in 570ms (next.js: 4ms, proxy.ts: 127ms, application-code: 440ms)
+ GET /admin/payment-methods 200 in 2.7s (next.js: 2.3s, proxy.ts: 281ms, application-code: 129ms)
+ GET /api/payment-methods 200 in 1689ms (next.js: 1230ms, proxy.ts: 166ms, application-code: 294ms)
+ GET /api/payment-methods 200 in 249ms (next.js: 4ms, proxy.ts: 121ms, application-code: 124ms)
+ GET /admin/subscriptions 200 in 1629ms (next.js: 1225ms, proxy.ts: 305ms, application-code: 100ms)
+ GET /api/admin/subscriptions 200 in 1919ms (next.js: 1201ms, proxy.ts: 188ms, application-code: 530ms)
+ GET /api/admin/subscriptions 200 in 516ms (next.js: 10ms, proxy.ts: 129ms, application-code: 377ms)
+ GET /admin/settings 200 in 1929ms (next.js: 1555ms, proxy.ts: 276ms, application-code: 98ms)
+ GET /api/users/profile 200 in 2.4s (next.js: 1867ms, proxy.ts: 120ms, application-code: 418ms)
+ GET /api/users/profile 200 in 385ms (next.js: 9ms, proxy.ts: 123ms, application-code: 254ms)
+ GET /api/admin/subscriptions 200 in 804ms (next.js: 17ms, proxy.ts: 329ms, application-code: 457ms)
+ GET /api/admin/subscriptions 200 in 504ms (next.js: 8ms, proxy.ts: 134ms, application-code: 361ms)
+ GET /api/payment-methods 200 in 267ms (next.js: 11ms, proxy.ts: 126ms, application-code: 129ms)
+ GET /api/payment-methods 200 in 246ms (next.js: 4ms, proxy.ts: 118ms, application-code: 124ms)
+ GET /api/requests 200 in 3.5s (next.js: 1874ms, proxy.ts: 117ms, application-code: 1473ms)
+ GET /api/payouts 200 in 3.4s (next.js: 2.0s, proxy.ts: 772ms, application-code: 607ms)
+ GET /api/admin/payments 200 in 3.5s (next.js: 2.4s, proxy.ts: 459ms, application-code: 637ms)
+ GET /api/commissions 200 in 3.5s (next.js: 2.3s, proxy.ts: 491ms, application-code: 696ms)
+ GET /api/admin/users 200 in 3.6s (next.js: 2.3s, proxy.ts: 484ms, application-code: 772ms)
+ GET /api/orders 200 in 3.6s (next.js: 2.3s, proxy.ts: 477ms, application-code: 786ms)
+○ Compiling / ...
+ GET /api/admin/users 401 in 1077ms (next.js: 79ms, proxy.ts: 962ms, application-code: 37ms)
+ GET /api/admin/payments 401 in 1108ms (next.js: 94ms, proxy.ts: 965ms, application-code: 49ms)
+ GET / 200 in 4.7s (next.js: 3.5s, proxy.ts: 498ms, application-code: 679ms)
+ GET /api/commissions 401 in 1207ms (next.js: 63ms, proxy.ts: 959ms, application-code: 185ms)
+ GET /api/requests 401 in 1211ms (next.js: 27ms, proxy.ts: 955ms, application-code: 229ms)
+ GET /api/payouts 401 in 1224ms (next.js: 122ms, proxy.ts: 968ms, application-code: 134ms)
+ GET /api/orders 401 in 2.8s (next.js: 2.5s, proxy.ts: 159ms, application-code: 194ms)
+ GET /login 200 in 3.0s (next.js: 2.8s, proxy.ts: 17ms, application-code: 161ms)
+ GET /api/admin/users 401 in 684ms (next.js: 14ms, proxy.ts: 646ms, application-code: 24ms)
+ GET /api/orders 401 in 223ms (next.js: 23ms, proxy.ts: 177ms, application-code: 24ms)
+ GET /login 200 in 199ms (next.js: 8ms, proxy.ts: 9ms, application-code: 182ms)
+ GET /api/admin/users 401 in 139ms (next.js: 4ms, proxy.ts: 123ms, application-code: 11ms)
+ GET /api/orders 401 in 158ms (next.js: 4ms, proxy.ts: 142ms, application-code: 12ms)
+ GET /api/orders 401 in 161ms (next.js: 6ms, proxy.ts: 144ms, application-code: 11ms)
+ GET /api/orders 401 in 153ms (next.js: 6ms, proxy.ts: 135ms, application-code: 12ms)
+ GET /api/orders 401 in 153ms (next.js: 7ms, proxy.ts: 134ms, application-code: 12ms)
+ GET /api/orders 401 in 154ms (next.js: 8ms, proxy.ts: 135ms, application-code: 11ms)
+ GET /wholesale/overview 200 in 3.3s (next.js: 2.9s, proxy.ts: 318ms, application-code: 159ms)
+ GET /api/orders 200 in 1521ms (next.js: 21ms, proxy.ts: 758ms, application-code: 742ms)
+ GET /api/orders 200 in 717ms (next.js: 4ms, proxy.ts: 122ms, application-code: 590ms)
+○ Compiling /wholesale/products ...
+ GET /wholesale/products 200 in 4.8s (next.js: 4.3s, proxy.ts: 351ms, application-code: 124ms)
+ GET /api/my-products 200 in 3.2s (next.js: 2.4s, proxy.ts: 280ms, application-code: 516ms)
+ GET /api/my-products 200 in 508ms (next.js: 10ms, proxy.ts: 126ms, application-code: 371ms)
+○ Compiling /wholesale/orders ...
+ GET /wholesale/orders 200 in 3.7s (next.js: 3.3s, proxy.ts: 306ms, application-code: 98ms)
+ GET /api/relationships 200 in 3.5s (next.js: 2.6s, proxy.ts: 290ms, application-code: 618ms)
+ GET /api/orders 200 in 3.6s (next.js: 2.6s, proxy.ts: 301ms, application-code: 735ms)
+ GET /api/relationships 200 in 483ms (next.js: 9ms, proxy.ts: 135ms, application-code: 340ms)
+ GET /api/orders 200 in 623ms (next.js: 9ms, proxy.ts: 117ms, application-code: 497ms)
+ GET /wholesale/finance 200 in 3.3s (next.js: 2.8s, proxy.ts: 339ms, application-code: 124ms)
+ GET /api/orders 200 in 755ms (next.js: 16ms, proxy.ts: 138ms, application-code: 602ms)
+ GET /api/orders 200 in 706ms (next.js: 4ms, proxy.ts: 182ms, application-code: 521ms)
+ GET /supplier/subscription 200 in 2.3s (next.js: 1913ms, proxy.ts: 288ms, application-code: 94ms)
+○ Compiling /api/subscriptions/plans ...
+ GET /api/subscriptions/plans 200 in 3.8s (next.js: 3.3s, proxy.ts: 172ms, application-code: 396ms)
+ GET /api/subscriptions/my 200 in 3.9s (next.js: 3.3s, proxy.ts: 133ms, application-code: 490ms)
+ GET /api/subscriptions/plans 200 in 264ms (next.js: 5ms, proxy.ts: 127ms, application-code: 132ms)
+ GET /api/subscriptions/my 200 in 374ms (next.js: 4ms, proxy.ts: 125ms, application-code: 246ms)
+ GET /wholesale/settings 200 in 2.9s (next.js: 2.4s, proxy.ts: 398ms, application-code: 110ms)
+ GET /api/users/profile 200 in 2.8s (next.js: 2.2s, proxy.ts: 141ms, application-code: 481ms)
+ GET /api/users/profile 200 in 442ms (next.js: 6ms, proxy.ts: 131ms, application-code: 305ms)
+ GET /wholesale/settings 200 in 1132ms (next.js: 84ms, proxy.ts: 472ms, application-code: 576ms)
+ GET /api/users/profile 200 in 397ms (next.js: 7ms, proxy.ts: 140ms, application-code: 250ms)
+ GET /api/users/profile 200 in 473ms (next.js: 6ms, proxy.ts: 140ms, application-code: 328ms)
+ GET /login 200 in 2.1s (next.js: 1393ms, proxy.ts: 10ms, application-code: 716ms)
+ GET /login 200 in 252ms (next.js: 13ms, proxy.ts: 131ms, application-code: 109ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /manifest.webmanifest 200 in 2.5s (next.js: 2.4s, proxy.ts: 7ms, application-code: 46ms)
+ GET /retailer/overview 200 in 1994ms (next.js: 1501ms, proxy.ts: 364ms, application-code: 129ms)
+ GET /api/orders 200 in 1951ms (next.js: 1215ms, proxy.ts: 122ms, application-code: 614ms)
+ GET /api/orders 200 in 603ms (next.js: 9ms, proxy.ts: 123ms, application-code: 472ms)
+ GET /retailer/shop 200 in 2.7s (next.js: 2.3s, proxy.ts: 305ms, application-code: 96ms)
+ GET /api/users?role=supplier 200 in 3.0s (next.js: 2.3s, proxy.ts: 164ms, application-code: 459ms)
+ GET /api/products 200 in 3.1s (next.js: 2.3s, proxy.ts: 208ms, application-code: 576ms)
+ GET /api/orders 200 in 3.3s (next.js: 2.3s, proxy.ts: 167ms, application-code: 756ms)
+ GET /api/users?role=supplier 200 in 430ms (next.js: 4ms, proxy.ts: 134ms, application-code: 293ms)
+ GET /api/products 200 in 569ms (next.js: 14ms, proxy.ts: 185ms, application-code: 371ms)
+ GET /api/orders 200 in 623ms (next.js: 6ms, proxy.ts: 126ms, application-code: 491ms)
+ GET /retailer/overview 200 in 346ms (next.js: 97ms, proxy.ts: 143ms, application-code: 106ms)
+ GET /api/orders 200 in 852ms (next.js: 35ms, proxy.ts: 229ms, application-code: 588ms)
+ GET /api/orders 200 in 614ms (next.js: 8ms, proxy.ts: 122ms, application-code: 485ms)
+ GET /retailer/shop 200 in 236ms (next.js: 17ms, proxy.ts: 143ms, application-code: 76ms)
+ GET /api/users?role=supplier 200 in 419ms (next.js: 9ms, proxy.ts: 131ms, application-code: 279ms)
+ GET /api/products 200 in 522ms (next.js: 16ms, proxy.ts: 132ms, application-code: 374ms)
+ GET /api/orders 200 in 638ms (next.js: 23ms, proxy.ts: 130ms, application-code: 484ms)
+ GET /api/users?role=supplier 200 in 377ms (next.js: 3ms, proxy.ts: 122ms, application-code: 252ms)
+ GET /api/products 200 in 496ms (next.js: 9ms, proxy.ts: 130ms, application-code: 357ms)
+ GET /api/orders 200 in 630ms (next.js: 6ms, proxy.ts: 125ms, application-code: 499ms)
+ GET /retailer/cart 200 in 1867ms (next.js: 1560ms, proxy.ts: 224ms, application-code: 83ms)
+[browser] Uncaught ReferenceError: useEffect is not defined
+    at RetailerCartPage (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/retailer/cart/page.tsx:53:5)
+ GET /supplier/subscription 200 in 607ms (next.js: 17ms, proxy.ts: 476ms, application-code: 114ms)
+ GET /retailer/overview 307 in 210ms (proxy.ts: 193ms)
+ GET /retailer/overview 307 in 176ms (proxy.ts: 165ms)
+ GET /retailer/overview 200 in 286ms (next.js: 11ms, proxy.ts: 166ms, application-code: 109ms)
+ GET /retailer/overview 307 in 161ms (proxy.ts: 138ms)
+[browser] TypeError: Cannot write to a CLOSED writable stream
+[browser] TypeError: Cannot write to a CLOSED writable stream
+[browser] TypeError: Cannot close a CLOSED writable stream
+ GET /retailer/overview 200 in 369ms (next.js: 22ms, proxy.ts: 139ms, application-code: 207ms)
+ GET /retailer/overview 200 in 368ms (next.js: 13ms, proxy.ts: 214ms, application-code: 142ms)
+ GET /retailer/overview 307 in 365ms (proxy.ts: 333ms)
+ GET /retailer/overview 200 in 556ms (next.js: 8ms, proxy.ts: 215ms, application-code: 333ms)
+ GET /retailer/overview 200 in 648ms (next.js: 38ms, proxy.ts: 264ms, application-code: 346ms)
+ GET /retailer/overview?redirect=%2Fwholesale%2Finventory 307 in 370ms (proxy.ts: 287ms)
+ GET /retailer/overview 307 in 386ms (proxy.ts: 278ms)
+ GET /retailer/overview 200 in 522ms (next.js: 25ms, proxy.ts: 293ms, application-code: 205ms)
+ GET /retailer/overview 200 in 399ms (next.js: 23ms, proxy.ts: 276ms, application-code: 100ms)
+ GET /retailer/overview 200 in 920ms (next.js: 18ms, proxy.ts: 407ms, application-code: 495ms)
+ GET /api/orders 200 in 919ms (next.js: 24ms, proxy.ts: 138ms, application-code: 756ms)
+ GET /api/orders 200 in 772ms (next.js: 4ms, proxy.ts: 193ms, application-code: 575ms)
+ GET /login 200 in 128ms (next.js: 25ms, proxy.ts: 18ms, application-code: 85ms)
+ GET /login 200 in 115ms (next.js: 6ms, proxy.ts: 10ms, application-code: 100ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+○ Compiling / ...
+ GET / 200 in 8.5s (next.js: 7.4s, proxy.ts: 10ms, application-code: 1091ms)
+○ Compiling /products/[slug] ...
+ GET / 200 in 846ms (next.js: 17ms, proxy.ts: 12ms, application-code: 817ms)
+ GET /products/13 200 in 9.1s (next.js: 8.8s, proxy.ts: 13ms, application-code: 295ms)
+ GET /register 200 in 3.3s (next.js: 3.1s, proxy.ts: 11ms, application-code: 130ms)
+ GET /login 200 in 599ms (next.js: 19ms, proxy.ts: 24ms, application-code: 556ms)
+○ Compiling /wholesale/overview ...
+ GET /wholesale/overview 200 in 6.6s (next.js: 6.0s, proxy.ts: 472ms, application-code: 135ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /api/orders 200 in 3.0s (next.js: 1501ms, proxy.ts: 653ms, application-code: 804ms)
+ GET /api/orders 200 in 1133ms (next.js: 11ms, proxy.ts: 540ms, application-code: 582ms)
+○ Compiling /wholesale/products ...
+ GET /wholesale/products 200 in 4.4s (next.js: 3.9s, proxy.ts: 413ms, application-code: 118ms)
+ GET /api/my-products 200 in 1952ms (next.js: 1148ms, proxy.ts: 294ms, application-code: 510ms)
+ GET /api/my-products 200 in 477ms (next.js: 5ms, proxy.ts: 123ms, application-code: 349ms)
+ GET /api/export/my-products 200 in 2.1s (next.js: 1211ms, proxy.ts: 412ms, application-code: 446ms)
+○ Compiling /wholesale/orders ...
+ GET /wholesale/orders 200 in 3.7s (next.js: 3.3s, proxy.ts: 379ms, application-code: 102ms)
+ GET /api/relationships 200 in 3.0s (next.js: 2.2s, proxy.ts: 157ms, application-code: 588ms)
+ GET /api/orders 200 in 3.1s (next.js: 1967ms, proxy.ts: 435ms, application-code: 744ms)
+ GET /api/relationships 200 in 667ms (next.js: 22ms, proxy.ts: 139ms, application-code: 506ms)
+ GET /api/orders 200 in 702ms (next.js: 2ms, proxy.ts: 164ms, application-code: 535ms)
+ GET /api/my-products 200 in 797ms (next.js: 16ms, proxy.ts: 323ms, application-code: 458ms)
+ GET /api/orders 200 in 913ms (next.js: 36ms, proxy.ts: 317ms, application-code: 560ms)
+ GET /api/my-products 200 in 1122ms (next.js: 5ms, proxy.ts: 131ms, application-code: 986ms)
+ GET /api/orders 200 in 1203ms (next.js: 5ms, proxy.ts: 178ms, application-code: 1020ms)
+ GET /delivery/overview 200 in 3.9s (next.js: 3.3s, proxy.ts: 440ms, application-code: 157ms)
+ GET /api/orders 200 in 763ms (next.js: 20ms, proxy.ts: 135ms, application-code: 608ms)
+ GET /api/orders 200 in 726ms (next.js: 4ms, proxy.ts: 125ms, application-code: 597ms)
+ GET /delivery/tasks 200 in 3.1s (next.js: 2.5s, proxy.ts: 442ms, application-code: 99ms)
+ GET /api/orders 200 in 941ms (next.js: 22ms, proxy.ts: 156ms, application-code: 763ms)
+ GET /api/orders 200 in 721ms (next.js: 4ms, proxy.ts: 143ms, application-code: 574ms)
+ GET /login 200 in 176ms (next.js: 23ms, proxy.ts: 24ms, application-code: 130ms)
+ GET /login 200 in 98ms (next.js: 5ms, proxy.ts: 9ms, application-code: 84ms)
+○ Compiling /admin/home ...
+ GET /admin/home 200 in 8.3s (next.js: 7.8s, proxy.ts: 314ms, application-code: 148ms)
+○ Compiling /api/orders ...
+ GET /api/admin/users 200 in 6.6s (next.js: 5.4s, proxy.ts: 317ms, application-code: 934ms)
+ GET /api/orders 200 in 6.6s (next.js: 4.7s, proxy.ts: 1031ms, application-code: 942ms)
+ GET /api/orders 200 in 622ms (next.js: 6ms, proxy.ts: 140ms, application-code: 476ms)
+ GET /api/admin/users 200 in 657ms (next.js: 4ms, proxy.ts: 163ms, application-code: 490ms)
+○ Compiling /admin/orders ...
+ GET /admin/orders 200 in 5.4s (next.js: 4.9s, proxy.ts: 315ms, application-code: 113ms)
+ GET /api/orders 200 in 895ms (next.js: 19ms, proxy.ts: 279ms, application-code: 598ms)
+ GET /api/orders 200 in 600ms (next.js: 5ms, proxy.ts: 123ms, application-code: 472ms)
+○ Compiling /admin/payment-methods ...
+ GET /admin/payment-methods 200 in 3.7s (next.js: 3.3s, proxy.ts: 301ms, application-code: 99ms)
+ GET /api/payment-methods 200 in 1644ms (next.js: 1218ms, proxy.ts: 142ms, application-code: 283ms)
+ GET /api/payment-methods 200 in 267ms (next.js: 5ms, proxy.ts: 129ms, application-code: 132ms)
+ GET /admin/subscriptions 200 in 1804ms (next.js: 1261ms, proxy.ts: 474ms, application-code: 69ms)
+ GET /api/admin/subscriptions 200 in 1965ms (next.js: 1143ms, proxy.ts: 299ms, application-code: 524ms)
+ GET /api/admin/subscriptions 200 in 519ms (next.js: 8ms, proxy.ts: 127ms, application-code: 385ms)
+ GET /admin/analytics 200 in 2.4s (next.js: 2.1s, proxy.ts: 294ms, application-code: 77ms)
+ GET /api/orders 200 in 794ms (next.js: 15ms, proxy.ts: 126ms, application-code: 653ms)
+ GET /api/orders 200 in 645ms (next.js: 7ms, proxy.ts: 128ms, application-code: 511ms)
+○ Compiling /api/export/users ...
+ GET /api/export/users 200 in 1226ms (next.js: 9ms, proxy.ts: 789ms, application-code: 427ms)
+○ Compiling /api/export/orders ...
+ GET /api/export/orders 200 in 5.1s (next.js: 3.4s, proxy.ts: 325ms, application-code: 1330ms)
+ GET /admin/analytics 200 in 1068ms (next.js: 138ms, proxy.ts: 368ms, application-code: 562ms)
+○ Compiling /api/orders ...
+ GET /api/orders 200 in 4.4s (next.js: 3.4s, proxy.ts: 142ms, application-code: 812ms)
+ GET /api/orders 200 in 644ms (next.js: 8ms, proxy.ts: 129ms, application-code: 507ms)
+○ Compiling /admin/refunds ...
+ GET /admin/refunds 200 in 8.1s (next.js: 7.5s, proxy.ts: 405ms, application-code: 132ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+○ Compiling /api/refunds ...
+ GET /manifest.webmanifest 200 in 5.8s (next.js: 5.6s, proxy.ts: 9ms, application-code: 201ms)
+ GET /api/refunds 200 in 6.7s (next.js: 5.0s, proxy.ts: 702ms, application-code: 1048ms)
+ GET /api/refunds 200 in 516ms (next.js: 5ms, proxy.ts: 138ms, application-code: 373ms)
+ GET /admin/subscriptions 200 in 936ms (next.js: 122ms, proxy.ts: 508ms, application-code: 306ms)
+ GET /admin/payment-methods 200 in 704ms (next.js: 30ms, proxy.ts: 513ms, application-code: 160ms)
+ GET /admin/orders 200 in 703ms (next.js: 83ms, proxy.ts: 528ms, application-code: 91ms)
+ GET /api/orders 200 in 1374ms (next.js: 13ms, proxy.ts: 630ms, application-code: 731ms)
+ GET /admin/home 200 in 230ms (next.js: 20ms, proxy.ts: 118ms, application-code: 93ms)
+ GET /api/orders 200 in 2.2s (next.js: 6ms, proxy.ts: 125ms, application-code: 2.1s)
+○ Compiling /api/admin/users ...
+ GET /api/admin/users 200 in 4.5s (next.js: 4.0s, proxy.ts: 124ms, application-code: 348ms)
+ GET /admin/home 200 in 1087ms (next.js: 175ms, proxy.ts: 351ms, application-code: 561ms)
+ GET /api/admin/users 200 in 938ms (next.js: 16ms, proxy.ts: 201ms, application-code: 722ms)
+ GET /api/orders 200 in 1005ms (next.js: 29ms, proxy.ts: 147ms, application-code: 829ms)
+ GET /api/admin/users 200 in 688ms (next.js: 5ms, proxy.ts: 139ms, application-code: 545ms)
+ GET /api/orders 200 in 667ms (next.js: 4ms, proxy.ts: 116ms, application-code: 547ms)
+ GET /admin/orders 200 in 533ms (next.js: 32ms, proxy.ts: 405ms, application-code: 97ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /api/orders 200 in 882ms (next.js: 15ms, proxy.ts: 197ms, application-code: 670ms)
+ GET /api/orders 200 in 619ms (next.js: 5ms, proxy.ts: 122ms, application-code: 492ms)
+○ Compiling /admin/users ...
+ GET /admin/users 200 in 9.6s (next.js: 9.2s, proxy.ts: 304ms, application-code: 122ms)
+ GET /api/admin/users 200 in 1245ms (next.js: 17ms, proxy.ts: 375ms, application-code: 853ms)
+ GET /api/admin/users 200 in 697ms (next.js: 4ms, proxy.ts: 140ms, application-code: 553ms)
+○ Compiling /refund-policy ...
+ GET /refund-policy 200 in 7.4s (next.js: 6.8s, proxy.ts: 389ms, application-code: 159ms)
+ GET /terms 200 in 3.2s (next.js: 2.6s, proxy.ts: 402ms, application-code: 259ms)
+○ Compiling /privacy ...
+ GET /privacy 200 in 7.3s (next.js: 6.7s, proxy.ts: 418ms, application-code: 136ms)
+ GET /api/admin/users 200 in 3.4s (next.js: 2.2s, proxy.ts: 320ms, application-code: 891ms)
+ GET /api/orders 200 in 3.3s (next.js: 1685ms, proxy.ts: 682ms, application-code: 906ms)
+ GET /api/admin/users 200 in 668ms (next.js: 8ms, proxy.ts: 130ms, application-code: 530ms)
+ GET /api/orders 200 in 681ms (next.js: 7ms, proxy.ts: 152ms, application-code: 522ms)
+ GET /admin/home 200 in 560ms (next.js: 124ms, proxy.ts: 330ms, application-code: 106ms)
+ GET /api/admin/users 200 in 1157ms (next.js: 7ms, proxy.ts: 125ms, application-code: 1024ms)
+ GET /api/orders 200 in 1304ms (next.js: 5ms, proxy.ts: 163ms, application-code: 1136ms)
+ GET /api/admin/users 200 in 709ms (next.js: 17ms, proxy.ts: 160ms, application-code: 532ms)
+ GET /api/orders 200 in 677ms (next.js: 15ms, proxy.ts: 180ms, application-code: 483ms)
+ GET /admin/home 200 in 681ms (next.js: 12ms, proxy.ts: 285ms, application-code: 383ms)
+ GET /api/admin/users 200 in 862ms (next.js: 9ms, proxy.ts: 132ms, application-code: 722ms)
+ GET /api/orders 200 in 871ms (next.js: 19ms, proxy.ts: 134ms, application-code: 718ms)
+ GET /api/admin/users 200 in 656ms (next.js: 10ms, proxy.ts: 130ms, application-code: 516ms)
+ GET /api/orders 200 in 666ms (next.js: 24ms, proxy.ts: 132ms, application-code: 510ms)
+ GET /admin/home 200 in 4.0s (next.js: 67ms, proxy.ts: 3.1s, application-code: 841ms)
+ GET /api/admin/users 200 in 712ms (next.js: 9ms, proxy.ts: 148ms, application-code: 556ms)
+ GET /api/orders 200 in 722ms (next.js: 29ms, proxy.ts: 150ms, application-code: 543ms)
+ GET /api/admin/users 200 in 680ms (next.js: 10ms, proxy.ts: 129ms, application-code: 541ms)
+ GET /api/orders 200 in 682ms (next.js: 4ms, proxy.ts: 148ms, application-code: 530ms)
+○ Compiling /admin/settings ...
+ GET /admin/settings 200 in 11.4s (next.js: 10.9s, proxy.ts: 365ms, application-code: 117ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+○ Compiling /api/users/profile ...
+[browser] Uncaught ReferenceError: useToast is not defined
+    at OfflineSection (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/settings/page.tsx:486:27)
+    at AdminSettingsPage (webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/admin/settings/page.tsx:162:117)
+ GET /manifest.webmanifest 200 in 6.3s (next.js: 6.1s, proxy.ts: 35ms, application-code: 177ms)
+ GET /api/users/profile 200 in 6.8s (next.js: 5.3s, proxy.ts: 867ms, application-code: 711ms)
+ GET /api/users/profile 200 in 408ms (next.js: 10ms, proxy.ts: 136ms, application-code: 261ms)
+ GET /admin/orders 200 in 535ms (next.js: 120ms, proxy.ts: 331ms, application-code: 84ms)
+ GET /admin/orders 200 in 993ms (next.js: 10ms, proxy.ts: 562ms, application-code: 422ms)
+ GET /api/orders 200 in 725ms (next.js: 17ms, proxy.ts: 134ms, application-code: 574ms)
+ GET /api/orders 200 in 768ms (next.js: 5ms, proxy.ts: 166ms, application-code: 598ms)

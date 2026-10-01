@@ -15,7 +15,7 @@ export function useFeatureFlag(key: string): boolean | null {
       .then((r) => (r.ok ? r.json() : {}))
       .then((data) => {
         if (cancelled) return;
-        setEnabled(data?.flags?.[key] === true);
+        setEnabled((data as any)?.flags?.[key] === true);
       })
       .catch(() => {
         if (!cancelled) setEnabled(false);

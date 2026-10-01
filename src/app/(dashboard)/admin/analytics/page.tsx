@@ -43,7 +43,7 @@ export default function AdminAnalyticsPage() {
   const fetchData = useCallback(async () => {
     try {
       const raw = await fetch("/api/orders").then((r) => (r.ok ? r.json() : {}));
-      const orders = Array.isArray(raw) ? raw : (raw.orders || []);
+      const orders = Array.isArray(raw) ? raw : ((raw as any)?.orders || []);
       setAllOrders(orders);
     } catch {
       showToast("فشل التحميل", "error");

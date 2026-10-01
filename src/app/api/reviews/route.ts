@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     if (guard) return guard;
     const body = await req.json();
     const parsed = reviewSchema.parse(body);
-    const data = await reviewService.createReview({ ...parsed, comment: parsed.comment || "" });
+    const data = await reviewService.createReview({ ...parsed, product_id: Number(parsed.product_id), comment: parsed.comment || "" });
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });

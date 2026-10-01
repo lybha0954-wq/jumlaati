@@ -57,6 +57,7 @@ export default function OrderDetailsPage({
   };
 
   const shareWhatsapp = () => {
+    if (!order) return;
     const text = `مرحباً، تابع طلبي في جُمْلَتِي\n\n📦 رقم الطلب: ${orderNumber}\n📅 التاريخ: ${new Date(order.created_at).toLocaleDateString("ar-IQ")}\n💰 الإجمالي: ${order.total_amount} د.ع\n📌 الحالة: ${getStatusInfo(order.status).label}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");

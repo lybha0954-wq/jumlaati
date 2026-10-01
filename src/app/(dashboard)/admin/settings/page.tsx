@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast } from "@/hooks/useToast";
+
 import { useState, useEffect } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { ProfileForm } from "@/components/settings/ProfileForm";

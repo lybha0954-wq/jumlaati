@@ -51,7 +51,7 @@ export default function SubscriptionPage() {
         fetch("/api/subscriptions/my").then((r) => (r.ok ? r.json() : {})),
       ]);
       setPlans(Array.isArray(plansRes) ? plansRes : []);
-      setCurrent(myRes?.subscription || null);
+      setCurrent((myRes as any)?.subscription || null);
     } catch {
       showToast("فشل التحميل", "error");
     } finally {
