@@ -21,9 +21,7 @@ export function ProductCard({ product }: { product: any }) {
   const url = `/products/${product.id}`;
   const supplierName = product.supplier_name || "تاجر جملة";
 
-  const handleAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleAdd = () => {
     if (isOut) {
       showToast("نفد المخزون", "error");
       return;
@@ -42,9 +40,16 @@ export function ProductCard({ product }: { product: any }) {
   };
 
   return (
-    <Link href={url} className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:-translate-y-1 hover:border-[#2e8b73]/30 hover:shadow-lg">
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:-translate-y-1 hover:border-[#2e8b73]/30 hover:shadow-lg dark:bg-gray-900 dark:border-gray-800">
+      {/* الرابط الممتد — يغطي البطاقة كاملة */}
+      <Link
+        href={url}
+        aria-label={product.name}
+        className="absolute inset-0 z-0"
+      />
+
       {/* صورة */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
+      <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-800">
         {image ? (
           <img src={image} alt={product.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -55,18 +60,18 @@ export function ProductCard({ product }: { product: any }) {
         )}
         {/* شارات */}
         {isOut && (
-          <span className="absolute top-2 right-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="absolute top-2 right-2 z-10 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
             نفد
           </span>
         )}
         {isLow && !isOut && (
-          <span className="absolute top-2 right-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="absolute top-2 right-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
             آخر {stock}
           </span>
         )}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          className="absolute top-2 left-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-500 opacity-0 shadow-sm transition-all hover:text-rose-500 group-hover:opacity-100"
+          type="button"
+          className="absolute top-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-500 opacity-0 shadow-sm transition-all hover:text-rose-500 group-hover:opacity-100 dark:bg-gray-800/90 dark:text-gray-300"
           aria-label="المفضلة"
         >
           <Heart size={14} />
@@ -74,8 +79,8 @@ export function ProductCard({ product }: { product: any }) {
       </div>
 
       {/* محتوى */}
-      <div className="flex flex-1 flex-col p-3">
-        <h3 className="mb-1 line-clamp-2 min-h-[2.5rem] text-sm font-bold text-gray-900">
+      <div className="relative z-0 flex flex-1 flex-col p-3">
+        <h3 className="mb-1 line-clamp-2 min-h-[2.5rem] text-sm font-bold text-gray-900 dark:text-gray-100">
           {product.name}
         </h3>
         {product.category && (
@@ -83,18 +88,21 @@ export function ProductCard({ product }: { product: any }) {
             {product.category}
           </p>
         )}
-        <p className="mb-3 line-clamp-1 text-[10px] text-gray-500">
+        <p className="mb-3 line-clamp-1 text-[10px] text-gray-500 dark:text-gray-400">
           <Store size={10} className="inline" /> {supplierName}
         </p>
 
         <div className="mt-auto space-y-2">
-          <p className="text-base font-black text-[#2e8b73]">{formatCurrency(price)}</p>
+          <p className="text-base font-black text-[#2e8b73] dark:text-[#6ecdb0]">
+            {formatCurrency(price)}
+          </p>
           <button
+            type="button"
             onClick={handleAdd}
             disabled={isOut}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all active:scale-95 ${
+            className={`relative z-10 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all active:scale-95 ${
               isOut
-                ? "bg-gray-100 text-gray-400"
+                ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600"
                 : isAdded
                 ? "bg-emerald-500 text-white"
                 : "bg-[#2e8b73] text-white hover:bg-[#1e6b57]"
@@ -105,6 +113,6 @@ export function ProductCard({ product }: { product: any }) {
           </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

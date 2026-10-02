@@ -36,6 +36,39 @@
     --radius: 0.75rem;
   }
 
+  /* ═══ الوضع الليلي ═══ */
+  .dark {
+    --background: 18 22 25;
+    --foreground: 235 238 240;
+    --card: 30 34 38;
+    --card-foreground: 235 238 240;
+    --popover: 30 34 38;
+    --popover-foreground: 235 238 240;
+    --primary: 82 175 148;
+    --primary-foreground: 15 25 22;
+    --primary-light: 110 205 175;
+    --primary-soft: 30 55 48;
+    --secondary: 45 50 55;
+    --secondary-foreground: 235 238 240;
+    --muted: 45 50 55;
+    --muted-foreground: 155 165 175;
+    --accent: 45 70 60;
+    --accent-foreground: 82 175 148;
+    --danger: 240 90 90;
+    --danger-foreground: 20 20 20;
+    --destructive: 240 90 90;
+    --destructive-foreground: 20 20 20;
+    --success: 82 190 120;
+    --success-foreground: 15 25 22;
+    --warning: 240 170 60;
+    --warning-foreground: 20 20 20;
+    --info: 90 155 240;
+    --info-foreground: 15 25 22;
+    --border: 55 62 68;
+    --input: 55 62 68;
+    --ring: 82 175 148;
+  }
+
   * {
     border-color: rgb(var(--border) / 1);
   }
@@ -178,4 +211,288 @@
 }
 .animate-slide-in-left {
   animation: slideInLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Dark Mode Overrides — تحويل ذكي للألوان الصلبة
+   يُطبَّق فقط عند تفعيل .dark
+   ═══════════════════════════════════════════════════════════ */
+
+.dark body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+/* خلفيات */
+.dark .bg-white { background-color: rgb(var(--card)) !important; }
+.dark .bg-gray-50,
+.dark .bg-gray-50\/50,
+.dark .bg-gray-50\/40 { background-color: rgb(24 28 32) !important; }
+.dark .bg-gray-100 { background-color: rgb(38 43 48) !important; }
+.dark .bg-gray-900 { background-color: rgb(15 20 24) !important; }
+
+/* نصوص */
+.dark .text-gray-900 { color: rgb(235 238 240) !important; }
+.dark .text-gray-800 { color: rgb(220 225 230) !important; }
+.dark .text-gray-700 { color: rgb(200 210 215) !important; }
+.dark .text-gray-600 { color: rgb(170 180 190) !important; }
+.dark .text-gray-500 { color: rgb(150 160 170) !important; }
+.dark .text-gray-400 { color: rgb(130 140 150) !important; }
+
+/* حدود */
+.dark .border-gray-100 { border-color: rgb(45 50 55) !important; }
+.dark .border-gray-200 { border-color: rgb(55 62 68) !important; }
+.dark .border { border-color: rgb(55 62 68) !important; }
+
+/* input */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: rgb(30 34 38);
+  color: rgb(235 238 240);
+  border-color: rgb(55 62 68);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgb(130 140 150);
+}
+
+/* hover states */
+.dark .hover\:bg-gray-50:hover { background-color: rgb(38 43 48) !important; }
+.dark .hover\:bg-gray-100:hover { background-color: rgb(45 50 55) !important; }
+
+/* bg-primary محدد */
+.dark .bg-\[\#e8f4f0\] { background-color: rgb(30 55 48) !important; }
+.dark .text-\[\#2e8b73\] { color: rgb(82 175 148) !important; }
+.dark .text-\[\#1e6b57\] { color: rgb(110 205 175) !important; }
+.dark .border-\[\#2e8b73\]\/30 { border-color: rgb(82 175 148) !important; }
+.dark .border-\[\#2e8b73\]\/40 { border-color: rgb(82 175 148) !important; }
+
+/* شريط التمرير */
+.dark ::-webkit-scrollbar-track { background: rgb(24 28 32); }
+.dark ::-webkit-scrollbar-thumb { background: rgb(70 78 85); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgb(90 100 110); }
+
+/* ═══ Topbar + Sidebar dark overrides ═══ */
+.dark .bg-white\/95 { background-color: rgb(20 24 28 / 0.95) !important; }
+.dark .bg-white\/90 { background-color: rgb(20 24 28 / 0.9) !important; }
+.dark .bg-white\/80 { background-color: rgb(20 24 28 / 0.8) !important; }
+.dark header { border-color: rgb(45 50 55) !important; }
+.dark aside { background-color: rgb(24 28 32) !important; border-color: rgb(45 50 55) !important; }
+.dark nav.fixed { background-color: rgb(20 24 28 / 0.95) !important; border-color: rgb(45 50 55) !important; }
+
+/* أزرار hover في Topbar */
+.dark .hover\:bg-gray-50:hover { background-color: rgb(38 43 48) !important; }
+.dark .hover\:text-gray-600:hover { color: rgb(200 210 215) !important; }
+
+/* placeholder texts */
+.dark .placeholder\:text-gray-400::placeholder { color: rgb(120 130 140) !important; }
+
+/* ═══════════════════════════════════════════════════════════
+   تليين الألوان — تخفيف البياض الناصع + إبراز الأزرار
+   (يعمل في الوضع النهاري فقط — الوضع الليلي له قواعده)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── الأبيض الناصع → أبيض ناعم مائل للرمادي ── */
+html:not(.dark) .bg-white {
+  background-color: rgb(253 254 255) !important;
+}
+
+html:not(.dark) .bg-white\/95 {
+  background-color: rgb(253 254 255 / 0.95) !important;
+}
+
+html:not(.dark) .bg-white\/90 {
+  background-color: rgb(253 254 255 / 0.90) !important;
+}
+
+/* ── خلفية الصفحة → رمادي دافئ فاتح ── */
+html:not(.dark) .bg-gray-50 {
+  background-color: rgb(238 242 245) !important;
+}
+
+html:not(.dark) .bg-gray-50\/50 {
+  background-color: rgb(238 242 245 / 0.55) !important;
+}
+
+html:not(.dark) .bg-gray-50\/40 {
+  background-color: rgb(238 242 245 / 0.40) !important;
+}
+
+/* ── حدود أنعم بميل للرمادي الدافئ ── */
+html:not(.dark) .border-gray-100 {
+  border-color: rgb(228 233 237) !important;
+}
+
+/* ── إبراز الأزرار الأساسية (الأخضر) ── */
+html:not(.dark) .bg-\[\#2e8b73\]:not([disabled]):not(a) {
+  box-shadow: 0 2px 8px -2px rgba(46, 139, 115, 0.30);
+  transition: box-shadow 200ms ease, transform 200ms ease, background-color 200ms ease;
+}
+
+html:not(.dark) a.bg-\[\#2e8b73\] {
+  box-shadow: 0 2px 8px -2px rgba(46, 139, 115, 0.30);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+html:not(.dark) .bg-\[\#2e8b73\]:hover:not([disabled]),
+html:not(.dark) a.bg-\[\#2e8b73\]:hover {
+  box-shadow: 0 6px 18px -4px rgba(46, 139, 115, 0.50);
+}
+
+/* ── أزرار ثانوية بلون أبيض — يبقى لها شكل أنيق ── */
+html:not(.dark) button.bg-white,
+html:not(.dark) a.bg-white {
+  border: 1px solid rgb(228 233 237);
+}
+
+/* ── الشارات الملونة — زيادة تباين طفيف ── */
+html:not(.dark) .rounded-full.bg-\[\#e8f4f0\] {
+  box-shadow: inset 0 0 0 1px rgba(46, 139, 115, 0.08);
+}
+
+/* ═══════════════════════════════════════════
+   تحسين التباين — بطاقات تطفو بوضوح
+   ═══════════════════════════════════════════ */
+
+/* ظل خفيف على البطاقات البيضاء (بلا border فقط) */
+html:not(.dark) .bg-white.rounded-2xl,
+html:not(.dark) .bg-white.rounded-xl,
+html:not(.dark) .bg-white.rounded-3xl {
+  box-shadow:
+    0 1px 2px 0 rgb(0 0 0 / 0.03),
+    0 1px 3px 0 rgb(0 0 0 / 0.02);
+}
+
+/* رأس الصفحة — خطأ فاصل أوضح */
+html:not(.dark) header {
+  border-bottom-color: rgb(228 233 237) !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.03);
+}
+
+/* Bottom Nav — يرفع عن الخلفية */
+html:not(.dark) nav.fixed.bottom-0 {
+  box-shadow: 0 -2px 8px -2px rgb(0 0 0 / 0.06);
+}
+
+/* hover على البطاقات — يبرز أكثر */
+html:not(.dark) .bg-white.hover\:border-\[\#2e8b73\]\/30:hover {
+  box-shadow: 0 4px 12px -2px rgb(46 139 115 / 0.10);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   تفاعلات اللمس والضغط — تجربة موحّدة في كل التطبيق
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── الأزرار: hover + active ── */
+@media (hover: hover) {
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
+    transition:
+      transform 180ms cubic-bezier(0.34, 1.2, 0.64, 1),
+      box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 180ms ease,
+      border-color 180ms ease,
+      color 180ms ease;
+  }
+
+  button:not([disabled]):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -4px rgba(46, 139, 115, 0.18);
+  }
+}
+
+button:not([disabled]):active {
+  transform: scale(0.96) translateY(0) !important;
+  transition-duration: 80ms;
+  box-shadow: none !important;
+}
+
+button[disabled] {
+  cursor: not-allowed;
+}
+
+/* ── البطاقات التفاعلية: الروابط بطبقة bg-white + rounded ── */
+@media (hover: hover) {
+  a.bg-white,
+  a[class*="rounded-2xl"][class*="border"],
+  a[class*="rounded-xl"][class*="border"],
+  a[class*="rounded-3xl"][class*="border"],
+  a[class*="rounded-lg"][class*="border"] {
+    transition:
+      transform 220ms cubic-bezier(0.34, 1.2, 0.64, 1),
+      box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 220ms ease,
+      background-color 220ms ease;
+    will-change: transform;
+  }
+
+  a.bg-white:hover,
+  a[class*="rounded-2xl"][class*="border"]:hover,
+  a[class*="rounded-xl"][class*="border"]:hover,
+  a[class*="rounded-3xl"][class*="border"]:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 10px 24px -10px rgba(46, 139, 115, 0.18),
+      0 4px 12px -6px rgba(0, 0, 0, 0.06);
+  }
+}
+
+a.bg-white:active,
+a[class*="rounded-2xl"][class*="border"]:active,
+a[class*="rounded-xl"][class*="border"]:active {
+  transform: scale(0.985) translateY(0) !important;
+  transition-duration: 100ms;
+}
+
+/* ── الجوال — تأثير لمسي فوري ── */
+@media (hover: none) {
+  button:not([disabled]):active,
+  a[class*="rounded"]:active {
+    transform: scale(0.97) !important;
+    transition-duration: 60ms;
+  }
+}
+
+/* ── البطاقات الإحصائية (KpiCard) — تفاعل خفيف ── */
+@media (hover: hover) {
+  .rounded-2xl.border.bg-white:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* ── روابط التبويبات (Tabs) — تحت الخط ── */
+@media (hover: hover) {
+  button[class*="rounded-full"]:hover {
+    transform: translateY(0) scale(1.02);
+    box-shadow: 0 2px 8px -2px rgba(46, 139, 115, 0.15);
+  }
+}
+
+/* ── بطاقات الفلاتر (الكل، جديدة، إلخ) ── */
+@media (hover: hover) {
+  button[class*="rounded-2xl"][class*="border"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px -4px rgba(46, 139, 115, 0.12);
+  }
+}
+
+/* ── الوضع الليلي — ظلال مختلفة ── */
+@media (hover: hover) {
+  html.dark a.bg-white:hover,
+  html.dark a[class*="rounded-2xl"][class*="border"]:hover,
+  html.dark button:not([disabled]):hover {
+    box-shadow: 0 8px 20px -8px rgba(82, 175, 148, 0.25);
+  }
+}
+
+/* ── احترام تفضيل تقليل الحركة ── */
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a {
+    transition: none !important;
+    transform: none !important;
+  }
 }

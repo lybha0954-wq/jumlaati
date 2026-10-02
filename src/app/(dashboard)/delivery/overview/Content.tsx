@@ -7,6 +7,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Truck, Clock, CheckCircle2, Wallet, Package, MapPin, ArrowLeft } from "lucide-react";
+import { getStatusInfo } from "@/lib/constants/order-status";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface Order {
   id: number;
@@ -176,38 +178,4 @@ export default function DeliveryOverviewPage() {
       </div>
     </div>
   );
-}
-
-function KpiCard({ icon, label, value, color, highlight }: any) {
-  const colors: any = {
-    blue: "bg-blue-50 text-blue-600",
-    amber: "bg-amber-50 text-amber-600",
-    purple: "bg-purple-50 text-purple-600",
-    emerald: "bg-[#e8f4f0] text-[#2e8b73]",
-  };
-  return (
-    <div
-      className={`rounded-2xl border bg-white p-4 transition-all ${
-        highlight ? "border-[#2e8b73]/30 shadow-sm" : "border-gray-100"
-      }`}
-    >
-      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl ${colors[color]}`}>
-        {icon}
-      </div>
-      <p className="mb-1 text-xs text-gray-500">{label}</p>
-      <p className="text-xl font-black text-gray-900">{value}</p>
-    </div>
-  );
-}
-
-function getStatusInfo(status: string) {
-  const map: Record<string, any> = {
-    pending:   { label: "جديد",           className: "bg-amber-50 text-amber-700" },
-    accepted:  { label: "مقبول",          className: "bg-blue-50 text-blue-700" },
-    shipped:   { label: "قيد التوصيل",    className: "bg-purple-50 text-purple-700" },
-    picked_up: { label: "مع المندوب",     className: "bg-indigo-50 text-indigo-700" },
-    delivered: { label: "تم التسليم",     className: "bg-[#e8f4f0] text-[#1e6b57]" },
-    cancelled: { label: "ملغي",           className: "bg-red-50 text-red-700" },
-  };
-  return map[status] || { label: status, className: "bg-gray-50 text-gray-600" };
 }

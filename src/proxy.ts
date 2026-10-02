@@ -13,6 +13,7 @@ const ROLE_TO_HOME: Record<string, string> = {
 const ROLE_PREFIX: Record<string, string[]> = {
   '/admin':     ['admin'],
   '/wholesale': ['supplier'],
+  '/supplier':  ['supplier'],
   '/retailer':  ['retailer'],
   '/delivery':  ['delivery'],
 };

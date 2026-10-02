@@ -7,7 +7,7 @@ import {
   Home, ShoppingCart, Package, Wallet, Menu, X,
   User, Settings, HelpCircle, LogOut, Bell, MapPin,
   Boxes, UserPlus, Coins, Users, BarChart3, Truck,
-  ShoppingBag, FileText, Heart, Store, Ticket, RotateCcw, Flag,
+  ShoppingBag, FileText, Heart, Store, Ticket, RotateCcw, Flag, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/lib/stores/userStore";
@@ -33,7 +33,7 @@ const TABS_BY_ROLE: Record<string, Tab[]> = {
     { key: "shop",   href: "/retailer/shop",     label: "تسوّق",    Icon: Store },
     { key: "cart",   href: "/retailer/cart",     label: "السلة",    Icon: ShoppingCart },
     { key: "orders", href: "/retailer/orders",   label: "طلباتي",   Icon: Package },
-    { key: "me",     href: "/retailer/settings", label: "حسابي",    Icon: User },
+    { key: "more",                                label: "المزيد",   Icon: Menu, action: "drawer" },
   ],
   supplier: [
     { key: "home",     href: "/wholesale/overview", label: "الرئيسية", Icon: Home },
@@ -62,7 +62,14 @@ const DRAWER_BY_ROLE: Record<string, DrawerItem[]> = {
   supplier: [
     { href: "/wholesale/finance", label: "المالية", Icon: Wallet },
   ],
-  retailer: [],
+  retailer: [
+    { href: "/retailer/invoices",  label: "فواتيري",  Icon: FileText },
+    { href: "/retailer/analytics", label: "مشترياتي", Icon: BarChart3 },
+    { href: "/retailer/favorites", label: "المفضلة",  Icon: Heart },
+    { href: "/retailer/points",    label: "نقاطي",    Icon: Coins },
+    { href: "/pricing",            label: "الباقات",  Icon: Crown },
+    { href: "/retailer/settings",  label: "الإعدادات", Icon: Settings },
+  ],
   delivery: [],
   admin: [
     { href: "/admin/analytics",  label: "التحليلات",  Icon: BarChart3 },

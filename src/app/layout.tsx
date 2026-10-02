@@ -3,8 +3,14 @@ import { Tajawal } from "next/font/google";
 import { baseMetadata } from "@/config/seo";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
-import { InstallPrompt } from "@/components/shared/InstallPrompt";
+
 import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
+import { RouteProgress } from "@/components/shared/RouteProgress";
+import dynamic from "next/dynamic";
+
+const InstallPrompt = dynamic(
+  () => import("@/components/shared/InstallPrompt").then((m) => m.InstallPrompt)
+);
 import "../styles/globals.css";
 
 const tajawal = Tajawal({
@@ -40,9 +46,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={tajawal.variable}>
+    <html lang="ar" dir="rtl" className={tajawal.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
+            <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("jumlati-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className={`${tajawal.className} antialiased`}>
         <AuthProvider>
+          <RouteProgress />
           {children}
           <InstallPrompt />
           <ServiceWorkerRegister />

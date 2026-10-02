@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ListSkeleton, KPISkeleton } from "@/components/shared/SkeletonLoader";
 import { useToast } from "@/hooks/useToast";
 import { Users, Store, Truck, Shield, Package, Search, Download } from "lucide-react";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface User {
   id: string;
@@ -101,10 +102,10 @@ export default function AdminUsersPage() {
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatCard icon={<Store size={16} />} label="تجار الجملة" value={counts.supplier} color="emerald" />
-          <StatCard icon={<Users size={16} />} label="السوبرماركت" value={counts.retailer} color="blue" />
-          <StatCard icon={<Truck size={16} />} label="المندوبون" value={counts.delivery} color="amber" />
-          <StatCard icon={<Shield size={16} />} label="الإدارة" value={counts.admin} color="purple" />
+          <KpiCard icon={<Store size={16} />} label="تجار الجملة" value={counts.supplier} color="emerald" />
+          <KpiCard icon={<Users size={16} />} label="السوبرماركت" value={counts.retailer} color="blue" />
+          <KpiCard icon={<Truck size={16} />} label="المندوبون" value={counts.delivery} color="amber" />
+          <KpiCard icon={<Shield size={16} />} label="الإدارة" value={counts.admin} color="purple" />
         </div>
 
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3">
@@ -194,25 +195,6 @@ export default function AdminUsersPage() {
     </div>
   );
 }
-
-function StatCard({ icon, label, value, color }: any) {
-  const colors: any = {
-    emerald: "bg-[#e8f4f0] text-[#2e8b73]",
-    blue: "bg-blue-50 text-blue-600",
-    amber: "bg-amber-50 text-amber-600",
-    purple: "bg-purple-50 text-purple-600",
-  };
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <div className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${colors[color]}`}>
-        {icon}
-      </div>
-      <p className="mb-0.5 text-xs text-gray-500">{label}</p>
-      <p className="text-xl font-black text-gray-900">{value}</p>
-    </div>
-  );
-}
-
 function labelOf(role: RoleFilter): string {
   const map: Record<string, string> = {
     all: "الكل", supplier: "تجار الجملة",

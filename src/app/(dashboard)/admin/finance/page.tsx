@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Wallet, TrendingUp, Store, Info, CreditCard, Calendar, Download, Coins, Banknote } from "lucide-react";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface Order {
   id: number;
@@ -141,7 +142,7 @@ function OverviewView({ orders }: { orders: Order[] }) {
   const totalVolume = completed.reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
   const totalCommission = Math.round(totalVolume * 0.01);
   const suppliers = new Set(orders.map((o) => o.supplier_name).filter(Boolean));
-  const subscriptionRevenue = suppliers.size * 25000;
+  const subscriptionRevenue = suppliers.size * 15000;
   const expectedMonthly = totalCommission + subscriptionRevenue;
 
   return (
@@ -187,7 +188,7 @@ function OverviewView({ orders }: { orders: Order[] }) {
         <div className="text-xs leading-relaxed text-gray-700">
           <strong className="text-[#1e6b57]">نموذج الإيراد</strong>
           <br />• السوبرماركت والمندوب: مجاني تماماً
-          <br />• تاجر الجملة: 1% عمولة أو 25,000 د.ع/شهر اشتراك
+          <br />• تاجر الجملة: 1% عمولة أو 15,000 د.ع/شهر اشتراك
         </div>
       </div>
     </>
@@ -241,22 +242,6 @@ function PaymentsView({ payments }: { payments: Payment[] }) {
     </>
   );
 }
-
-function KpiCard({ icon, label, value, color }: any) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    amber: "bg-amber-50 text-amber-600",
-    emerald: "bg-[#e8f4f0] text-[#2e8b73]",
-  };
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl ${colors[color]}`}>{icon}</div>
-      <p className="mb-1 text-xs text-gray-500">{label}</p>
-      <p className="text-lg font-black text-gray-900">{value}</p>
-    </div>
-  );
-}
-
 function CommissionsView({ commissions }: { commissions: Commission[] }) {
   const total = commissions.reduce((s, c) => s + (Number(c.amount) || 0), 0);
   const pending = commissions.filter((c) => c.status === "pending");

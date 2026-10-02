@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListSkeleton, KPISkeleton } from "@/components/shared/SkeletonLoader";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
+import { getStatusInfo } from "@/lib/constants/order-status";
+import { usePaginatedOrders } from "@/hooks/usePaginatedOrders";
 import {
   ShoppingCart, Search, ArrowLeft, Store, Truck, User,
-  CheckCircle2, Clock, XCircle, Package,
+  Package, Loader2,
 } from "lucide-react";
 
 interface Order {
@@ -34,25 +36,21 @@ const FILTERS: { key: Filter; label: string; color: string }[] = [
 ];
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const { showToast } = useToast();
 
-  const fetchOrders = useCallback(async () => {
-    try {
-      const res = await fetch("/api/orders");
-      const data = res.ok ? await res.json() : [];
-      setOrders(Array.isArray(data) ? data : []);
-    } catch {
-      showToast("فشل التحميل", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    items: orders,
+    total,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+  } = usePaginatedOrders<Order>({ limit: 20 });
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  if (error) showToast(error, "error");
 
   const counts = useMemo(() => ({
     all: orders.length,
@@ -105,7 +103,7 @@ export default function AdminOrdersPage() {
           <h1 className="mb-1 flex items-center gap-2 text-2xl font-black text-gray-900">
             <ShoppingCart size={22} className="text-[#2e8b73]" /> الطلبات
           </h1>
-          <p className="text-sm text-gray-500">{orders.length} طلب في النظام</p>
+          <p className="text-sm text-gray-500">{total} طلب في النظام</p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -138,65 +136,76 @@ export default function AdminOrdersPage() {
             color="gray"
           />
         ) : (
-          <div className="space-y-2">
-            {filtered.map((o) => {
-              const st = getStatusInfo(o.status);
-              const orderLabel = o.order_number || `#${String(o.id).slice(0, 8)}`;
-              return (
-                <Link key={o.id} href={`/orders/${o.id}`}
-                  className="block rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:border-[#2e8b73]/30 hover:shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-black text-gray-900">{orderLabel}</span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${st.className}`}>
-                          {st.label}
-                        </span>
+          <>
+            <div className="space-y-2">
+              {filtered.map((o) => {
+                const st = getStatusInfo(o.status);
+                const orderLabel = o.order_number || `#${String(o.id).slice(0, 8)}`;
+                return (
+                  <Link key={o.id} href={`/orders/${o.id}`}
+                    className="block rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:border-[#2e8b73]/30 hover:shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-black text-gray-900">{orderLabel}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${st.className}`}>
+                            {st.label}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                          {o.supplier_name && (
+                            <span className="inline-flex items-center gap-1">
+                              <Store size={11} /> <span className="truncate">{o.supplier_name}</span>
+                            </span>
+                          )}
+                          {o.retailer_name && (
+                            <span className="inline-flex items-center gap-1">
+                              <User size={11} /> <span className="truncate">{o.retailer_name}</span>
+                            </span>
+                          )}
+                          {o.delivery_name && (
+                            <span className="inline-flex items-center gap-1">
+                              <Truck size={11} /> <span className="truncate">{o.delivery_name}</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-[10px] text-gray-400">
+                          {String(o.created_at || "").slice(0, 16)}
+                        </p>
                       </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-                        {o.supplier_name && (
-                          <span className="inline-flex items-center gap-1">
-                            <Store size={11} /> <span className="truncate">{o.supplier_name}</span>
-                          </span>
-                        )}
-                        {o.retailer_name && (
-                          <span className="inline-flex items-center gap-1">
-                            <User size={11} /> <span className="truncate">{o.retailer_name}</span>
-                          </span>
-                        )}
-                        {o.delivery_name && (
-                          <span className="inline-flex items-center gap-1">
-                            <Truck size={11} /> <span className="truncate">{o.delivery_name}</span>
-                          </span>
-                        )}
+                      <div className="text-left flex-shrink-0">
+                        <p className="text-base font-black text-[#2e8b73]">{formatCurrency(o.total_amount)}</p>
+                        <ArrowLeft size={14} className="mt-1 ml-auto text-gray-300" />
                       </div>
-                      <p className="mt-1 text-[10px] text-gray-400">
-                        {String(o.created_at || "").slice(0, 16)}
-                      </p>
                     </div>
-                    <div className="text-left flex-shrink-0">
-                      <p className="text-base font-black text-[#2e8b73]">{formatCurrency(o.total_amount)}</p>
-                      <ArrowLeft size={14} className="mt-1 ml-auto text-gray-300" />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {hasMore && (
+              <div className="mt-5 flex justify-center">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-[#2e8b73] bg-white px-6 py-3 text-sm font-bold text-[#2e8b73] transition-all hover:bg-[#e8f4f0] active:scale-95 disabled:opacity-50"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      جاري التحميل...
+                    </>
+                  ) : (
+                    <>
+                      تحميل المزيد ({orders.length} من {total})
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
   );
-}
-
-function getStatusInfo(status: string) {
-  const map: Record<string, any> = {
-    pending:   { label: "جديد",           className: "bg-amber-50 text-amber-700" },
-    accepted:  { label: "مقبول",          className: "bg-blue-50 text-blue-700" },
-    shipped:   { label: "قيد التوصيل",    className: "bg-purple-50 text-purple-700" },
-    picked_up: { label: "مع المندوب",     className: "bg-indigo-50 text-indigo-700" },
-    delivered: { label: "تم التسليم",     className: "bg-[#e8f4f0] text-[#1e6b57]" },
-    cancelled: { label: "ملغي",           className: "bg-red-50 text-red-700" },
-  };
-  return map[status] || { label: status, className: "bg-gray-50 text-gray-600" };
 }

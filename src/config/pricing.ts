@@ -8,7 +8,9 @@
  *   • المندوب: مجاني بالكامل
  *   • تاجر الجملة: يختار أحد خيارين:
  *       A) بدون اشتراك → 1% عمولة على كل طلب
- *       B) اشتراك 25,000 د.ع/شهر → 0% عمولة
+ *       B) اشتراك 15,000 د.ع/شهر → 0% عمولة
+ * 
+ * عرض الإطلاق: 3 أشهر مجاناً لجميع التجار
  * 
  * الحكمة:
  *   • السوبرماركت مجاني لأنه القلب (كلما زاد، زادت قيمة النظام)
@@ -25,6 +27,14 @@ export const PRICING = {
   /** الأدوار المجانية */
   freeRoles: ['retailer', 'delivery'] as const,
 
+  /** 🎁 عرض الإطلاق */
+  launchOffer: {
+    enabled: true,
+    freeMonths: 3,
+    label: 'أول 3 أشهر مجاناً',
+    description: 'جرّب التطبيق مجاناً 3 أشهر — بدون التزام',
+  },
+
   /** تاجر الجملة — خيارات الدفع */
   supplier: {
     /** الخيار A: بدون اشتراك */
@@ -39,9 +49,10 @@ export const PRICING = {
     subscription: {
       id: 'subscription',
       label: 'اشتراك شهري',
-      description: '25,000 د.ع شهرياً — بدون أي عمولة',
+      description: '15,000 د.ع شهرياً — بدون أي عمولة',
       commissionRate: 0,
-      monthlyFee: 25000,
+      monthlyFee: 15000,
+      yearlyFee: 150000, // توفير شهرين
     },
   },
 
@@ -49,28 +60,30 @@ export const PRICING = {
   addons: {
     featured: {
       id: 'featured',
-      label: 'تاجر مميّز ⭐',
+      label: 'تاجر مميّز',
       description: 'تظهر أولاً في نتائج البحث',
-      price: 30000,
+      price: 10000,
+      yearlyPrice: 100000,
       period: 'monthly',
     },
     advancedReports: {
       id: 'advanced_reports',
-      label: 'تقارير متقدمة 📊',
+      label: 'تقارير متقدمة',
       description: 'رسوم بيانية وتقارير مفصلة',
-      price: 15000,
+      price: 8000,
+      yearlyPrice: 80000,
       period: 'monthly',
     },
     sms: {
       id: 'sms',
-      label: 'رسائل SMS 📱',
+      label: 'رسائل SMS',
       description: 'أرسل إشعارات لعملائك',
       price: 100,
       period: 'per_message',
     },
     qrPrint: {
       id: 'qr_print',
-      label: 'QR مطبوع 🔲',
+      label: 'QR مطبوع',
       description: 'بطاقات QR جاهزة للملصقات',
       price: 10000,
       period: 'per_100',
@@ -87,23 +100,20 @@ export function calcCommission(
   return Math.round(orderTotal * PRICING.supplier.payPerOrder.commissionRate);
 }
 
-/** هل تجاوز التاجر الحد المجاني؟ */
-export const FREE_ORDERS_LIMIT = 0; // لا حد — كل طلب له 1%
-
 /** عدد الطلبات المطلوبة لتوفير الاشتراك */
 export function breakEvenOrders(avgOrderValue = 80000): number {
   const commissionPerOrder = avgOrderValue * PRICING.supplier.payPerOrder.commissionRate;
   return Math.ceil(PRICING.supplier.subscription.monthlyFee / commissionPerOrder);
 }
 
-/** رسالة تحفيزية للتاجر حسب استخدمه */
+/** رسالة تحفيزية للتاجر حسب استخدامه */
 export function pricingHint(orderCount: number, avgOrderValue = 80000): string {
   const commissionCost = orderCount * avgOrderValue * PRICING.supplier.payPerOrder.commissionRate;
   const subscriptionCost = PRICING.supplier.subscription.monthlyFee;
-  
+
   if (commissionCost > subscriptionCost) {
     const saving = Math.round(commissionCost - subscriptionCost);
-    return `💡 لو اشتركت هذا الشهر، ستوفّر ${saving.toLocaleString('ar-IQ')} د.ع`;
+    return `لو اشتركت هذا الشهر، ستوفّر ${saving.toLocaleString('ar-IQ')} د.ع`;
   }
   return '';
 }

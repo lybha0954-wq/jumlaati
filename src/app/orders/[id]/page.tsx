@@ -11,6 +11,7 @@ import {
   MapPin, Calendar, Phone, MessageCircle,
   CheckCircle2, Clock, XCircle, FileText, Copy, Share2,
 } from "lucide-react";
+import { getStatusInfo } from "@/lib/constants/order-status";
 
 interface OrderItem {
   id: string; product_name: string; quantity: number;
@@ -227,11 +228,41 @@ export default function OrderDetailsPage({
 
 function Timeline({ status, order }: { status: string; order: Order }) {
   const steps = [
-    { key: "pending",   label: "تم إنشاء الطلب", icon: Package,      time: order.created_at },
-    { key: "accepted",  label: "قبله المورد",     icon: CheckCircle2, time: order.accepted_at },
-    { key: "shipped",   label: "قيد التوصيل",     icon: Truck,        time: order.shipped_at },
-    { key: "picked_up", label: "استلمه المندوب", icon: Package,      time: order.picked_up_at },
-    { key: "delivered", label: "تم التسليم",      icon: CheckCircle2, time: order.delivered_at },
+    {
+      key: "pending",
+      label: "تم إنشاء الطلب",
+      desc: "استلمنا طلبك بنجاح",
+      icon: Package,
+      time: order.created_at,
+    },
+    {
+      key: "accepted",
+      label: "قبله المورد",
+      desc: "تاجر الجملة وافق على طلبك",
+      icon: CheckCircle2,
+      time: order.accepted_at,
+    },
+    {
+      key: "shipped",
+      label: "قيد التوصيل",
+      desc: "الطلب في الطريق إليك",
+      icon: Truck,
+      time: order.shipped_at,
+    },
+    {
+      key: "picked_up",
+      label: "مع المندوب",
+      desc: "المندوب استلم الطلب",
+      icon: User,
+      time: order.picked_up_at,
+    },
+    {
+      key: "delivered",
+      label: "تم التسليم",
+      desc: "وصل الطلب إلى الموقع",
+      icon: CheckCircle2,
+      time: order.delivered_at,
+    },
   ];
 
   const orderIdx: Record<string, number> = {
@@ -239,49 +270,130 @@ function Timeline({ status, order }: { status: string; order: Order }) {
   };
   const currentIdx = orderIdx[status] ?? -1;
 
+  // ═══ حالة ملغي ═══
   if (status === "cancelled") {
     return (
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500">
-          <XCircle size={18} />
+      <div className="flex items-start gap-4 rounded-2xl border border-red-200 bg-red-50/50 p-5 dark:border-red-900/60 dark:bg-red-950/30">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300">
+          <XCircle size={28} strokeWidth={2.5} />
         </div>
-        <div>
-          <p className="text-sm font-bold text-red-700">تم إلغاء الطلب</p>
-          <p className="text-xs text-gray-500">{formatDate(order.cancelled_at || order.created_at)}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-black text-red-700 dark:text-red-300">
+            تم إلغاء الطلب
+          </p>
+          <p className="mt-1 text-xs text-red-600/70 dark:text-red-400/70">
+            {formatDate(order.cancelled_at || order.created_at)}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <ol className="relative space-y-4">
+    <ol className="relative space-y-1">
       {steps.map((step, idx) => {
         const done = idx < currentIdx;
         const active = idx === currentIdx;
+        const pending = idx > currentIdx;
         const Icon = step.icon;
+        const isLast = idx === steps.length - 1;
+
+        // ═══ ألوان الحالة ═══
+        const circleClass = done
+          ? "bg-gradient-to-br from-[#3a9d82] to-[#1e6b57] text-white shadow-md shadow-[#2e8b73]/30"
+          : active
+            ? "bg-[#e8f4f0] text-[#2e8b73] ring-4 ring-[#2e8b73]/20 dark:bg-[#1e3a33] dark:text-[#6ecdb0]"
+            : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600";
+
         return (
-          <li key={step.key} className="relative flex items-start gap-3">
-            {idx < steps.length - 1 && (
+          <li key={step.key} className="relative flex gap-4">
+            {/* ═══ الخط الرأسي ═══ */}
+            {!isLast && (
               <span
-                className={`absolute right-4 top-10 w-0.5 ${done ? "bg-[#2e8b73]" : "bg-gray-100"}`}
-                style={{ height: "calc(100% - 8px)" }}
+                aria-hidden="true"
+                className={`absolute right-[21px] top-11 w-0.5 rounded-full transition-all ${
+                  done
+                    ? "bg-gradient-to-b from-[#2e8b73] to-[#2e8b73]/40"
+                    : "bg-gray-200 dark:bg-gray-700"
+                }`}
+                style={{ bottom: "-4px" }}
               />
             )}
-            <div className={`relative z-10 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all ${
-              done ? "bg-[#2e8b73] text-white"
-                : active ? "bg-[#e8f4f0] text-[#2e8b73] ring-2 ring-[#2e8b73]/30"
-                : "bg-gray-100 text-gray-400"
-            }`}>
-              <Icon size={16} strokeWidth={done ? 2.5 : 2} />
+
+            {/* ═══ الدائرة + الأيقونة ═══ */}
+            <div className="relative flex-shrink-0">
+              <div
+                className={`relative z-10 flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${circleClass}`}
+              >
+                <Icon size={20} strokeWidth={done || active ? 2.5 : 2} />
+
+                {/* علامة ✓ صغيرة للمكتمل */}
+                {done && (
+                  <span className="absolute -bottom-0.5 -left-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-[#2e8b73] dark:border-gray-900">
+                    <CheckCircle2 size={9} className="text-white" strokeWidth={3} />
+                  </span>
+                )}
+
+                {/* نبض للحالة النشطة */}
+                {active && (
+                  <span className="absolute inset-0 animate-ping rounded-full bg-[#2e8b73]/20" />
+                )}
+              </div>
             </div>
-            <div className="flex-1 pt-1.5">
-              <p className={`text-sm font-bold ${done || active ? "text-gray-900" : "text-gray-400"}`}>
-                {step.label}
-              </p>
-              {step.time && (
-                <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
-                  <Clock size={10} /> {formatDate(step.time)}
+
+            {/* ═══ المحتوى ═══ */}
+            <div
+              className={`flex-1 pb-5 transition-opacity ${
+                pending ? "opacity-50" : "opacity-100"
+              }`}
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p
+                  className={`text-sm font-black ${
+                    done || active
+                      ? "text-gray-900 dark:text-gray-100"
+                      : "text-gray-500 dark:text-gray-500"
+                  }`}
+                >
+                  {step.label}
                 </p>
+
+                {/* شارة الوقت */}
+                {step.time && (
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      done
+                        ? "bg-[#e8f4f0] text-[#1e6b57] dark:bg-[#1e3a33] dark:text-[#6ecdb0]"
+                        : active
+                          ? "bg-[#2e8b73] text-white"
+                          : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500"
+                    }`}
+                  >
+                    <Clock size={9} />
+                    {formatDate(step.time)}
+                  </span>
+                )}
+              </div>
+
+              <p
+                className={`mt-1 text-xs leading-relaxed ${
+                  done || active
+                    ? "text-gray-500 dark:text-gray-400"
+                    : "text-gray-400 dark:text-gray-600"
+                }`}
+              >
+                {step.desc}
+              </p>
+
+              {/* ملاحظة "قيد التنفيذ" للحالة النشطة */}
+              {active && (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#e8f4f0] px-2.5 py-1 text-[10px] font-bold text-[#1e6b57] dark:bg-[#1e3a33] dark:text-[#6ecdb0]">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2e8b73] opacity-75"></span>
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#2e8b73]"></span>
+                  </span>
+                  قيد التنفيذ الآن
+                </div>
               )}
             </div>
           </li>
@@ -330,19 +442,6 @@ function PartyRow({ icon, label, name, phone, color }: any) {
     </div>
   );
 }
-
-function getStatusInfo(status: string) {
-  const map: Record<string, any> = {
-    pending:   { label: "قيد الانتظار",   className: "bg-amber-50 text-amber-700" },
-    accepted:  { label: "مقبول",           className: "bg-blue-50 text-blue-700" },
-    shipped:   { label: "قيد التوصيل",     className: "bg-purple-50 text-purple-700" },
-    picked_up: { label: "استلمه المندوب", className: "bg-indigo-50 text-indigo-700" },
-    delivered: { label: "تم التسليم",     className: "bg-[#e8f4f0] text-[#1e6b57]" },
-    cancelled: { label: "ملغي",            className: "bg-red-50 text-red-700" },
-  };
-  return map[status] || { label: status, className: "bg-gray-50 text-gray-600" };
-}
-
 function formatDate(s: string | undefined): string {
   if (!s) return "—";
   try {

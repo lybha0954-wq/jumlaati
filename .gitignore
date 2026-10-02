@@ -72,3 +72,7 @@ dead-code.txt
 # Cleanup backups
 _cleanup-backup/
 *.debug
+next.log
+next.log.*
+jumlaati_codebase_dump.txt
+PROJECT-SCAN-*.md

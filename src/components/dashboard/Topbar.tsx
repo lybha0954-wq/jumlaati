@@ -7,8 +7,23 @@ import { useUserStore } from "@/lib/stores/userStore";
 import { useNotificationStore } from "@/lib/stores/notificationStore";
 import { useRealtime } from "@/hooks/useRealtime";
 import { useAuth } from "@/contexts/AuthContext";
-import { NotificationDropdown } from "./NotificationDropdown";
-import { Package, Search, LogIn, LogOut, ArrowRight, X } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+
+import { Package, Search, LogIn, LogOut, ArrowRight, X, Bell, Sun, Moon } from "lucide-react";
+import dynamic from "next/dynamic";
+
+// ═══ تحميل مؤجَّل — يُحمَّل فقط عند فتح قائمة الإشعارات ═══
+const NotificationDropdown = dynamic(
+  () => import("./NotificationDropdown").then((m) => m.NotificationDropdown),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400">
+        <Bell size={18} />
+      </div>
+    ),
+  }
+);
 
 const SETTINGS_BY_ROLE: Record<string, string> = {
   admin: "/admin/settings",
@@ -33,6 +48,7 @@ export function Topbar() {
   const { signOut } = useAuth();
   const { fetchNotifications } = useNotificationStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const { theme, toggle, mounted } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
 
   const refresh = useCallback(() => { fetchNotifications(); }, [fetchNotifications]);
@@ -73,7 +89,7 @@ export function Topbar() {
           </button>
         )}
 
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" prefetch={false} className="flex items-center gap-2">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#2e8b73]/10">
             <Package className="h-5 w-5 text-[#2e8b73]" strokeWidth={2.5} />
           </div>
@@ -103,11 +119,20 @@ export function Topbar() {
           {searchOpen ? <X size={18} /> : <Search size={18} />}
         </button>
 
+        <button
+          onClick={toggle}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+          aria-label={theme === "dark" ? "الوضع النهاري" : "الوضع الليلي"}
+          title={theme === "dark" ? "الوضع النهاري" : "الوضع الليلي"}
+        >
+          {mounted ? (theme === "dark" ? <Sun size={18} /> : <Moon size={18} />) : <Moon size={18} />}
+        </button>
+
         {user && <NotificationDropdown />}
 
         {user ? (
           <div className="flex items-center gap-1">
-            <Link href={settingsHref}
+            <Link href={settingsHref} prefetch={false}
               className="flex items-center gap-2 rounded-full border border-gray-100 py-1 pl-2 pr-1 transition-colors hover:bg-gray-50 sm:pl-3">
               <span className="hidden max-w-[80px] truncate text-xs font-medium text-gray-700 lg:block">
                 {user?.name || user?.email?.split("@")[0] || "المستخدم"}

@@ -28,6 +28,10 @@ export function Footer() {
             سياسة الاسترداد
           </Link>
           <span className="text-gray-300">|</span>
+          <Link href="/pricing" prefetch={false} className="font-bold text-gray-600 hover:text-[#2e8b73]">
+            الباقات
+          </Link>
+          <span className="text-gray-300">|</span>
           <Link href="/contact" prefetch={false} className="font-bold text-gray-600 hover:text-[#2e8b73]">
             تواصل معنا
           </Link>

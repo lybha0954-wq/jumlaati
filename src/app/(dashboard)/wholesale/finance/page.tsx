@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Wallet, TrendingUp, Percent, Package, Clock, CheckCircle2 } from "lucide-react";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface Order {
   id: number;
@@ -92,8 +93,8 @@ function EarningsView({ orders }: { orders: Order[] }) {
   return (
     <>
       <div className="mb-5 grid grid-cols-2 gap-3">
-        <KpiBox icon={<TrendingUp size={16} />} label="إجمالي المبيعات" value={formatCurrency(grossSales)} color="emerald" />
-        <KpiBox icon={<Percent size={16} />} label="عمولة المنصة" value={formatCurrency(totalCommission)} color="amber" />
+        <KpiCard icon={<TrendingUp size={16} />} label="إجمالي المبيعات" value={formatCurrency(grossSales)} color="emerald" />
+        <KpiCard icon={<Percent size={16} />} label="عمولة المنصة" value={formatCurrency(totalCommission)} color="amber" />
         <div className="col-span-2 rounded-2xl border border-[#2e8b73]/30 bg-[#e8f4f0] p-4">
           <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#2e8b73]">
             <Wallet size={16} />
@@ -101,7 +102,7 @@ function EarningsView({ orders }: { orders: Order[] }) {
           <p className="mb-1 text-xs text-[#1e6b57]">صافي الأرباح</p>
           <p className="text-2xl font-black text-[#1e6b57]">{formatCurrency(netSales)}</p>
         </div>
-        <KpiBox icon={<Package size={16} />} label="طلبات مكتملة" value={String(delivered.length)} color="purple" />
+        <KpiCard icon={<Package size={16} />} label="طلبات مكتملة" value={String(delivered.length)} color="purple" />
       </div>
 
       <div className="rounded-2xl border border-gray-100 bg-white">
@@ -151,8 +152,8 @@ function PayoutsView({ orders }: { orders: Order[] }) {
   return (
     <>
       <div className="mb-5 grid grid-cols-2 gap-3">
-        <KpiBox icon={<Clock size={16} />} label="مبالغ معلّقة" value={formatCurrency(pendingAmount)} sub={`${pending.length} طلب`} color="amber" />
-        <KpiBox icon={<CheckCircle2 size={16} />} label="محصّل فعلياً" value={formatCurrency(paidAmount)} sub={`${delivered.length} طلب`} color="emerald" />
+        <KpiCard icon={<Clock size={16} />} label="مبالغ معلّقة" value={formatCurrency(pendingAmount)} sub={`${pending.length} طلب`} color="amber" />
+        <KpiCard icon={<CheckCircle2 size={16} />} label="محصّل فعلياً" value={formatCurrency(paidAmount)} sub={`${delivered.length} طلب`} color="emerald" />
         <div className="col-span-2 rounded-2xl border border-[#2e8b73]/30 bg-[#e8f4f0] p-4">
           <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#2e8b73]">
             <Wallet size={16} />
@@ -199,23 +200,5 @@ function PayoutsView({ orders }: { orders: Order[] }) {
         )}
       </div>
     </>
-  );
-}
-
-function KpiBox({ icon, label, value, sub, color }: any) {
-  const colors: Record<string, string> = {
-    emerald: "bg-[#e8f4f0] text-[#2e8b73]",
-    amber: "bg-amber-50 text-amber-600",
-    purple: "bg-purple-50 text-purple-600",
-  };
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <div className={`mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl ${colors[color]}`}>
-        {icon}
-      </div>
-      <p className="mb-1 text-xs text-gray-500">{label}</p>
-      <p className="text-xl font-black text-gray-900">{value}</p>
-      {sub && <p className="mt-1 text-[10px] text-gray-400">{sub}</p>}
-    </div>
   );
 }

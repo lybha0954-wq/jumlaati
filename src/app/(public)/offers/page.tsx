@@ -5,7 +5,7 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListSkeleton, KPISkeleton } from "@/components/shared/SkeletonLoader";
 import {
-  Sparkles, Gift, Tag, Calendar, Percent, Package, Store,
+  Gift, Tag, Calendar, Percent, Package, Store,
   Search, Clock, CheckCircle2, AlertTriangle, TrendingDown,
 } from "lucide-react";
 import Link from "next/link";
@@ -128,7 +128,7 @@ export default function OffersPage() {
         {/* رأس الصفحة */}
         <div className="mb-6 text-center">
           <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
-            <Sparkles className="h-8 w-8 text-amber-500" strokeWidth={2} />
+            <Gift className="h-8 w-8 text-amber-500" strokeWidth={2} />
           </div>
           <h1 className="mb-2 text-3xl font-black text-gray-900">العروض الترويجية</h1>
           <p className="text-sm text-gray-500">
@@ -179,7 +179,7 @@ export default function OffersPage() {
             <div className="mb-8 grid grid-cols-1 gap-4 text-right sm:grid-cols-3">
               <FeatureCard icon={<Tag className="h-5 w-5" />} title="خصومات مباشرة" desc="عروض على منتجات محددة" />
               <FeatureCard icon={<Gift className="h-5 w-5" />} title="هدايا الكمية" desc="مكافآت عند طلب كميات كبيرة" />
-              <FeatureCard icon={<Sparkles className="h-5 w-5" />} title="عروض موسمية" desc="تخفيضات في المناسبات" />
+              <FeatureCard icon={<Calendar className="h-5 w-5" />} title="عروض موسمية" desc="تخفيضات في المناسبات" />
             </div>
             <Link href="/products"
               className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 font-bold text-white hover:bg-amber-600 active:scale-95">

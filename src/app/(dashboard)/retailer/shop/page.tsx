@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import {
   Store, Search, ArrowLeft, Phone, Package,
-  Sparkles, CheckCircle2, Filter, Heart, Coins,
+  Star, CheckCircle2, Filter, Heart, Coins,
 } from "lucide-react";
 
 interface Supplier {
@@ -164,7 +164,7 @@ function SuppliersView({ loading, filtered, stats, search, setSearch, filter, se
         <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
           <FilterChip active={filter === "all"} onClick={() => setFilter("all")} label="الكل" count={suppliersCount} />
           <FilterChip active={filter === "previous"} onClick={() => setFilter("previous")} label="تعاملت معهم" count={previousCount} icon={<CheckCircle2 size={12} />} />
-          <FilterChip active={filter === "new"} onClick={() => setFilter("new")} label="جدد" count={newCount} icon={<Sparkles size={12} />} />
+          <FilterChip active={filter === "new"} onClick={() => setFilter("new")} label="جدد" count={newCount} icon={<Star size={12} />} />
         </div>
       )}
 

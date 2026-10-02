@@ -24,7 +24,7 @@ const CATEGORY_AR: Record<string, string> = {
   operations: "عمليات",
   quality: "جودة",
   admin: "إدارة",
-  ai: "ذكاء",
+  ai: "متقدّم",
   ui: "واجهة",
   i18n: "لغات",
 };

@@ -10,6 +10,7 @@ import {
   Ticket, Plus, Trash2, X, Percent, AlertTriangle,
   Calendar, Hash, CheckCircle2,
 } from "lucide-react";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface Coupon {
   id: string;
@@ -81,9 +82,9 @@ export default function AdminCouponsPage() {
         </div>
 
         <div className="mb-5 grid grid-cols-3 gap-3">
-          <KPI icon={<Ticket size={16} />} label="الإجمالي" value={coupons.length} color="blue" />
-          <KPI icon={<CheckCircle2 size={16} />} label="نشطة" value={active} color="emerald" />
-          <KPI icon={<Hash size={16} />} label="مستخدمة" value={totalUsed} color="amber" />
+          <KpiCard icon={<Ticket size={16} />} label="الإجمالي" value={coupons.length} color="blue" />
+          <KpiCard icon={<CheckCircle2 size={16} />} label="نشطة" value={active} color="emerald" />
+          <KpiCard icon={<Hash size={16} />} label="مستخدمة" value={totalUsed} color="amber" />
         </div>
 
         {coupons.length === 0 ? (
@@ -111,22 +112,6 @@ export default function AdminCouponsPage() {
     </div>
   );
 }
-
-function KPI({ icon, label, value, color }: any) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-[#e8f4f0] text-[#2e8b73]",
-    amber: "bg-amber-50 text-amber-600",
-  };
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <div className={`mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl ${colors[color]}`}>{icon}</div>
-      <p className="mb-1 text-xs text-gray-500">{label}</p>
-      <p className="text-xl font-black text-gray-900">{value}</p>
-    </div>
-  );
-}
-
 function CouponCard({ coupon }: { coupon: Coupon }) {
   const usage = coupon.max_uses > 0 ? Math.round((coupon.used_count / coupon.max_uses) * 100) : 0;
   const isExpired = coupon.valid_to && new Date(coupon.valid_to) < new Date();

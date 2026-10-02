@@ -2,11 +2,21 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit, buildKey, rateLimitResponse } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json([], { status: 401 });
+
+    // ═══ Pagination params (اختياري — backward-compatible) ═══
+    const { searchParams } = new URL(req.url);
+    const pageParam = searchParams.get('page');
+    const limitParam = searchParams.get('limit');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(limitParam || '20', 10) || 20));
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -25,7 +35,7 @@ export async function GET() {
         retailer_id, supplier_id, delivery_id,
         created_at, accepted_at, shipped_at,
         picked_up_at, delivered_at, cancelled_at
-      `)
+      `, isPaginated ? { count: 'exact' } : {})
       .order('created_at', { ascending: false });
 
     if (role === 'supplier') {
@@ -36,7 +46,11 @@ export async function GET() {
       query = query.eq('delivery_id', user.id);
     }
 
-    const { data, error } = await query;
+    if (isPaginated) {
+      query = query.range(from, to);
+    }
+
+    const { data, error, count } = await query;
     if (error) {
       console.error('[api/orders] query error:', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -65,7 +79,19 @@ export async function GET() {
       delivery_name: o.delivery_id ? nameMap[o.delivery_id] : null,
     }));
 
-    return NextResponse.json(orders);
+    // ═══ استجابة قديمة (بدون pagination) ═══
+    if (!isPaginated) {
+      return NextResponse.json(orders);
+    }
+
+    // ═══ استجابة جديدة (مع pagination) ═══
+    return NextResponse.json({
+      items: orders,
+      total: count ?? 0,
+      page,
+      limit,
+      hasMore: (count ?? 0) > page * limit,
+    });
   } catch (error: any) {
     console.error('[api/orders] catch:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

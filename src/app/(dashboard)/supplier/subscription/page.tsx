@@ -6,8 +6,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
 import {
-  Crown, Check, Sparkles, Calendar, Wallet, Info,
-  CheckCircle2, AlertTriangle, X,
+  Crown, Check, Calendar, Wallet, Info,
+  CheckCircle2, AlertTriangle, X, Gift, Sparkles, Rocket,
 } from "lucide-react";
 
 interface Plan {
@@ -33,7 +33,7 @@ const FEATURE_LABELS: Record<string, string> = {
   reports_advanced: "تقارير متقدمة",
   offers: "نشر العروض",
   push_manual: "إشعارات يدوية",
-  matching: "مطابقة ذكية",
+  matching: "مطابقة",
 };
 
 export default function SubscriptionPage() {
@@ -98,12 +98,36 @@ export default function SubscriptionPage() {
     <div className="min-h-screen bg-gray-50/50 pb-24">
       <Topbar />
       <div className="mx-auto max-w-3xl px-4 py-6">
+        {/* ═══ 🎁 عرض الإطلاق ═══ */}
+        <div className="mb-5 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-l from-amber-50 via-white to-amber-50 shadow-md dark:border-amber-900/40 dark:from-amber-950/40 dark:via-gray-900 dark:to-amber-950/40">
+          <div className="flex items-center gap-3 p-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-md shadow-amber-500/30">
+              <Gift size={22} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <Sparkles size={11} className="text-amber-600 dark:text-amber-400" />
+                <p className="text-[10px] font-black uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                  عرض الإطلاق
+                </p>
+              </div>
+              <p className="mt-0.5 text-base font-black text-gray-900 dark:text-gray-100">
+                أول 3 أشهر مجاناً لجميع التجار
+              </p>
+              <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">
+                جرّب التطبيق مجاناً 3 أشهر — بدون التزام
+              </p>
+            </div>
+            <Rocket size={22} className="hidden flex-shrink-0 text-amber-500 sm:block" />
+          </div>
+        </div>
+
         <div className="mb-6 text-center">
-          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f4f0]">
+          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f4f0] dark:bg-[#1e3a33]">
             <Crown className="h-7 w-7 text-[#2e8b73]" />
           </div>
-          <h1 className="mb-1 text-2xl font-black text-gray-900">الباقات</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="mb-1 text-2xl font-black text-gray-900 dark:text-gray-100">الباقات</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             اختر الباقة المناسبة لنشاطك
           </p>
         </div>
@@ -135,10 +159,10 @@ export default function SubscriptionPage() {
             return (
               <div
                 key={plan.key}
-                className={`relative rounded-2xl border-2 bg-white p-5 transition-all ${
+                className={`relative rounded-2xl border-2 bg-white p-5 transition-all dark:bg-gray-900 ${
                   plan.is_recommended
-                    ? "border-[#2e8b73] shadow-md"
-                    : "border-gray-100"
+                    ? "border-[#2e8b73] shadow-md shadow-[#2e8b73]/10"
+                    : "border-gray-100 dark:border-gray-800"
                 }`}
               >
                 {plan.is_recommended && (
@@ -156,13 +180,16 @@ export default function SubscriptionPage() {
                   </div>
                   <div className="flex-shrink-0 text-left">
                     {plan.price_iqd === 0 ? (
-                      <p className="text-xl font-black text-emerald-600">مجاناً</p>
+                      <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">مجاناً</p>
                     ) : (
                       <>
-                        <p className="text-xl font-black text-[#2e8b73]">
+                        <p className="text-xl font-black text-[#2e8b73] dark:text-[#6ecdb0]">
                           {formatCurrency(plan.price_iqd)}
                         </p>
                         <p className="text-[10px] text-gray-400">/{plan.period_days} يوم</p>
+                        <p className="mt-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                          🎁 مجاناً 3 أشهر
+                        </p>
                       </>
                     )}
                   </div>
@@ -190,10 +217,21 @@ export default function SubscriptionPage() {
                     disabled={subscribing === plan.key}
                     className={`w-full rounded-xl py-3 text-sm font-bold transition-all active:scale-95 disabled:opacity-50 ${
                       plan.is_recommended
-                        ? "bg-[#2e8b73] text-white hover:bg-[#1e6b57]"
-                        : "border-2 border-[#2e8b73] bg-white text-[#2e8b73] hover:bg-[#e8f4f0]"
+                        ? "bg-[#2e8b73] text-white shadow-md shadow-[#2e8b73]/25 hover:bg-[#1e6b57] hover:shadow-lg"
+                        : "border-2 border-[#2e8b73] bg-white text-[#2e8b73] hover:bg-[#e8f4f0] dark:bg-gray-900 dark:hover:bg-[#1e3a33]"
                     }`}>
-                    {subscribing === plan.key ? "جاري..." : "اشترك الآن"}
+                    {subscribing === plan.key ? (
+                      "جاري..."
+                    ) : plan.price_iqd === 0 ? (
+                      "ابدأ مجاناً"
+                    ) : (
+                      <>
+                        اشترك الآن
+                        <span className="ml-1.5 rounded-full bg-white/25 px-2 py-0.5 text-[9px]">
+                          3 أشهر مجاناً
+                        </span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>

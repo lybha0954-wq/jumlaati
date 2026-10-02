@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Truck, Package, MapPin, CheckCircle2, Store, Calendar, History } from "lucide-react";
+import { usePaginatedOrders } from "@/hooks/usePaginatedOrders";
+import { Truck, Package, MapPin, CheckCircle2, Store, Calendar, History, Loader2 } from "lucide-react";
+import { getStatusInfo } from "@/lib/constants/order-status";
 
 interface Order {
   id: number;
@@ -24,25 +26,18 @@ type TopTab = "active" | "history";
 type FilterKey = "active" | "shipped" | "picked_up" | "delivered";
 
 export default function DeliveryTasksPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [topTab, setTopTab] = useState<TopTab>("active");
   const [filter, setFilter] = useState<FilterKey>("active");
   const { showToast } = useToast();
 
-  const fetchOrders = useCallback(async () => {
-    try {
-      const res = await fetch("/api/orders");
-      const data = res.ok ? await res.json() : [];
-      setOrders(Array.isArray(data) ? data : []);
-    } catch {
-      showToast("فشل التحميل", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  const {
+    items: orders,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    refresh,
+  } = usePaginatedOrders<Order>({ limit: 20 });
 
   const updateStatus = async (id: number, status: string) => {
     const res = await fetch(`/api/orders/${id}`, {
@@ -52,7 +47,7 @@ export default function DeliveryTasksPage() {
     });
     if (res.ok) {
       showToast("تم التحديث ✅", "success");
-      fetchOrders();
+      await refresh();
     } else {
       const err = await res.json().catch(() => ({}));
       showToast(err.error || "فشل التحديث", "error");
@@ -100,11 +95,33 @@ export default function DeliveryTasksPage() {
         </div>
 
         {topTab === "active" ? (
-          <ActiveTasksView
-            counts={counts} filter={filter} setFilter={setFilter}
-            shipped={shipped} pickedUp={pickedUp} delivered={delivered}
-            updateStatus={updateStatus}
-          />
+          <>
+            <ActiveTasksView
+              counts={counts} filter={filter} setFilter={setFilter}
+              shipped={shipped} pickedUp={pickedUp} delivered={delivered}
+              updateStatus={updateStatus}
+            />
+            {hasMore && (
+              <div className="mt-5 flex justify-center">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-[#2e8b73] bg-white px-6 py-3 text-sm font-bold text-[#2e8b73] transition-all hover:bg-[#e8f4f0] active:scale-95 disabled:opacity-50"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      جاري التحميل...
+                    </>
+                  ) : (
+                    <>
+                      تحميل المزيد ({orders.length} محمّلة)
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <HistoryView orders={delivered} />
         )}
@@ -281,16 +298,4 @@ function HistoryView({ orders }: { orders: Order[] }) {
       </div>
     </>
   );
-}
-
-function getStatusInfo(status: string) {
-  const map: Record<string, any> = {
-    pending:   { label: "جديد",           className: "bg-amber-50 text-amber-700" },
-    accepted:  { label: "مقبول",          className: "bg-blue-50 text-blue-700" },
-    shipped:   { label: "قيد التوصيل",    className: "bg-purple-50 text-purple-700" },
-    picked_up: { label: "مع المندوب",     className: "bg-indigo-50 text-indigo-700" },
-    delivered: { label: "تم التسليم",     className: "bg-[#e8f4f0] text-[#1e6b57]" },
-    cancelled: { label: "ملغي",           className: "bg-red-50 text-red-700" },
-  };
-  return map[status] || { label: status, className: "bg-gray-50 text-gray-600" };
 }

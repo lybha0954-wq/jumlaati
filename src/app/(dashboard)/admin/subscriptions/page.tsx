@@ -9,6 +9,7 @@ import {
   Crown, Search, Users, TrendingUp, Calendar, CheckCircle2,
   XCircle, Clock, Wallet,
 } from "lucide-react";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface Subscription {
   id: string;
@@ -90,10 +91,10 @@ export default function AdminSubscriptionsPage() {
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <KPI icon={<Users size={16} />} label="الإجمالي" value={String(counts.all)} color="blue" />
-          <KPI icon={<CheckCircle2 size={16} />} label="نشط" value={String(counts.active)} color="emerald" />
-          <KPI icon={<Clock size={16} />} label="منتهي" value={String(counts.expired)} color="amber" />
-          <KPI icon={<Wallet size={16} />} label="الإيراد" value={formatCurrency(revenue)} color="purple" />
+          <KpiCard icon={<Users size={16} />} label="الإجمالي" value={String(counts.all)} color="blue" />
+          <KpiCard icon={<CheckCircle2 size={16} />} label="نشط" value={String(counts.active)} color="emerald" />
+          <KpiCard icon={<Clock size={16} />} label="منتهي" value={String(counts.expired)} color="amber" />
+          <KpiCard icon={<Wallet size={16} />} label="الإيراد" value={formatCurrency(revenue)} color="purple" />
         </div>
 
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
@@ -133,25 +134,6 @@ export default function AdminSubscriptionsPage() {
     </div>
   );
 }
-
-function KPI({ icon, label, value, color }: any) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-[#e8f4f0] text-[#2e8b73]",
-    amber: "bg-amber-50 text-amber-600",
-    purple: "bg-purple-50 text-purple-600",
-  };
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <div className={`mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl ${colors[color]}`}>
-        {icon}
-      </div>
-      <p className="mb-1 text-xs text-gray-500">{label}</p>
-      <p className="text-base font-black text-gray-900">{value}</p>
-    </div>
-  );
-}
-
 function SubCard({ sub }: { sub: Subscription }) {
   const statusInfo: Record<string, { label: string; cls: string }> = {
     active:    { label: "نشط",   cls: "bg-[#e8f4f0] text-[#1e6b57]" },

@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next'
+import { siteConfig } from '@/config/site'
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: 'https://jumlaati.netlify.app', lastModified: new Date() },
-    { url: 'https://jumlaati.netlify.app/products', lastModified: new Date() },
-    { url: 'https://jumlaati.netlify.app/login', lastModified: new Date() },
+    { url: siteConfig.url, lastModified: new Date() },
+    { url: siteConfig.url + '/products', lastModified: new Date() },
+    { url: siteConfig.url + '/login', lastModified: new Date() },
   ]
 }
