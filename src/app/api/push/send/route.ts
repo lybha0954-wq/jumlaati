@@ -7,14 +7,52 @@ const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "";
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:admin@jumlati.iq";
 
-if (VAPID_PUBLIC && VAPID_PRIVATE) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+// ═══ Lazy init — لا يُنفَّذ إلا داخل الـ handler ═══
+let webpushReady = false;
+function ensureWebpushConfigured(): boolean {
+  if (webpushReady) return true;
+
+  // فحص القيم
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
+    console.error("[push/send] VAPID keys missing");
+    return false;
+  }
+
+  // فحص طول المفتاح العام (65 بايت عند decode = ~87-88 char base64url)
+  try {
+    const decoded = Buffer.from(VAPID_PUBLIC.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+    if (decoded.length !== 65) {
+      console.error(`[push/send] VAPID public key invalid length: ${decoded.length} (expected 65)`);
+      return false;
+    }
+  } catch (err) {
+    console.error("[push/send] VAPID public key decode failed:", err);
+    return false;
+  }
+
+  try {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+    webpushReady = true;
+    return true;
+  } catch (err) {
+    console.error("[push/send] setVapidDetails failed:", err);
+    return false;
+  }
 }
 
 export async function POST(req: Request) {
   try {
     const guard = await requireFeature("push_manual");
     if (guard) return guard;
+
+    // فحص VAPID قبل البدء
+    if (!ensureWebpushConfigured()) {
+      return NextResponse.json(
+        { error: "Push not configured — invalid VAPID keys" },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
