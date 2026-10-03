@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { WebVitalsReporter } from "@/components/shared/WebVitalsReporter";
 import { Tajawal } from "next/font/google";
 import { baseMetadata } from "@/config/seo";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className={`${tajawal.className} antialiased`}>
         <AuthProvider>
           <RouteProgress />
+          <WebVitalsReporter />
           {children}
           <InstallPrompt />
           <ServiceWorkerRegister />
