@@ -13,7 +13,11 @@ export async function GET() {
     const flags: Record<string, boolean> = {};
     (data || []).forEach((f: any) => { flags[f.key] = f.enabled; });
 
-    return NextResponse.json({ flags });
+    return NextResponse.json({ flags }, {
+      headers: {
+        "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=60",
+      },
+    });
   } catch (err) {
     console.error("[api/feature-flags] error:", err);
     return NextResponse.json({ flags: {} });

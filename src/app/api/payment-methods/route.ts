@@ -10,7 +10,11 @@ export async function GET() {
       .order("sort_order", { ascending: true });
 
     if (error) return NextResponse.json([]);
-    return NextResponse.json(data || []);
+    return NextResponse.json(data || [], {
+      headers: {
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=60",
+      },
+    });
   } catch {
     return NextResponse.json([]);
   }

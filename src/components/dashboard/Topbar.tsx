@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useUserStore } from "@/lib/stores/userStore";
@@ -53,6 +54,7 @@ export function Topbar() {
 
   const refresh = useCallback(() => { fetchNotifications(); }, [fetchNotifications]);
   useRealtime("notifications", () => { refresh(); });
+  useRealtimeNotifications();
   useEffect(() => { refresh(); }, [refresh]);
 
   // إغلاق البحث عند تغيير الصفحة

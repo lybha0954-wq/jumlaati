@@ -45,6 +45,7 @@ export function ProductCard({ product }: { product: any }) {
       {/* الرابط الممتد — يغطي البطاقة كاملة */}
       <Link
         href={url}
+        prefetch={true}
         aria-label={product.name}
         className="absolute inset-0 z-0"
       />
