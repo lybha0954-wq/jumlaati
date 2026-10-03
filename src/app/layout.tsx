@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Onboarding } from "@/components/shared/Onboarding";
+import { KeyboardShortcuts } from "@/components/shared/KeyboardShortcuts";
 import { PWAUpdateNotification } from "@/components/shared/PWAUpdateNotification";
 import { WebVitalsReporter } from "@/components/shared/WebVitalsReporter";
 import { Tajawal } from "next/font/google";
@@ -64,6 +66,8 @@ export default function RootLayout({
           <RouteProgress />
           <WebVitalsReporter />
           {children}
+          <Onboarding />
+          <KeyboardShortcuts />
           <InstallPrompt />
           <PWAUpdateNotification />
           <ServiceWorkerRegister />
