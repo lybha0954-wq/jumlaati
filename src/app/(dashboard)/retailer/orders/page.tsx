@@ -48,15 +48,42 @@ export default function RetailerOrdersPage() {
 
   const cancelOrder = async (id: number) => {
     if (!confirm("هل أنت متأكد من إلغاء الطلب؟")) return;
-    const res = await fetch(`/api/orders/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "cancelled" }),
-    });
-    if (res.ok) {
-      showToast("تم إلغاء الطلب", "success");
-      await refresh();
-    } else {
+
+    // ═══ Optimistic: نُخفي الطلب فوراً ═══
+    const previousOrders = [...orders];
+    setOptimisticHidden((prev) => new Set(prev).add(id));
+
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+
+      if (res.ok) {
+        showToast("تم إلغاء الطلب", "success");
+        await refresh();
+        // نظّف after refresh
+        setOptimisticHidden((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      } else {
+        // ═══ Rollback على الفشل ═══
+        setOptimisticHidden((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        showToast("فشل الإلغاء", "error");
+      }
+    } catch {
+      setOptimisticHidden((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       showToast("فشل الإلغاء", "error");
     }
   };
@@ -88,6 +115,7 @@ export default function RetailerOrdersPage() {
   };
 
   const filtered = orders.filter((o) => {
+    if (optimisticHidden.has(o.id)) return false;
     if (filter === "all") return true;
     if (filter === "pending") return o.status === "pending";
     if (filter === "active")
