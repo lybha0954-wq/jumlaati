@@ -14,7 +14,8 @@ export async function GET() {
     (data || []).forEach((f: any) => { flags[f.key] = f.enabled; });
 
     return NextResponse.json({ flags });
-  } catch {
+  } catch (err) {
+    console.error("[api/feature-flags] error:", err);
     return NextResponse.json({ flags: {} });
   }
 }

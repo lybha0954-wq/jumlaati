@@ -108,7 +108,9 @@ export default function RetailerCartPage() {
       const merged = [trimmed, ...current.filter((a) => a !== trimmed)].slice(0, 5);
       localStorage.setItem("jumlati-saved-addresses", JSON.stringify(merged));
       setSavedAddresses(merged);
-    } catch {}
+    } catch (err) {
+      console.warn('[cart] save addresses failed:', err);
+    }
 
     try {
       await fetch("/api/users/profile", {
@@ -116,7 +118,9 @@ export default function RetailerCartPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address: trimmed }),
       });
-    } catch {}
+    } catch (err) {
+      console.warn('[cart] rememberAddress failed:', err);
+    }
   };
 
   const handleCheckout = async () => {

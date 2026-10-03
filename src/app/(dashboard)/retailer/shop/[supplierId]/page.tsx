@@ -82,7 +82,9 @@ export default function SupplierCatalogPage({
         if (pid) map[String(pid)] = String(w.id);
       });
       setWishlistIds(map);
-    } catch {}
+    } catch (err) {
+      console.warn("[shop] fetch failed:", err);
+    }
   }, [wishlistEnabled]);
 
   useEffect(() => { reloadWishlist(); }, [reloadWishlist]);

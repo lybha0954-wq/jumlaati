@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { formatCurrency } from "@/lib/utils/currency";
-import { ArrowLeft, CreditCard, Wallet, MapPin, ShieldCheck, Lock } from "lucide-react";
+import { ArrowLeft, MapPin, ShieldCheck, Lock } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 
 export default function CheckoutPage() {

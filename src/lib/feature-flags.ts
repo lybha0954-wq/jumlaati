@@ -16,7 +16,8 @@ async function fetchFlags(): Promise<Record<string, boolean>> {
     rows.forEach((r) => { data[r.key] = r.enabled === true; });
     cache = { data, ts: Date.now() };
     return data;
-  } catch {
+  } catch (err) {
+    console.error("[feature-flags] fetch failed:", err);
     return cache?.data || {};
   }
 }

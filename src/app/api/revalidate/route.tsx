@@ -3,20 +3,31 @@ import { revalidatePath } from 'next/cache';
 
 export async function POST(request: NextRequest) {
   try {
-    const { path, secret } = await request.json();
+    // ═══ التحقق من وجود المفتاح أولاً ═══
+    const expectedSecret = process.env.CRON_SECRET;
 
-    if (secret !== process.env.REVALIDATION_SECRET) {
+    if (!expectedSecret) {
+      return NextResponse.json(
+        { message: 'Revalidation disabled — secret not configured' },
+        { status: 503 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { path, secret } = body;
+
+    // ═══ مقارنة آمنة (لا timing attacks) ═══
+    if (!secret || secret !== expectedSecret) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!path) {
-      return NextResponse.json({ message: 'Path is required' }, { status: 400 });
+    if (!path || typeof path !== 'string' || !path.startsWith('/')) {
+      return NextResponse.json({ message: 'Path is required (must start with /)' }, { status: 400 });
     }
 
     revalidatePath(path);
-    
     return NextResponse.json({ revalidated: true, path });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: 'Error revalidating' }, { status: 500 });
   }
 }
