@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -104,10 +105,12 @@ export default function RetailerFavoritesPage() {
                 >
                   <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-800">
                     {p.image_url ? (
-                      <img
+                      <Image
                         src={p.image_url}
                         alt={p.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="64px"
+                        className="object-cover"
                       />
                     ) : (
                       <Package className="h-6 w-6 text-gray-300" />

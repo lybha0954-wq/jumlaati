@@ -1,6 +1,8 @@
 "use client";
 
 import { use, useEffect, useState, useMemo, useCallback } from "react";
+import { FilterChip } from "@/components/shared/FilterChip";
+import Image from "next/image";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -325,10 +327,12 @@ export default function SupplierCatalogPage({
                   {/* صورة */}
                   <div className="relative mb-3 flex h-24 items-center justify-center overflow-hidden rounded-xl bg-gray-50">
                     {p.image_url ? (
-                      <img
+                      <Image
                         src={p.image_url}
                         alt={p.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="(max-width: 640px) 50vw, 33vw"
+                        className="object-cover"
                       />
                     ) : (
                       <Package className="h-10 w-10 text-gray-300" />
@@ -465,40 +469,3 @@ export default function SupplierCatalogPage({
 
 /* ═════════════════════ مكونات فرعية ═════════════════════ */
 
-function FilterChip({
-  active, onClick, label, count, color = "default",
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  count: number;
-  color?: "default" | "emerald" | "red";
-}) {
-  const activeColors: Record<string, string> = {
-    default: "bg-[#2e8b73] text-white shadow-md shadow-[#2e8b73]/20",
-    emerald: "bg-[#2e8b73] text-white shadow-md shadow-[#2e8b73]/20",
-    red: "bg-red-500 text-white shadow-md shadow-red-500/20",
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
-        active
-          ? activeColors[color]
-          : "border border-gray-100 bg-white text-gray-600 hover:border-[#2e8b73]/30 hover:text-[#1e6b57]"
-      }`}
-    >
-      {label}
-      {count > 0 && (
-        <span
-          className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-            active ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"
-          }`}
-        >
-          {count}
-        </span>
-      )}
-    </button>
-  );
-}

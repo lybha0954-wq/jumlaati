@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListSkeleton, KPISkeleton } from "@/components/shared/SkeletonLoader";
@@ -241,8 +242,8 @@ function OfferCard({ offer, discount, expired, expiringSoon }: {
           : "bg-gradient-to-l from-amber-500 to-orange-500"
       }`}>
         {offer.product_image ? (
-          <img src={offer.product_image} alt={offer.title}
-            className="h-full w-full object-cover opacity-90" />
+          <Image src={offer.product_image} alt={offer.title} fill sizes="(max-width: 640px) 100vw, 50vw"
+            className="object-cover opacity-90" />
         ) : (
           <div className="flex h-full items-center justify-center">
             <Gift className="h-10 w-10 text-white/60" strokeWidth={1.5} />

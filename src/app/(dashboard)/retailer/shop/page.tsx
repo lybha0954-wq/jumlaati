@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { FilterChip } from "@/components/shared/FilterChip";
+import Image from "next/image";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -236,25 +238,6 @@ function SuppliersView({ loading, filtered, stats, search, setSearch, filter, se
   );
 }
 
-function FilterChip({ active, onClick, label, count, icon }: any) {
-  return (
-    <button onClick={onClick}
-      className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
-        active
-          ? "bg-[#2e8b73] text-white shadow-md shadow-[#2e8b73]/20"
-          : "border border-gray-100 bg-white text-gray-600 hover:border-[#2e8b73]/30 hover:text-[#1e6b57]"
-      }`}>
-      {icon}
-      {label}
-      {count > 0 && (
-        <span className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-          active ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"
-        }`}>{count}</span>
-      )}
-    </button>
-  );
-}
-
 function EmptyState({ hasSearch, hasFilter, onReset }: any) {
   return (
     <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
@@ -343,7 +326,7 @@ function FavoritesView() {
           <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3">
             <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50">
               {p.image_url ? (
-                <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" />
+                <Image src={p.image_url} alt={p.name} fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" />
               ) : (
                 <Package className="h-6 w-6 text-gray-300" />
               )}

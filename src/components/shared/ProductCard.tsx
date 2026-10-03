@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { ShoppingCart, Heart, Check, Package, Store } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cartStore";
@@ -51,8 +52,8 @@ export function ProductCard({ product }: { product: any }) {
       {/* صورة */}
       <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-800">
         {image ? (
-          <img src={image} alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <Image src={image} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110" />
         ) : (
           <div className="flex h-full items-center justify-center">
             <Package className="h-12 w-12 text-gray-300" />

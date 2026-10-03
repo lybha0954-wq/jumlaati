@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { StatusBar } from "@/components/shared/StatusBar";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -213,20 +214,6 @@ function UserCountCard({ icon, label, value, color }: any) {
   );
 }
 
-function StatusBar({ label, value, total, color }: any) {
-  const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-  return (
-    <div>
-      <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="font-bold text-gray-700">{label}</span>
-        <span className="text-gray-500">{value} ({percent}%)</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${percent}%` }} />
-      </div>
-    </div>
-  );
-}
 
 function QuickLink({ href, icon, label }: any) {
   return (

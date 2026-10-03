@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { Topbar } from "@/components/dashboard/Topbar";
+import Image from "next/image";
 import { productService } from "@/lib/services/productService";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -51,7 +52,8 @@ export default async function ProductPage({
           {/* صورة */}
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50">
             {image ? (
-              <img src={image} alt={product.name} className="h-full w-full object-cover" />
+              <Image src={image} alt={product.name} fill sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover" priority />
             ) : (
               <div className="flex h-full items-center justify-center">
                 <Package className="h-16 w-16 text-gray-300" />

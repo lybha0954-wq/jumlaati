@@ -1,6 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+// ═══ Lazy: يُحمَّل فقط عند الحاجة ═══
+const PaymentMethodsSection = dynamic(
+  () => import("@/components/shared/PaymentMethodsSection"),
+  {
+    loading: () => (
+      <div className="space-y-2">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+        ))}
+      </div>
+    ),
+  }
+);
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -386,10 +402,12 @@ export default function RetailerCartPage() {
                 <div className="flex gap-3">
                   <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gray-50 dark:bg-gray-800">
                     {item.image ? (
-                      <img
+                      <Image
                         src={item.image}
                         alt={item.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
                       />
                     ) : (
                       <Package className="h-8 w-8 text-gray-300 dark:text-gray-600" />
@@ -568,52 +586,11 @@ export default function RetailerCartPage() {
 
         {enabledMethods.length > 0 && (
           <div className="mb-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <div className="space-y-2">
-              {enabledMethods.map((pm) => {
-                const isSelected = paymentMethod === pm.key;
-                return (
-                  <button
-                    key={pm.key}
-                    onClick={() => setPaymentMethod(pm.key)}
-                    className={`flex w-full items-center justify-between gap-3 rounded-xl border-2 p-3 text-right transition-all ${
-                      isSelected
-                        ? "border-[#2e8b73] bg-[#e8f4f0] dark:bg-[#1e3a33]"
-                        : "border-gray-100 bg-white hover:border-[#2e8b73]/30 dark:border-gray-800 dark:bg-gray-900"
-                    }`}
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div
-                        className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-2xl ${
-                          isSelected
-                            ? "bg-white dark:bg-gray-800"
-                            : "bg-gray-50 dark:bg-gray-800"
-                        }`}
-                      >
-                        {pm.icon || "💳"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                          {pm.label}
-                        </p>
-                        {pm.description && (
-                          <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">
-                            {pm.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {isSelected ? (
-                      <CheckCircle2
-                        size={20}
-                        className="flex-shrink-0 text-[#2e8b73]"
-                      />
-                    ) : (
-                      <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-gray-300 dark:border-gray-600" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <PaymentMethodsSection
+              methods={enabledMethods}
+              selected={paymentMethod}
+              onSelect={setPaymentMethod}
+            />
           </div>
         )}
 

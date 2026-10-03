@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { StatusBar } from "@/components/shared/StatusBar";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
@@ -437,24 +438,6 @@ function KpiCard({ icon, label, value, color }: any) {
   );
 }
 
-function StatusBar({ label, value, total, color }: any) {
-  const pct = Math.round((value / total) * 100);
-  const colors: any = {
-    amber: "bg-amber-500", blue: "bg-blue-500", purple: "bg-purple-500",
-    indigo: "bg-indigo-500", emerald: "bg-[#2e8b73]", red: "bg-red-500",
-  };
-  return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between text-xs">
-        <span className="font-bold text-gray-700">{label}</span>
-        <span className="text-gray-500">{value} ({pct}%)</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-        <div className={`h-full rounded-full transition-all ${colors[color]}`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
 
 function TopList({ title, icon, items, unit }: any) {
   return (
