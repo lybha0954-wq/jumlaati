@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { PWAUpdateNotification } from "@/components/shared/PWAUpdateNotification";
 import { WebVitalsReporter } from "@/components/shared/WebVitalsReporter";
 import { Tajawal } from "next/font/google";
 import { baseMetadata } from "@/config/seo";
@@ -33,7 +34,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2e8b73",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#2e8b73" },
+    { media: "(prefers-color-scheme: dark)", color: "#1e6b57" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -61,6 +65,7 @@ export default function RootLayout({
           <WebVitalsReporter />
           {children}
           <InstallPrompt />
+          <PWAUpdateNotification />
           <ServiceWorkerRegister />
           <Toaster position="top-center" richColors closeButton dir="rtl" />
         </AuthProvider>

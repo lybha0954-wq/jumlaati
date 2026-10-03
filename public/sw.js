@@ -160,3 +160,10 @@ self.addEventListener("notificationclick", (event) => {
     })()
   );
 });
+
+// ═══ SKIP_WAITING (لتحديث فوري) ═══
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
